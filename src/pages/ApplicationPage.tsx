@@ -5,6 +5,7 @@ import { profile } from '../data/profile';
 import { CVDocument } from '../components/cv/CVDocument';
 import { CoverLetterDocument } from '../components/cover-letter/CoverLetterDocument';
 import { ExportModal } from '../components/ExportModal';
+import { JsonEditModal } from '../components/JsonEditModal';
 import { useApplication } from '../hooks/useApplication';
 import { useApplicationStatus } from '../hooks/useApplicationStatus';
 import { STATUS_LABELS, STATUS_COLORS } from '../utils/status';
@@ -31,9 +32,10 @@ export function ApplicationPage() {
 }
 
 function ApplicationContent({ staticApp }: { staticApp: ApplicationConfig }) {
-  const { app, isDirty } = useApplication(staticApp);
+  const { app, save, isDirty } = useApplication(staticApp);
   const [status, setStatus] = useApplicationStatus(staticApp.id, staticApp.status);
   const [exportOpen, setExportOpen] = useState(false);
+  const [jsonOpen, setJsonOpen] = useState(false);
 
   return (
     <div className="app-page">
@@ -58,6 +60,9 @@ function ApplicationContent({ staticApp }: { staticApp: ApplicationConfig }) {
           <Link className="app-edit-btn" to={`/application/${staticApp.id}/edit`}>
             Edit
           </Link>
+          <button className="app-edit-btn" onClick={() => setJsonOpen(true)}>
+            JSON
+          </button>
           <button className="app-export-btn" onClick={() => setExportOpen(true)}>
             LLM Export
           </button>
@@ -76,6 +81,14 @@ function ApplicationContent({ staticApp }: { staticApp: ApplicationConfig }) {
         <ExportModal
           text={generateTextExport(profile, { ...app, status })}
           onClose={() => setExportOpen(false)}
+        />
+      )}
+
+      {jsonOpen && (
+        <JsonEditModal
+          app={{ ...app, status }}
+          onSave={(updated) => { save(updated); }}
+          onClose={() => setJsonOpen(false)}
         />
       )}
     </div>
