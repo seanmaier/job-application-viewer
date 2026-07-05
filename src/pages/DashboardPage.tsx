@@ -8,11 +8,6 @@ export function DashboardPage() {
     <div className="dashboard">
       <header className="dashboard-header">
         <div className="dashboard-title">Applications</div>
-        <p className="dashboard-hint">
-          Add a new application by creating a file in{' '}
-          <code>src/data/applications/</code> and exporting it from{' '}
-          <code>index.ts</code>.
-        </p>
       </header>
 
       <main className="dashboard-grid">
@@ -20,10 +15,10 @@ export function DashboardPage() {
           <ApplicationCard key={app.id} application={app} />
         ))}
 
-        <Link className="app-card app-card--new" to="#" onClick={(e) => e.preventDefault()}>
+        <Link className="app-card app-card--new" to="/application/new">
           <span className="app-card-new-icon">+</span>
           <span className="app-card-new-label">New application</span>
-          <span className="app-card-new-hint">Create a file in src/data/applications/</span>
+          <span className="app-card-new-hint">Fill in the form, copy the generated code</span>
         </Link>
       </main>
     </div>
