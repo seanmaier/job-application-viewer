@@ -38,7 +38,7 @@ export function CoverLetterDocument({ profile, application }: Props) {
         </div>
       </div>
 
-      <div className="cl-subject">Re: Application - {cl.subjectRole}</div>
+      <div className="cl-subject">Re: {cl.subjectRole}</div>
 
       <div className="cl-body">
         {cl.paragraphs.map((p, i) => (

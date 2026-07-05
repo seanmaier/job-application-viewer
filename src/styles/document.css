@@ -310,9 +310,23 @@
     box-shadow: none;
     margin: 0;
     width: 210mm;
-    padding: 14mm 16mm;
+    height: 297mm;
+    padding: 10mm 12mm;
+    overflow: hidden;
     break-after: page;
     page-break-after: always;
+  }
+
+  /* No forced break after the last page — prevents a blank third page */
+  .doc-page:last-child {
+    break-after: auto;
+    page-break-after: auto;
+  }
+
+  /* Prevent Firefox inserting a break before the grid body */
+  .cv-body {
+    break-before: avoid;
+    page-break-before: avoid;
   }
 
   .exp-entry,
