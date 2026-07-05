@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
 import type { ApplicationConfig } from '../types';
-import '../styles/json-edit-modal.css';
 
 type StorableConfig = Omit<ApplicationConfig, 'status'>;
 
@@ -70,30 +69,46 @@ export function JsonEditModal({ app, onSave, onClose }: Props) {
   };
 
   return (
-    <div className="json-overlay" onClick={onClose}>
-      <div className="json-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="json-modal-header">
-          <div className="json-modal-title-group">
-            <span className="json-modal-title">JSON Editor</span>
-            <span className="json-modal-subtitle">{app.company} · {app.role}</span>
+    <div className="fixed inset-0 bg-[rgba(20,28,46,0.65)] flex items-center justify-center z-[100] p-6" onClick={onClose}>
+      <div
+        className="bg-[#1a2236] rounded-lg w-full max-w-[760px] h-[80vh] flex flex-col shadow-[0_20px_60px_rgba(20,28,46,0.40)] overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex justify-between items-center py-3 px-5 border-b border-white/7 shrink-0 gap-4">
+          <div className="flex items-baseline gap-2.5 overflow-hidden">
+            <span className="[font-family:var(--font-mono)] text-[11px] font-semibold text-[color:var(--surface)] tracking-[0.08em] uppercase shrink-0">JSON Editor</span>
+            <span className="[font-family:var(--font-mono)] text-[11px] text-[#4A5568] whitespace-nowrap overflow-hidden text-ellipsis">{app.company} · {app.role}</span>
           </div>
-          <div className="json-modal-actions">
-            <span className="json-status-note">status is managed via the toolbar dropdown</span>
+          <div className="flex items-center gap-2.5 shrink-0">
+            <span className="[font-family:var(--font-mono)] text-[10px] text-[#4A5568] italic">status is managed via the toolbar dropdown</span>
             <button
-              className={`json-save-btn ${saved ? 'json-save-btn--saved' : ''}`}
+              className={
+                saved
+                  ? '[font-family:var(--font-mono)] text-[11px] bg-[color:var(--status-offer)] text-white border-none rounded px-4 py-1.5 pointer-events-none'
+                  : '[font-family:var(--font-mono)] text-[11px] bg-[color:var(--accent)] text-white border-none rounded px-4 py-1.5 cursor-pointer transition-colors duration-150 hover:bg-[#1d4ed8]'
+              }
               onClick={handleSave}
             >
               {saved ? 'Saved!' : 'Save'}
             </button>
-            <button className="json-close-btn" onClick={onClose}>✕</button>
+            <button
+              className="text-[14px] bg-transparent border-none text-[#4A5568] cursor-pointer py-1 px-2 rounded leading-none hover:bg-white/7 hover:text-[color:var(--surface)]"
+              onClick={onClose}
+            >
+              ✕
+            </button>
           </div>
         </div>
 
-        {error && <div className="json-error">{error}</div>}
+        {error && (
+          <div className="[font-family:var(--font-mono)] text-[11px] text-[color:var(--status-rejected)] bg-[rgba(220,38,38,0.10)] border-b border-[rgba(220,38,38,0.20)] py-2 px-5 shrink-0">
+            {error}
+          </div>
+        )}
 
         <textarea
           ref={textareaRef}
-          className="json-textarea"
+          className="flex-1 [font-family:var(--font-mono)] text-[12.5px] leading-[1.65] text-[#c9d1e0] bg-transparent border-none p-5 resize-none outline-none whitespace-pre [overflow-wrap:normal] overflow-auto"
           value={text}
           onChange={(e) => { setText(e.target.value); setError(null); }}
           spellCheck={false}

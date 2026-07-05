@@ -4,10 +4,15 @@ import { applications } from '../data/applications';
 import type { ApplicationConfig, Profile } from '../types';
 import profileData from '@private/profile.json';
 import { useApplication } from '../hooks/useApplication';
+import {
+  nafSection, nafRow, nafLabel, nafOptional, nafInput, nafTextarea,
+  nafCheckboxes, nafCheckboxLabel, nafCheckboxInput, nafParagraphRow, nafRemoveBtn, nafAddBtn,
+  newAppPage, newAppBack, newAppTitle, newAppBody, newAppForm,
+  newAppPreview, napHeader, napFilename, napCode, napHint, napLiveLabel,
+  editAppHeader, editAppCompany, editAppHeaderActions, editResetBtn, editSaveBtn, editSaveBtnSaved,
+} from '../styles/formStyles';
 
 const profile = profileData as Profile;
-import '../styles/new-application-page.css';
-import '../styles/edit-application-page.css';
 
 function toId(company: string) {
   return company.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'new-app';
@@ -99,22 +104,22 @@ function EditContent({ staticApp }: { staticApp: ApplicationConfig }) {
   const previewApp: ApplicationConfig = { ...buildConfig(), status: app.status };
 
   return (
-    <div className="new-app-page">
-      <div className="edit-app-header">
-        <Link className="new-app-back" to={`/application/${staticApp.id}`}>
+    <div className={newAppPage}>
+      <div className={editAppHeader}>
+        <Link className={newAppBack} to={`/application/${staticApp.id}`}>
           ← {staticApp.company}
         </Link>
-        <span className="new-app-title">
-          Editing &nbsp;<span className="edit-app-company">{staticApp.company}</span>
+        <span className={newAppTitle}>
+          Editing &nbsp;<span className={editAppCompany}>{staticApp.company}</span>
         </span>
-        <div className="edit-app-header-actions">
+        <div className={editAppHeaderActions}>
           {isDirty && (
-            <button className="edit-reset-btn" onClick={handleReset}>
+            <button className={editResetBtn} onClick={handleReset}>
               Reset to default
             </button>
           )}
           <button
-            className={`edit-save-btn ${saved ? 'edit-save-btn--saved' : ''}`}
+            className={saved ? editSaveBtnSaved : editSaveBtn}
             onClick={handleSave}
           >
             {saved ? 'Saved!' : 'Save changes'}
@@ -122,68 +127,68 @@ function EditContent({ staticApp }: { staticApp: ApplicationConfig }) {
         </div>
       </div>
 
-      <div className="new-app-body">
+      <div className={newAppBody}>
         {/* ── Form ── */}
-        <div className="new-app-form">
-          <div className="naf-section">
-            <span className="naf-label">Company</span>
-            <input className="naf-input" value={company} onChange={(e) => setCompany(e.target.value)} />
+        <div className={newAppForm}>
+          <div className={nafSection}>
+            <span className={nafLabel}>Company</span>
+            <input className={nafInput} value={company} onChange={(e) => setCompany(e.target.value)} />
           </div>
 
-          <div className="naf-section">
-            <span className="naf-label">Role</span>
-            <input className="naf-input" value={role} onChange={(e) => setRole(e.target.value)} />
+          <div className={nafSection}>
+            <span className={nafLabel}>Role</span>
+            <input className={nafInput} value={role} onChange={(e) => setRole(e.target.value)} />
           </div>
 
-          <div className="naf-section">
-            <span className="naf-label">
-              Job posting URL <span className="naf-optional">(optional)</span>
+          <div className={nafSection}>
+            <span className={nafLabel}>
+              Job posting URL <span className={nafOptional}>(optional)</span>
             </span>
             <input
-              className="naf-input"
+              className={nafInput}
               placeholder="https://..."
               value={url}
               onChange={(e) => setUrl(e.target.value)}
             />
           </div>
 
-          <div className="naf-row">
-            <div className="naf-section">
-              <span className="naf-label">
-                Applied date <span className="naf-optional">(optional)</span>
+          <div className={nafRow}>
+            <div className={nafSection}>
+              <span className={nafLabel}>
+                Applied date <span className={nafOptional}>(optional)</span>
               </span>
               <input
-                className="naf-input"
+                className={nafInput}
                 placeholder="e.g. July 5, 2026"
                 value={appliedDate}
                 onChange={(e) => setAppliedDate(e.target.value)}
               />
             </div>
-            <div className="naf-section">
-              <span className="naf-label">Cover letter date</span>
+            <div className={nafSection}>
+              <span className={nafLabel}>Cover letter date</span>
               <input
-                className="naf-input"
+                className={nafInput}
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
               />
             </div>
           </div>
 
-          <div className="naf-row">
-            <div className="naf-section">
-              <span className="naf-label">Recipient org</span>
+          <div className={nafRow}>
+            <div className={nafSection}>
+              <span className={nafLabel}>Recipient org</span>
               <input
-                className="naf-input"
+                className={nafInput}
                 value={recipientOrg}
                 onChange={(e) => setRecipientOrg(e.target.value)}
               />
             </div>
-            <div className="naf-section">
-              <span className="naf-label">
-                Recipient name <span className="naf-optional">(optional)</span>
+            <div className={nafSection}>
+              <span className={nafLabel}>
+                Recipient name <span className={nafOptional}>(optional)</span>
               </span>
               <input
-                className="naf-input"
+                className={nafInput}
                 placeholder="defaults to Hiring Team"
                 value={recipientName}
                 onChange={(e) => setRecipientName(e.target.value)}
@@ -191,22 +196,22 @@ function EditContent({ staticApp }: { staticApp: ApplicationConfig }) {
             </div>
           </div>
 
-          <div className="naf-section">
-            <span className="naf-label">Subject role</span>
+          <div className={nafSection}>
+            <span className={nafLabel}>Subject role</span>
             <input
-              className="naf-input"
+              className={nafInput}
               placeholder="defaults to Role"
               value={subjectRole}
               onChange={(e) => setSubjectRole(e.target.value)}
             />
           </div>
 
-          <div className="naf-section">
-            <span className="naf-label">
-              Profile summary override <span className="naf-optional">(optional)</span>
+          <div className={nafSection}>
+            <span className={nafLabel}>
+              Profile summary override <span className={nafOptional}>(optional)</span>
             </span>
             <textarea
-              className="naf-textarea"
+              className={nafTextarea}
               placeholder="Leave empty to use the default profile summary"
               rows={3}
               value={summaryOverride}
@@ -214,12 +219,13 @@ function EditContent({ staticApp }: { staticApp: ApplicationConfig }) {
             />
           </div>
 
-          <div className="naf-section">
-            <span className="naf-label">Featured projects</span>
-            <div className="naf-checkboxes">
+          <div className={nafSection}>
+            <span className={nafLabel}>Featured projects</span>
+            <div className={nafCheckboxes}>
               {profile.projects.map((p) => (
-                <label className="naf-checkbox-label" key={p.id}>
+                <label className={nafCheckboxLabel} key={p.id}>
                   <input
+                    className={nafCheckboxInput}
                     type="checkbox"
                     checked={featuredIds.includes(p.id)}
                     onChange={() => toggleProject(p.id)}
@@ -230,40 +236,40 @@ function EditContent({ staticApp }: { staticApp: ApplicationConfig }) {
             </div>
           </div>
 
-          <div className="naf-section">
-            <span className="naf-label">Cover letter paragraphs</span>
+          <div className={nafSection}>
+            <span className={nafLabel}>Cover letter paragraphs</span>
             {paragraphs.map((p, i) => (
-              <div className="naf-paragraph-row" key={i}>
+              <div className={nafParagraphRow} key={i}>
                 <textarea
-                  className="naf-textarea"
+                  className={nafTextarea}
                   placeholder={`Paragraph ${i + 1}`}
                   value={p}
                   rows={4}
                   onChange={(e) => updateParagraph(i, e.target.value)}
                 />
                 {paragraphs.length > 1 && (
-                  <button className="naf-remove-btn" onClick={() => removeParagraph(i)}>
+                  <button className={nafRemoveBtn} onClick={() => removeParagraph(i)}>
                     ✕
                   </button>
                 )}
               </div>
             ))}
-            <button className="naf-add-btn" onClick={addParagraph}>
+            <button className={nafAddBtn} onClick={addParagraph}>
               + Add paragraph
             </button>
           </div>
         </div>
 
         {/* ── Code preview ── */}
-        <div className="new-app-preview">
-          <div className="nap-header">
-            <span className="nap-filename">
+        <div className={newAppPreview}>
+          <div className={napHeader}>
+            <span className={napFilename}>
               src/data/applications/{toId(company)}.json
             </span>
-            <span className="nap-live-label">live preview</span>
+            <span className={napLiveLabel}>live preview</span>
           </div>
-          <pre className="nap-code">{generateJson(previewApp)}</pre>
-          <p className="nap-hint">
+          <pre className={napCode}>{generateJson(previewApp)}</pre>
+          <p className={napHint}>
             Changes are saved to your browser. Copy the JSON above to update{' '}
             <code>src/data/applications/{toId(company)}.json</code> permanently.
           </p>
@@ -279,9 +285,9 @@ export function EditApplicationPage() {
 
   if (!staticApp) {
     return (
-      <div className="app-not-found">
+      <div className="py-20 px-10 [font-family:var(--font-mono)] text-[color:var(--ink-2)] flex flex-col gap-4">
         <p>Application not found.</p>
-        <Link to="/">← Back to dashboard</Link>
+        <Link className="text-[color:var(--accent)]" to="/">← Back to dashboard</Link>
       </div>
     );
   }

@@ -2,7 +2,12 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import type { Profile } from '../types';
 import profileData from '@private/profile.json';
-import '../styles/new-application-page.css';
+import {
+  nafSection, nafRow, nafLabel, nafOptional, nafInput, nafTextarea,
+  nafCheckboxes, nafCheckboxLabel, nafCheckboxInput, nafParagraphRow, nafRemoveBtn, nafAddBtn,
+  newAppPage, newAppHeader, newAppBack, newAppTitle, newAppBody, newAppForm,
+  newAppPreview, napHeader, napFilename, napCopyBtn, napCopyBtnCopied, napCode, napHint, napHintCode,
+} from '../styles/formStyles';
 
 const profile = profileData as Profile;
 
@@ -71,58 +76,58 @@ export function NewApplicationPage() {
   const filename = `${toId(company) || 'company'}.json`;
 
   return (
-    <div className="new-app-page">
-      <div className="new-app-header">
-        <Link className="new-app-back" to="/">← Dashboard</Link>
-        <span className="new-app-title">New Application</span>
+    <div className={newAppPage}>
+      <div className={newAppHeader}>
+        <Link className={newAppBack} to="/">← Dashboard</Link>
+        <span className={newAppTitle}>New Application</span>
       </div>
 
-      <div className="new-app-body">
+      <div className={newAppBody}>
         {/* ── Form ── */}
-        <div className="new-app-form">
-          <div className="naf-section">
-            <span className="naf-label">Company</span>
+        <div className={newAppForm}>
+          <div className={nafSection}>
+            <span className={nafLabel}>Company</span>
             <input
-              className="naf-input"
+              className={nafInput}
               placeholder="e.g. Vattenfall"
               value={company}
               onChange={(e) => setCompany(e.target.value)}
             />
           </div>
 
-          <div className="naf-section">
-            <span className="naf-label">Role</span>
+          <div className={nafSection}>
+            <span className={nafLabel}>Role</span>
             <input
-              className="naf-input"
+              className={nafInput}
               placeholder="e.g. Backend Engineer"
               value={role}
               onChange={(e) => setRole(e.target.value)}
             />
           </div>
 
-          <div className="naf-section">
-            <span className="naf-label">Job posting URL <span className="naf-optional">(optional)</span></span>
+          <div className={nafSection}>
+            <span className={nafLabel}>Job posting URL <span className={nafOptional}>(optional)</span></span>
             <input
-              className="naf-input"
+              className={nafInput}
               placeholder="https://..."
               value={url}
               onChange={(e) => setUrl(e.target.value)}
             />
           </div>
 
-          <div className="naf-row">
-            <div className="naf-section">
-              <span className="naf-label">Cover letter date</span>
+          <div className={nafRow}>
+            <div className={nafSection}>
+              <span className={nafLabel}>Cover letter date</span>
               <input
-                className="naf-input"
+                className={nafInput}
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
               />
             </div>
-            <div className="naf-section">
-              <span className="naf-label">Subject role <span className="naf-optional">(if different)</span></span>
+            <div className={nafSection}>
+              <span className={nafLabel}>Subject role <span className={nafOptional}>(if different)</span></span>
               <input
-                className="naf-input"
+                className={nafInput}
                 placeholder="defaults to Role"
                 value={subjectRole}
                 onChange={(e) => setSubjectRole(e.target.value)}
@@ -130,12 +135,13 @@ export function NewApplicationPage() {
             </div>
           </div>
 
-          <div className="naf-section">
-            <span className="naf-label">Featured projects</span>
-            <div className="naf-checkboxes">
+          <div className={nafSection}>
+            <span className={nafLabel}>Featured projects</span>
+            <div className={nafCheckboxes}>
               {profile.projects.map((p) => (
-                <label className="naf-checkbox-label" key={p.id}>
+                <label className={nafCheckboxLabel} key={p.id}>
                   <input
+                    className={nafCheckboxInput}
                     type="checkbox"
                     checked={featuredIds.includes(p.id)}
                     onChange={() => toggleProject(p.id)}
@@ -146,41 +152,41 @@ export function NewApplicationPage() {
             </div>
           </div>
 
-          <div className="naf-section">
-            <span className="naf-label">Cover letter paragraphs</span>
+          <div className={nafSection}>
+            <span className={nafLabel}>Cover letter paragraphs</span>
             {paragraphs.map((p, i) => (
-              <div className="naf-paragraph-row" key={i}>
+              <div className={nafParagraphRow} key={i}>
                 <textarea
-                  className="naf-textarea"
+                  className={nafTextarea}
                   placeholder={`Paragraph ${i + 1}`}
                   value={p}
                   rows={4}
                   onChange={(e) => updateParagraph(i, e.target.value)}
                 />
                 {paragraphs.length > 1 && (
-                  <button className="naf-remove-btn" onClick={() => removeParagraph(i)}>✕</button>
+                  <button className={nafRemoveBtn} onClick={() => removeParagraph(i)}>✕</button>
                 )}
               </div>
             ))}
-            <button className="naf-add-btn" onClick={addParagraph}>+ Add paragraph</button>
+            <button className={nafAddBtn} onClick={addParagraph}>+ Add paragraph</button>
           </div>
         </div>
 
         {/* ── Code preview ── */}
-        <div className="new-app-preview">
-          <div className="nap-header">
-            <span className="nap-filename">src/data/applications/{filename}</span>
+        <div className={newAppPreview}>
+          <div className={napHeader}>
+            <span className={napFilename}>src/data/applications/{filename}</span>
             <button
-              className={`nap-copy-btn ${copied ? 'nap-copy-btn--copied' : ''}`}
+              className={copied ? napCopyBtnCopied : napCopyBtn}
               onClick={handleCopy}
             >
               {copied ? 'Copied!' : 'Copy'}
             </button>
           </div>
-          <pre className="nap-code">{code}</pre>
-          <p className="nap-hint">
-            Save as <code>src/data/applications/{filename}</code>, then add the import to{' '}
-            <code>src/data/applications/index.ts</code>.
+          <pre className={napCode}>{code}</pre>
+          <p className={napHint}>
+            Save as <code className={napHintCode}>src/data/applications/{filename}</code>, then add the import to{' '}
+            <code className={napHintCode}>src/data/applications/index.ts</code>.
           </p>
         </div>
       </div>

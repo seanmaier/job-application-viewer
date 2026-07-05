@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import '../styles/export-modal.css';
 
 interface Props {
   text: string;
@@ -23,18 +22,33 @@ export function ExportModal({ text, onClose }: Props) {
   };
 
   return (
-    <div className="export-overlay" onClick={onClose}>
-      <div className="export-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="export-modal-header">
-          <span className="export-modal-title">LLM Export</span>
-          <div className="export-modal-actions">
-            <button className={`export-copy-btn ${copied ? 'export-copy-btn--copied' : ''}`} onClick={handleCopy}>
+    <div className="fixed inset-0 bg-[rgba(20,28,46,0.60)] flex items-center justify-center z-[100] p-6" onClick={onClose}>
+      <div
+        className="bg-[color:var(--surface)] rounded-lg w-full max-w-[740px] max-h-[84vh] flex flex-col shadow-[0_16px_48px_rgba(20,28,46,0.24)] overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex justify-between items-center py-3.5 px-5 border-b border-[color:var(--rule)] shrink-0 gap-3">
+          <span className="[font-family:var(--font-mono)] text-[12px] font-semibold text-[color:var(--ink)] tracking-[0.06em] uppercase">LLM Export</span>
+          <div className="flex gap-2 items-center">
+            <button
+              className={
+                copied
+                  ? '[font-family:var(--font-mono)] text-[11px] bg-[#059669] text-white border-none rounded px-3.5 py-1.5 cursor-pointer tracking-[0.02em] hover:bg-[#059669]'
+                  : '[font-family:var(--font-mono)] text-[11px] bg-[color:var(--accent)] text-white border-none rounded px-3.5 py-1.5 cursor-pointer transition-colors duration-150 tracking-[0.02em] hover:bg-[#1d4ed8]'
+              }
+              onClick={handleCopy}
+            >
               {copied ? 'Copied!' : 'Copy to clipboard'}
             </button>
-            <button className="export-close-btn" onClick={onClose}>✕</button>
+            <button
+              className="text-[14px] bg-transparent border-none text-[color:var(--ink-3)] cursor-pointer py-1 px-2 rounded leading-none hover:bg-[color:var(--bg)] hover:text-[color:var(--ink)]"
+              onClick={onClose}
+            >
+              ✕
+            </button>
           </div>
         </div>
-        <pre className="export-text">{text}</pre>
+        <pre className="[font-family:var(--font-mono)] text-[11.5px] leading-[1.65] text-[color:var(--ink-2)] py-5 px-6 overflow-y-auto whitespace-pre-wrap break-words flex-1">{text}</pre>
       </div>
     </div>
   );
