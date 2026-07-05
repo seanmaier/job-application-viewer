@@ -133,5 +133,5 @@
 @media print {
   .app-toolbar { display: none; }
   .app-documents { padding: 0; }
-  .app-page { background: white; }
+  .app-page { min-height: 0; background: white; }
 }

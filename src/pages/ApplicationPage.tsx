@@ -69,7 +69,12 @@ function ApplicationContent({ staticApp }: { staticApp: ApplicationConfig }) {
           <button className="app-export-btn" onClick={() => setExportOpen(true)}>
             LLM Export
           </button>
-          <button className="app-print-btn" onClick={() => window.print()}>
+          <button className="app-print-btn" onClick={() => {
+            const prev = document.title;
+            document.title = `${app.company} - ${app.role} · REDACTED`;
+            window.print();
+            document.title = prev;
+          }}>
             Print / PDF
           </button>
         </div>

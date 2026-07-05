@@ -71,7 +71,7 @@ export function CVDocument({ profile, application }: Props) {
             <ul className="sidebar-list">
               {profile.languages.map((lang) => (
                 <li key={lang.name}>
-                  {lang.name} — {lang.level}
+                  {lang.name}. {lang.level}
                 </li>
               ))}
             </ul>

@@ -1,3 +1,9 @@
+/* ── Print: page setup ──────────────────────────────── */
+@page {
+  size: A4;
+  margin: 0;
+}
+
 /* ── Page shell ─────────────────────────────────────── */
 .doc-page {
   background: var(--surface);
@@ -303,8 +309,9 @@
   .doc-page {
     box-shadow: none;
     margin: 0;
-    width: 100%;
-    padding: 36px 40px;
+    width: 210mm;
+    padding: 14mm 16mm;
+    break-after: page;
     page-break-after: always;
   }
 
