@@ -1,0 +1,313 @@
+/* ── Page shell ─────────────────────────────────────── */
+.doc-page {
+  background: var(--surface);
+  width: 794px;
+  margin: 0 auto 48px;
+  padding: 52px 52px 56px;
+  box-shadow: 0 2px 20px rgba(20, 28, 46, 0.10);
+}
+
+/* ── Section label ──────────────────────────────────── */
+.doc-label {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 10px;
+}
+
+/* ══════════════════════════════════════════════════════
+   CV
+══════════════════════════════════════════════════════ */
+.cv-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  padding-bottom: 22px;
+  border-bottom: 1.5px solid var(--rule);
+}
+
+.cv-name {
+  font-size: 27px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  line-height: 1;
+}
+
+.cv-role {
+  font-size: 12.5px;
+  color: var(--ink-2);
+  margin-top: 5px;
+  letter-spacing: 0.01em;
+}
+
+.cv-contact {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--ink-2);
+  text-align: right;
+  line-height: 1.85;
+}
+
+.cv-contact a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.cv-body {
+  display: grid;
+  grid-template-columns: 194px 1fr;
+  gap: 0 34px;
+  margin-top: 26px;
+}
+
+/* Sidebar */
+.sidebar-section { margin-bottom: 20px; }
+
+.skill-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  margin-top: 1px;
+}
+
+.skill-tag {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  background: var(--accent-bg);
+  color: var(--accent);
+  padding: 2px 7px;
+  border-radius: 3px;
+  line-height: 1.6;
+}
+
+.skill-tag--learning {
+  background: var(--bg);
+  color: var(--ink-3);
+  border: 1px solid var(--rule);
+}
+
+.edu-degree { font-size: 12px; font-weight: 600; }
+.edu-school { font-size: 11px; color: var(--ink-2); margin-top: 2px; }
+.edu-year   { font-family: var(--font-mono); font-size: 10px; color: var(--ink-3); margin-top: 2px; }
+
+.sidebar-list {
+  list-style: none;
+  font-size: 12px;
+  color: var(--ink-2);
+  line-height: 1.95;
+}
+
+/* Main column */
+.main-section { margin-bottom: 20px; }
+
+.summary-text {
+  font-size: 12.5px;
+  color: var(--ink-2);
+  line-height: 1.68;
+}
+
+/* Experience entries */
+.exp-entry {
+  border-left: 2px solid var(--rule);
+  padding-left: 13px;
+  margin-bottom: 14px;
+  transition: border-color 0.15s;
+}
+
+.exp-entry:hover { border-left-color: var(--accent); }
+
+.exp-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.exp-title {
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.exp-dates {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--ink-3);
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.exp-company {
+  font-size: 11px;
+  color: var(--accent);
+  font-weight: 500;
+  margin: 2px 0 6px;
+}
+
+.exp-bullets {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.exp-bullets li {
+  font-size: 11.5px;
+  color: var(--ink-2);
+  line-height: 1.5;
+  padding-left: 12px;
+  position: relative;
+}
+
+.exp-bullets li::before {
+  content: '–';
+  position: absolute;
+  left: 0;
+  color: var(--ink-3);
+}
+
+/* Projects */
+.project-entry {
+  border-left: 2px solid var(--rule);
+  padding-left: 13px;
+  margin-bottom: 12px;
+  transition: border-color 0.15s;
+}
+
+.project-entry:hover { border-left-color: var(--accent); }
+
+.project-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.project-name { font-size: 12.5px; font-weight: 600; }
+
+.project-hackathon {
+  font-weight: 400;
+  color: var(--ink-3);
+  font-size: 11px;
+}
+
+.project-link {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--accent);
+  text-decoration: none;
+  flex-shrink: 0;
+}
+
+.project-link:hover { text-decoration: underline; }
+
+.project-stack {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--ink-3);
+  margin: 2px 0 4px;
+}
+
+.project-desc {
+  font-size: 11.5px;
+  color: var(--ink-2);
+  line-height: 1.5;
+}
+
+/* ══════════════════════════════════════════════════════
+   Cover letter
+══════════════════════════════════════════════════════ */
+.cl-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  padding-bottom: 22px;
+  border-bottom: 1.5px solid var(--rule);
+  margin-bottom: 32px;
+}
+
+.cl-sender-name {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+}
+
+.cl-sender-sub {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--ink-2);
+  margin-top: 4px;
+}
+
+.cl-contact-right {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--ink-2);
+  text-align: right;
+  line-height: 1.85;
+}
+
+.cl-contact-right a { color: var(--accent); text-decoration: none; }
+
+.cl-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 28px;
+}
+
+.cl-date {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-3);
+}
+
+.cl-recipient {
+  font-size: 12.5px;
+  color: var(--ink-2);
+  line-height: 1.75;
+  margin-top: 10px;
+}
+
+.cl-subject {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 26px;
+  border-top: 1px solid var(--rule);
+  padding-top: 16px;
+}
+
+.cl-body p {
+  font-size: 13px;
+  color: var(--ink);
+  line-height: 1.78;
+  margin-bottom: 18px;
+  max-width: 590px;
+}
+
+.cl-sign {
+  margin-top: 36px;
+  font-size: 13px;
+  color: var(--ink);
+  line-height: 2.2;
+}
+
+.cl-sign-name { font-weight: 600; }
+
+/* ── Print ──────────────────────────────────────────── */
+@media print {
+  .doc-page {
+    box-shadow: none;
+    margin: 0;
+    width: 100%;
+    padding: 36px 40px;
+    page-break-after: always;
+  }
+
+  .exp-entry,
+  .project-entry { border-left-color: var(--accent) !important; }
+}

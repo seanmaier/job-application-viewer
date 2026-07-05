@@ -1,0 +1,23 @@
+:root {
+  --ink:        #141C2E;
+  --ink-2:      #4A5568;
+  --ink-3:      #8896AB;
+  --accent:     #2563EB;
+  --accent-bg:  #EEF2FF;
+  --bg:         #E5E9F0;
+  --surface:    #FFFFFF;
+  --rule:       #DDE3EE;
+  --ph-bg:      #FEF3C7;
+  --ph-ink:     #92400E;
+  --font-sans:  -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  --font-mono:  'SF Mono', 'Cascadia Code', 'Consolas', 'Courier New', monospace;
+
+  /* Status colours */
+  --status-drafting:   #6B7280;
+  --status-ready:      #2563EB;
+  --status-sent:       #D97706;
+  --status-interview:  #7C3AED;
+  --status-offer:      #059669;
+  --status-rejected:   #DC2626;
+  --status-withdrawn:  #9CA3AF;
+}
