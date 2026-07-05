@@ -5,18 +5,20 @@ import { profile } from '../data/profile';
 import { CVDocument } from '../components/cv/CVDocument';
 import { CoverLetterDocument } from '../components/cover-letter/CoverLetterDocument';
 import { ExportModal } from '../components/ExportModal';
+import { useApplication } from '../hooks/useApplication';
 import { useApplicationStatus } from '../hooks/useApplicationStatus';
 import { STATUS_LABELS, STATUS_COLORS } from '../utils/status';
 import { generateTextExport } from '../utils/textExport';
-import type { ApplicationStatus } from '../types';
+import type { ApplicationConfig, ApplicationStatus } from '../types';
 import '../styles/application-page.css';
 
+// Guard component — renders nothing until we confirm the app exists,
+// so inner hooks are never called conditionally.
 export function ApplicationPage() {
   const { id } = useParams<{ id: string }>();
-  const application = applications.find((a) => a.id === id);
-  const [exportOpen, setExportOpen] = useState(false);
+  const staticApp = id ? applications.find((a) => a.id === id) : undefined;
 
-  if (!application) {
+  if (!staticApp) {
     return (
       <div className="app-not-found">
         <p>Application not found.</p>
@@ -25,15 +27,22 @@ export function ApplicationPage() {
     );
   }
 
-  const [status, setStatus] = useApplicationStatus(application.id, application.status);
+  return <ApplicationContent staticApp={staticApp} />;
+}
+
+function ApplicationContent({ staticApp }: { staticApp: ApplicationConfig }) {
+  const { app, isDirty } = useApplication(staticApp);
+  const [status, setStatus] = useApplicationStatus(staticApp.id, staticApp.status);
+  const [exportOpen, setExportOpen] = useState(false);
 
   return (
     <div className="app-page">
       <div className="app-toolbar">
         <Link className="app-back" to="/">← Dashboard</Link>
         <div className="app-toolbar-center">
-          <span className="app-company">{application.company}</span>
-          <span className="app-role">{application.role}</span>
+          <span className="app-company">{app.company}</span>
+          <span className="app-role">{app.role}</span>
+          {isDirty && <span className="app-dirty-badge">edited</span>}
         </div>
         <div className="app-toolbar-right">
           <select
@@ -46,6 +55,9 @@ export function ApplicationPage() {
               <option key={value} value={value}>{label}</option>
             ))}
           </select>
+          <Link className="app-edit-btn" to={`/application/${staticApp.id}/edit`}>
+            Edit
+          </Link>
           <button className="app-export-btn" onClick={() => setExportOpen(true)}>
             LLM Export
           </button>
@@ -56,13 +68,13 @@ export function ApplicationPage() {
       </div>
 
       <div className="app-documents">
-        <CVDocument profile={profile} application={application} />
-        <CoverLetterDocument profile={profile} application={application} />
+        <CVDocument profile={profile} application={{ ...app, status }} />
+        <CoverLetterDocument profile={profile} application={{ ...app, status }} />
       </div>
 
       {exportOpen && (
         <ExportModal
-          text={generateTextExport(profile, application)}
+          text={generateTextExport(profile, { ...app, status })}
           onClose={() => setExportOpen(false)}
         />
       )}
