@@ -22,8 +22,8 @@ React 19 · TypeScript · Vite · Tailwind CSS · React Router
 ## Getting started
 
 ```bash
-git clone <this-repo>
-cd job-applications
+git clone https://github.com/seanmaier/job-application-viewer.git
+cd job-application-viewer
 npm install
 ```
 
