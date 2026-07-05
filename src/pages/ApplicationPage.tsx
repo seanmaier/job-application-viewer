@@ -1,16 +1,20 @@
+import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { applications } from '../data/applications';
 import { profile } from '../data/profile';
 import { CVDocument } from '../components/cv/CVDocument';
 import { CoverLetterDocument } from '../components/cover-letter/CoverLetterDocument';
+import { ExportModal } from '../components/ExportModal';
 import { useApplicationStatus } from '../hooks/useApplicationStatus';
 import { STATUS_LABELS, STATUS_COLORS } from '../utils/status';
+import { generateTextExport } from '../utils/textExport';
 import type { ApplicationStatus } from '../types';
 import '../styles/application-page.css';
 
 export function ApplicationPage() {
   const { id } = useParams<{ id: string }>();
   const application = applications.find((a) => a.id === id);
+  const [exportOpen, setExportOpen] = useState(false);
 
   if (!application) {
     return (
@@ -42,6 +46,9 @@ export function ApplicationPage() {
               <option key={value} value={value}>{label}</option>
             ))}
           </select>
+          <button className="app-export-btn" onClick={() => setExportOpen(true)}>
+            LLM Export
+          </button>
           <button className="app-print-btn" onClick={() => window.print()}>
             Print / PDF
           </button>
@@ -52,6 +59,13 @@ export function ApplicationPage() {
         <CVDocument profile={profile} application={application} />
         <CoverLetterDocument profile={profile} application={application} />
       </div>
+
+      {exportOpen && (
+        <ExportModal
+          text={generateTextExport(profile, application)}
+          onClose={() => setExportOpen(false)}
+        />
+      )}
     </div>
   );
 }

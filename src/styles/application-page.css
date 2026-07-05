@@ -69,6 +69,7 @@
 
 .app-status-select option { color: var(--ink); background: var(--surface); }
 
+.app-export-btn,
 .app-print-btn {
   font-family: var(--font-mono);
   font-size: 11px;
@@ -81,6 +82,7 @@
   letter-spacing: 0.04em;
 }
 
+.app-export-btn:hover,
 .app-print-btn:hover { background: var(--accent); color: var(--surface); }
 
 /* ── Document area ──────────────────────────────────── */
