@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { applications } from '../data/applications';
-import { profile } from '../data/profile';
+import type { ApplicationConfig, Profile } from '../types';
+import profileData from '../data/profile.json';
 import { useApplication } from '../hooks/useApplication';
-import type { ApplicationConfig } from '../types';
+
+const profile = profileData as Profile;
 import '../styles/new-application-page.css';
 import '../styles/edit-application-page.css';
 
@@ -11,42 +13,25 @@ function toId(company: string) {
   return company.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'new-app';
 }
 
-function generateCode(app: ApplicationConfig): string {
-  const id = app.id;
-  const varName = id.replace(/-([a-z])/g, (_, c: string) => c.toUpperCase());
-  const urlLine = app.url ? `  url: '${app.url}',\n` : '';
-  const summaryLine = app.summaryOverride
-    ? `  summaryOverride: '${app.summaryOverride.replace(/'/g, "\\'")}',\n`
-    : '';
-  const appliedLine = app.appliedDate ? `  appliedDate: '${app.appliedDate}',\n` : '';
-  const featuredLine =
-    app.featuredProjectIds && app.featuredProjectIds.length > 0
-      ? `  featuredProjectIds: [${app.featuredProjectIds.map((id) => `'${id}'`).join(', ')}],\n`
-      : '';
-  const recipientNameLine = app.coverLetter.recipientName
-    ? `    recipientName: '${app.coverLetter.recipientName}',\n`
-    : '';
-  const paragraphsStr = app.coverLetter.paragraphs
-    .map((p) => `    '${p.replace(/'/g, "\\'")}',`)
-    .join('\n');
-
-  return `import type { ApplicationConfig } from '../../types';
-
-export const ${varName}: ApplicationConfig = {
-  id: '${id}',
-  company: '${app.company}',
-  role: '${app.role}',
-  status: '${app.status}',
-${urlLine}${appliedLine}${summaryLine}${featuredLine}  coverLetter: {
-    recipientOrg: '${app.coverLetter.recipientOrg}',
-${recipientNameLine}    date: '${app.coverLetter.date}',
-    subjectRole: '${app.coverLetter.subjectRole}',
-    paragraphs: [
-${paragraphsStr}
-    ],
-  },
-};
-`;
+function generateJson(app: ApplicationConfig): string {
+  const obj: Record<string, unknown> = {
+    id: app.id,
+    company: app.company,
+    role: app.role,
+    status: app.status,
+    ...(app.url && { url: app.url }),
+    ...(app.appliedDate && { appliedDate: app.appliedDate }),
+    ...(app.summaryOverride && { summaryOverride: app.summaryOverride }),
+    ...(app.featuredProjectIds?.length && { featuredProjectIds: app.featuredProjectIds }),
+    coverLetter: {
+      recipientOrg: app.coverLetter.recipientOrg,
+      ...(app.coverLetter.recipientName && { recipientName: app.coverLetter.recipientName }),
+      date: app.coverLetter.date,
+      subjectRole: app.coverLetter.subjectRole,
+      paragraphs: app.coverLetter.paragraphs,
+    },
+  };
+  return JSON.stringify(obj, null, 2);
 }
 
 // Inner component — staticApp is guaranteed to exist
@@ -273,14 +258,14 @@ function EditContent({ staticApp }: { staticApp: ApplicationConfig }) {
         <div className="new-app-preview">
           <div className="nap-header">
             <span className="nap-filename">
-              src/data/applications/{toId(company)}.ts
+              src/data/applications/{toId(company)}.json
             </span>
             <span className="nap-live-label">live preview</span>
           </div>
-          <pre className="nap-code">{generateCode(previewApp)}</pre>
+          <pre className="nap-code">{generateJson(previewApp)}</pre>
           <p className="nap-hint">
-            Changes are saved to your browser. Copy the code above to update{' '}
-            <code>src/data/applications/{toId(company)}.ts</code> permanently.
+            Changes are saved to your browser. Copy the JSON above to update{' '}
+            <code>src/data/applications/{toId(company)}.json</code> permanently.
           </p>
         </div>
       </div>

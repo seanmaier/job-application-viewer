@@ -1,4 +1,4 @@
 import type { ApplicationConfig } from '../../types';
-import { freiheit } from './freiheit';
+import freiheitData from './freiheit.json';
 
-export const applications: ApplicationConfig[] = [freiheit];
+export const applications: ApplicationConfig[] = [freiheitData as ApplicationConfig];

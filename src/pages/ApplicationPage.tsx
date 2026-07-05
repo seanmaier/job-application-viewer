@@ -1,7 +1,10 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { applications } from '../data/applications';
-import { profile } from '../data/profile';
+import type { Profile } from '../types';
+import profileData from '../data/profile.json';
+
+const profile = profileData as Profile;
 import { CVDocument } from '../components/cv/CVDocument';
 import { CoverLetterDocument } from '../components/cover-letter/CoverLetterDocument';
 import { ExportModal } from '../components/ExportModal';

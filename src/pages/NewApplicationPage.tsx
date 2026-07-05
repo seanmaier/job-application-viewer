@@ -1,13 +1,16 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { profile } from '../data/profile';
+import type { Profile } from '../types';
+import profileData from '../data/profile.json';
 import '../styles/new-application-page.css';
+
+const profile = profileData as Profile;
 
 function toId(company: string): string {
   return company.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'new-app';
 }
 
-function generateCode(
+function generateJson(
   company: string,
   role: string,
   url: string,
@@ -17,31 +20,21 @@ function generateCode(
   paragraphs: string[],
 ): string {
   const id = toId(company);
-  const featuredLine = featuredIds.length > 0
-    ? `  featuredProjectIds: [${featuredIds.map((id) => `'${id}'`).join(', ')}],\n`
-    : '';
-  const urlLine = url ? `  url: '${url}',\n` : '';
-  const paragraphsStr = paragraphs
-    .map((p) => `    '${p.replace(/'/g, "\\'")}',`)
-    .join('\n');
-
-  return `import type { ApplicationConfig } from '../../types';
-
-export const ${id.replace(/-([a-z])/g, (_, c) => c.toUpperCase())}: ApplicationConfig = {
-  id: '${id}',
-  company: '${company}',
-  role: '${role}',
-  status: 'drafting',
-${urlLine}${featuredLine}  coverLetter: {
-    recipientOrg: '${company}',
-    date: '${date}',
-    subjectRole: '${subjectRole || role}',
-    paragraphs: [
-${paragraphsStr}
-    ],
-  },
-};
-`;
+  const obj: Record<string, unknown> = {
+    id,
+    company,
+    role,
+    status: 'drafting',
+    ...(url && { url }),
+    ...(featuredIds.length > 0 && { featuredProjectIds: featuredIds }),
+    coverLetter: {
+      recipientOrg: company,
+      date,
+      subjectRole: subjectRole || role,
+      paragraphs,
+    },
+  };
+  return JSON.stringify(obj, null, 2);
 }
 
 export function NewApplicationPage() {
@@ -67,7 +60,7 @@ export function NewApplicationPage() {
   const addParagraph = () => setParagraphs((prev) => [...prev, '']);
   const removeParagraph = (i: number) => setParagraphs((prev) => prev.filter((_, idx) => idx !== i));
 
-  const code = generateCode(company, role, url, date, subjectRole, featuredIds, paragraphs.filter(Boolean));
+  const code = generateJson(company, role, url, date, subjectRole, featuredIds, paragraphs.filter(Boolean));
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(code);
@@ -75,7 +68,7 @@ export function NewApplicationPage() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const filename = `${toId(company) || 'company'}.ts`;
+  const filename = `${toId(company) || 'company'}.json`;
 
   return (
     <div className="new-app-page">
@@ -186,7 +179,7 @@ export function NewApplicationPage() {
           </div>
           <pre className="nap-code">{code}</pre>
           <p className="nap-hint">
-            Save as <code>src/data/applications/{filename}</code>, then import and add it to{' '}
+            Save as <code>src/data/applications/{filename}</code>, then add the import to{' '}
             <code>src/data/applications/index.ts</code>.
           </p>
         </div>
