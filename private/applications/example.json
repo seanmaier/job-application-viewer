@@ -1,0 +1,18 @@
+{
+  "id": "example-company",
+  "company": "Example Company",
+  "role": "Software Engineer",
+  "status": "drafting",
+  "url": "https://example.com/careers/software-engineer",
+  "featuredProjectIds": ["example-project"],
+  "coverLetter": {
+    "recipientOrg": "Example Company GmbH",
+    "date": "January 1, 2026",
+    "subjectRole": "Software Engineer",
+    "paragraphs": [
+      "Opening paragraph explaining what drew you to this company.",
+      "Middle paragraph connecting your background to the role.",
+      "Closing paragraph inviting further conversation."
+    ]
+  }
+}

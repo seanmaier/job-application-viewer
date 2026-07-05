@@ -2,6 +2,19 @@
 
 This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
 
+## Personal data
+
+Your profile and application data live in `private/`, which is gitignored — it's never
+committed. To run the app locally:
+
+```
+cp private/profile.example.json private/profile.json
+cp private/applications/example.json private/applications/<your-application-id>.json
+```
+
+Fill in your own details, then register the application file in
+`src/data/applications/index.ts`, importing it via the `@private/applications/...` alias.
+
 Currently, two official plugins are available:
 
 - [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)

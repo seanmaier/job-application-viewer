@@ -12,6 +12,12 @@ dist
 dist-ssr
 *.local
 
+# Personal data — real files stay local only, example templates are committed
+/private/*.json
+!/private/profile.example.json
+/private/applications/*.json
+!/private/applications/example.json
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

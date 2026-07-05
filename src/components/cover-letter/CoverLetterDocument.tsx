@@ -34,7 +34,7 @@ export function CoverLetterDocument({ profile, application }: Props) {
           <br />
           {cl.recipientOrg}
           <br />
-          REDACTED
+          {profile.city}
         </div>
       </div>
 

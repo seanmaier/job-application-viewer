@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { applications } from '../data/applications';
 import type { Profile } from '../types';
-import profileData from '../data/profile.json';
+import profileData from '@private/profile.json';
 
 const profile = profileData as Profile;
 import { CVDocument } from '../components/cv/CVDocument';
@@ -71,7 +71,7 @@ function ApplicationContent({ staticApp }: { staticApp: ApplicationConfig }) {
           </button>
           <button className="app-print-btn" onClick={() => {
             const prev = document.title;
-            document.title = `${app.company} - ${app.role} · REDACTED`;
+            document.title = `${app.company} - ${app.role} · ${profile.name}`;
             window.print();
             document.title = prev;
           }}>

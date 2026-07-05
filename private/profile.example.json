@@ -1,0 +1,44 @@
+{
+  "name": "Jane Doe",
+  "role": "Software Engineer · Backend & Distributed Systems",
+  "email": "jane.doe@example.com",
+  "website": "janedoe.example",
+  "github": "github.com/janedoe",
+  "linkedin": "linkedin.com/in/janedoe",
+  "city": "Berlin, Germany",
+  "summary": "One or two sentences summarizing your background and what kind of engineering work you're drawn to.",
+  "experience": [
+    {
+      "title": "Software Engineer",
+      "company": "Example Corp",
+      "dates": "Jan 2024 – Present",
+      "bullets": [
+        "A concrete accomplishment with technologies and scope",
+        "Another bullet describing responsibilities or impact"
+      ]
+    }
+  ],
+  "projects": [
+    {
+      "id": "example-project",
+      "name": "Example Project",
+      "stack": "TypeScript · React · PostgreSQL",
+      "description": "Short description of what the project does and why it's notable.",
+      "link": "https://github.com/janedoe/example-project",
+      "linkLabel": "github ↗"
+    }
+  ],
+  "education": {
+    "degree": "Computer Science",
+    "school": "Example University",
+    "dates": "2020 – 2024"
+  },
+  "skillGroups": [
+    { "label": "Languages", "skills": ["TypeScript", "Python"] },
+    { "label": "Frameworks", "skills": ["React", "FastAPI"] }
+  ],
+  "languages": [
+    { "name": "English", "level": "Fluent" }
+  ],
+  "interests": ["Reading", "Hiking"]
+}

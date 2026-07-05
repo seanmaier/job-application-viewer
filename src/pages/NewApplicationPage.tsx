@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import type { Profile } from '../types';
-import profileData from '../data/profile.json';
+import profileData from '@private/profile.json';
 import '../styles/new-application-page.css';
 
 const profile = profileData as Profile;

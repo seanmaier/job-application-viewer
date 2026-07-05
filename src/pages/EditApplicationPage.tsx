@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { applications } from '../data/applications';
 import type { ApplicationConfig, Profile } from '../types';
-import profileData from '../data/profile.json';
+import profileData from '@private/profile.json';
 import { useApplication } from '../hooks/useApplication';
 
 const profile = profileData as Profile;
