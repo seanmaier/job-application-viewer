@@ -1,0 +1,108 @@
+.app-page {
+  min-height: 100vh;
+  background: var(--bg);
+}
+
+/* ── Toolbar ────────────────────────────────────────── */
+.app-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--ink);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  height: 52px;
+  gap: 16px;
+}
+
+.app-back {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-3);
+  text-decoration: none;
+  flex-shrink: 0;
+}
+
+.app-back:hover { color: var(--surface); }
+
+.app-toolbar-center {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  overflow: hidden;
+}
+
+.app-company {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--surface);
+  white-space: nowrap;
+}
+
+.app-role {
+  font-size: 12px;
+  color: var(--ink-3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.app-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.app-status-select {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 4px;
+  padding: 5px 10px;
+  cursor: pointer;
+  min-width: 140px;
+}
+
+.app-status-select option { color: var(--ink); background: var(--surface); }
+
+.app-print-btn {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  background: transparent;
+  color: var(--accent-bg);
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  padding: 5px 14px;
+  cursor: pointer;
+  letter-spacing: 0.04em;
+}
+
+.app-print-btn:hover { background: var(--accent); color: var(--surface); }
+
+/* ── Document area ──────────────────────────────────── */
+.app-documents {
+  padding: 40px 20px 80px;
+}
+
+/* ── Not found ──────────────────────────────────────── */
+.app-not-found {
+  padding: 80px 40px;
+  font-family: var(--font-mono);
+  color: var(--ink-2);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.app-not-found a { color: var(--accent); }
+
+/* ── Print ──────────────────────────────────────────── */
+@media print {
+  .app-toolbar { display: none; }
+  .app-documents { padding: 0; }
+  .app-page { background: white; }
+}
