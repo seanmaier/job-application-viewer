@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { applications } from '../data/applications';
+import { getLocalApplications } from '../utils/localApplications';
 import { getProfile } from '../data/profiles';
 import { CVDocument } from '../components/cv/CVDocument';
 import { CoverLetterDocument } from '../components/cover-letter/CoverLetterDocument';
@@ -16,7 +17,7 @@ const LANG_FLAGS: Record<string, string> = { en: '🇬🇧', de: '🇩🇪' };
 
 export function ApplicationPage() {
   const { id } = useParams<{ id: string }>();
-  const staticApp = id ? applications.find((a) => a.id === id) : undefined;
+  const staticApp = id ? [...applications, ...getLocalApplications()].find((a) => a.id === id) : undefined;
 
   if (!staticApp) {
     return (

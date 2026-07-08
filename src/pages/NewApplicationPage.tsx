@@ -1,19 +1,21 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import type { AppLanguage } from '../types';
+import { Link, useNavigate } from 'react-router-dom';
+import type { AppLanguage, ApplicationConfig } from '../types';
 import { getProfile } from '../data/profiles';
+import { saveLocalApplication } from '../utils/localApplications';
 import {
   nafSection, nafRow, nafLabel, nafOptional, nafInput, nafTextarea,
   nafCheckboxes, nafCheckboxLabel, nafCheckboxInput, nafParagraphRow, nafRemoveBtn, nafAddBtn,
   newAppPage, newAppHeader, newAppBack, newAppTitle, newAppBody, newAppForm,
   newAppPreview, napHeader, napFilename, napCopyBtn, napCopyBtnCopied, napCode, napHint, napHintCode,
+  editSaveBtn,
 } from '../styles/formStyles';
 
 function toId(company: string): string {
   return company.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'new-app';
 }
 
-function generateJson(
+function buildConfig(
   company: string,
   role: string,
   url: string,
@@ -23,10 +25,9 @@ function generateJson(
   date: string,
   subjectRole: string,
   paragraphs: string[],
-): string {
-  const id = toId(company);
-  const obj: Record<string, unknown> = {
-    id,
+): ApplicationConfig {
+  return {
+    id: toId(company),
     company,
     role,
     status: 'drafting',
@@ -42,10 +43,11 @@ function generateJson(
       },
     }),
   };
-  return JSON.stringify(obj, null, 2);
 }
 
 export function NewApplicationPage() {
+  const navigate = useNavigate();
+
   const [company, setCompany] = useState('');
   const [role, setRole] = useState('');
   const [url, setUrl] = useState('');
@@ -72,15 +74,23 @@ export function NewApplicationPage() {
   const addParagraph = () => setParagraphs((prev) => [...prev, '']);
   const removeParagraph = (i: number) => setParagraphs((prev) => prev.filter((_, idx) => idx !== i));
 
-  const code = generateJson(company, role, url, language, featuredIds, hasCoverLetter, date, subjectRole, paragraphs.filter(Boolean));
+  const config = buildConfig(company, role, url, language, featuredIds, hasCoverLetter, date, subjectRole, paragraphs.filter(Boolean));
+  const code = JSON.stringify(config, null, 2);
+  const filename = `${config.id || 'company'}.json`;
+
+  const canSave = company.trim() !== '' && role.trim() !== '';
+
+  const handleSave = () => {
+    if (!canSave) return;
+    saveLocalApplication(config);
+    navigate(`/application/${config.id}`);
+  };
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(code);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
-
-  const filename = `${toId(company) || 'company'}.json`;
 
   return (
     <div className={newAppPage}>
@@ -206,22 +216,32 @@ export function NewApplicationPage() {
               </div>
             </>
           )}
+
+          <button
+            className={editSaveBtn}
+            style={{ opacity: canSave ? 1 : 0.4, cursor: canSave ? 'pointer' : 'not-allowed' }}
+            onClick={handleSave}
+            disabled={!canSave}
+          >
+            Save application
+          </button>
         </div>
 
         {/* ── Code preview ── */}
         <div className={newAppPreview}>
           <div className={napHeader}>
-            <span className={napFilename}>src/data/applications/{filename}</span>
+            <span className={napFilename}>private/applications/{filename}</span>
             <button
               className={copied ? napCopyBtnCopied : napCopyBtn}
               onClick={handleCopy}
             >
-              {copied ? 'Copied!' : 'Copy'}
+              {copied ? 'Copied!' : 'Copy JSON'}
             </button>
           </div>
           <pre className={napCode}>{code}</pre>
           <p className={napHint}>
-            Save as <code className={napHintCode}>private/applications/{filename}</code>, then add the import to{' '}
+            To commit permanently, save as{' '}
+            <code className={napHintCode}>private/applications/{filename}</code> and add the import to{' '}
             <code className={napHintCode}>src/data/applications/index.ts</code>.
           </p>
         </div>

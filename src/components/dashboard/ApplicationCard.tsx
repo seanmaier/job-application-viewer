@@ -7,15 +7,26 @@ const LANG_FLAGS: Record<string, string> = { en: '🇬🇧', de: '🇩🇪' };
 
 interface Props {
   application: ApplicationConfig;
+  onDelete?: () => void;
 }
 
-export function ApplicationCard({ application }: Props) {
+export function ApplicationCard({ application, onDelete }: Props) {
   const [status] = useApplicationStatus(application.id, application.status);
   const langFlag = LANG_FLAGS[application.language ?? 'en'];
 
   return (
+    <div className="relative group">
+      {onDelete && (
+        <button
+          className="absolute top-2 right-2 z-10 text-[11px] text-[color:var(--ink-3)] bg-transparent border-none cursor-pointer p-1 rounded opacity-0 group-hover:opacity-100 transition-opacity hover:text-[color:var(--status-rejected)]"
+          onClick={(e) => { e.preventDefault(); onDelete(); }}
+          title="Delete"
+        >
+          ✕
+        </button>
+      )}
     <Link
-      className="group bg-[color:var(--surface)] border-[1.5px] border-[color:var(--rule)] rounded-lg pt-[22px] px-6 pb-[18px] no-underline flex flex-col gap-1 transition-[border-color,box-shadow] duration-150 cursor-pointer hover:border-[color:var(--accent)] hover:shadow-[0_4px_16px_rgba(37,99,235,0.10)]"
+      className="bg-[color:var(--surface)] border-[1.5px] border-[color:var(--rule)] rounded-lg pt-[22px] px-6 pb-[18px] no-underline flex flex-col gap-1 transition-[border-color,box-shadow] duration-150 cursor-pointer hover:border-[color:var(--accent)] hover:shadow-[0_4px_16px_rgba(37,99,235,0.10)]"
       to={`/application/${application.id}`}
     >
       <div className="flex justify-between items-start gap-2 mb-0.5">
@@ -36,5 +47,6 @@ export function ApplicationCard({ application }: Props) {
       )}
       <div className="[font-family:var(--font-mono)] text-[10.5px] text-[color:var(--accent)] mt-3 opacity-0 transition-opacity duration-150 group-hover:opacity-100">Open →</div>
     </Link>
+    </div>
   );
 }

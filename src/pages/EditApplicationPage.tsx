@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { applications } from '../data/applications';
+import { getLocalApplications } from '../utils/localApplications';
 import type { ApplicationConfig, AppLanguage } from '../types';
 import { getProfile } from '../data/profiles';
 import { useApplication } from '../hooks/useApplication';
@@ -318,7 +319,7 @@ function EditContent({ staticApp }: { staticApp: ApplicationConfig }) {
 
 export function EditApplicationPage() {
   const { id } = useParams<{ id: string }>();
-  const staticApp = id ? applications.find((a) => a.id === id) : undefined;
+  const staticApp = id ? [...applications, ...getLocalApplications()].find((a) => a.id === id) : undefined;
 
   if (!staticApp) {
     return (
