@@ -3,12 +3,15 @@ import { useApplicationStatus } from '../../hooks/useApplicationStatus';
 import { STATUS_LABELS, STATUS_COLORS } from '../../utils/status';
 import type { ApplicationConfig } from '../../types';
 
+const LANG_FLAGS: Record<string, string> = { en: '🇬🇧', de: '🇩🇪' };
+
 interface Props {
   application: ApplicationConfig;
 }
 
 export function ApplicationCard({ application }: Props) {
   const [status] = useApplicationStatus(application.id, application.status);
+  const langFlag = LANG_FLAGS[application.language ?? 'en'];
 
   return (
     <Link
@@ -16,7 +19,10 @@ export function ApplicationCard({ application }: Props) {
       to={`/application/${application.id}`}
     >
       <div className="flex justify-between items-start gap-2 mb-0.5">
-        <div className="text-[15px] font-bold text-[color:var(--ink)] tracking-[-0.2px]">{application.company}</div>
+        <div className="flex items-center gap-1.5">
+          <div className="text-[15px] font-bold text-[color:var(--ink)] tracking-[-0.2px]">{application.company}</div>
+          <span className="text-[12px] leading-none" title={application.language ?? 'en'}>{langFlag}</span>
+        </div>
         <span
           className="[font-family:var(--font-mono)] text-[10px] py-0.5 px-2 rounded-full border whitespace-nowrap shrink-0"
           style={{ color: STATUS_COLORS[status], borderColor: STATUS_COLORS[status] }}

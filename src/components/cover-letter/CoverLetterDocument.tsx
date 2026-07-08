@@ -1,9 +1,9 @@
-import type { ApplicationConfig, Profile } from '../../types';
+import type { ApplicationConfig, CoverLetter, Profile } from '../../types';
 import '../../styles/document.css';
 
 interface Props {
   profile: Profile;
-  application: ApplicationConfig;
+  application: Omit<ApplicationConfig, 'coverLetter'> & { coverLetter: CoverLetter };
 }
 
 export function CoverLetterDocument({ profile, application }: Props) {

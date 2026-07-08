@@ -68,14 +68,17 @@ export interface CoverLetter {
   paragraphs: string[];
 }
 
+export type AppLanguage = 'en' | 'de';
+
 export interface ApplicationConfig {
   id: string;
   company: string;
   role: string;
   status: ApplicationStatus;
+  language?: AppLanguage;
   appliedDate?: string;
   url?: string;
   summaryOverride?: string;
   featuredProjectIds?: string[];
-  coverLetter: CoverLetter;
+  coverLetter?: CoverLetter;
 }

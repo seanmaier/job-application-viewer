@@ -1,15 +1,13 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import type { Profile } from '../types';
-import profileData from '@private/profile.json';
+import type { AppLanguage } from '../types';
+import { getProfile } from '../data/profiles';
 import {
   nafSection, nafRow, nafLabel, nafOptional, nafInput, nafTextarea,
   nafCheckboxes, nafCheckboxLabel, nafCheckboxInput, nafParagraphRow, nafRemoveBtn, nafAddBtn,
   newAppPage, newAppHeader, newAppBack, newAppTitle, newAppBody, newAppForm,
   newAppPreview, napHeader, napFilename, napCopyBtn, napCopyBtnCopied, napCode, napHint, napHintCode,
 } from '../styles/formStyles';
-
-const profile = profileData as Profile;
 
 function toId(company: string): string {
   return company.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'new-app';
@@ -19,9 +17,11 @@ function generateJson(
   company: string,
   role: string,
   url: string,
+  language: AppLanguage,
+  featuredIds: string[],
+  hasCoverLetter: boolean,
   date: string,
   subjectRole: string,
-  featuredIds: string[],
   paragraphs: string[],
 ): string {
   const id = toId(company);
@@ -30,14 +30,17 @@ function generateJson(
     company,
     role,
     status: 'drafting',
+    language,
     ...(url && { url }),
     ...(featuredIds.length > 0 && { featuredProjectIds: featuredIds }),
-    coverLetter: {
-      recipientOrg: company,
-      date,
-      subjectRole: subjectRole || role,
-      paragraphs,
-    },
+    ...(hasCoverLetter && {
+      coverLetter: {
+        recipientOrg: company,
+        date,
+        subjectRole: subjectRole || role,
+        paragraphs,
+      },
+    }),
   };
   return JSON.stringify(obj, null, 2);
 }
@@ -46,11 +49,15 @@ export function NewApplicationPage() {
   const [company, setCompany] = useState('');
   const [role, setRole] = useState('');
   const [url, setUrl] = useState('');
-  const [date, setDate] = useState('July 5, 2026');
+  const [language, setLanguage] = useState<AppLanguage>('en');
+  const [hasCoverLetter, setHasCoverLetter] = useState(false);
+  const [date, setDate] = useState('July 8, 2026');
   const [subjectRole, setSubjectRole] = useState('');
-  const [featuredIds, setFeaturedIds] = useState<string[]>(profile.projects.map((p) => p.id));
   const [paragraphs, setParagraphs] = useState<string[]>(['']);
   const [copied, setCopied] = useState(false);
+
+  const profile = getProfile(language);
+  const [featuredIds, setFeaturedIds] = useState<string[]>(() => getProfile('en').projects.map((p) => p.id));
 
   const toggleProject = (id: string) => {
     setFeaturedIds((prev) =>
@@ -65,7 +72,7 @@ export function NewApplicationPage() {
   const addParagraph = () => setParagraphs((prev) => [...prev, '']);
   const removeParagraph = (i: number) => setParagraphs((prev) => prev.filter((_, idx) => idx !== i));
 
-  const code = generateJson(company, role, url, date, subjectRole, featuredIds, paragraphs.filter(Boolean));
+  const code = generateJson(company, role, url, language, featuredIds, hasCoverLetter, date, subjectRole, paragraphs.filter(Boolean));
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(code);
@@ -105,33 +112,26 @@ export function NewApplicationPage() {
             />
           </div>
 
-          <div className={nafSection}>
-            <span className={nafLabel}>Job posting URL <span className={nafOptional}>(optional)</span></span>
-            <input
-              className={nafInput}
-              placeholder="https://..."
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-            />
-          </div>
-
           <div className={nafRow}>
             <div className={nafSection}>
-              <span className={nafLabel}>Cover letter date</span>
+              <span className={nafLabel}>Job posting URL <span className={nafOptional}>(optional)</span></span>
               <input
                 className={nafInput}
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
+                placeholder="https://..."
+                value={url}
+                onChange={(e) => setUrl(e.target.value)}
               />
             </div>
             <div className={nafSection}>
-              <span className={nafLabel}>Subject role <span className={nafOptional}>(if different)</span></span>
-              <input
+              <span className={nafLabel}>Language</span>
+              <select
                 className={nafInput}
-                placeholder="defaults to Role"
-                value={subjectRole}
-                onChange={(e) => setSubjectRole(e.target.value)}
-              />
+                value={language}
+                onChange={(e) => setLanguage(e.target.value as AppLanguage)}
+              >
+                <option value="en">English 🇬🇧</option>
+                <option value="de">Deutsch 🇩🇪</option>
+              </select>
             </div>
           </div>
 
@@ -153,23 +153,59 @@ export function NewApplicationPage() {
           </div>
 
           <div className={nafSection}>
-            <span className={nafLabel}>Cover letter paragraphs</span>
-            {paragraphs.map((p, i) => (
-              <div className={nafParagraphRow} key={i}>
-                <textarea
-                  className={nafTextarea}
-                  placeholder={`Paragraph ${i + 1}`}
-                  value={p}
-                  rows={4}
-                  onChange={(e) => updateParagraph(i, e.target.value)}
-                />
-                {paragraphs.length > 1 && (
-                  <button className={nafRemoveBtn} onClick={() => removeParagraph(i)}>✕</button>
-                )}
-              </div>
-            ))}
-            <button className={nafAddBtn} onClick={addParagraph}>+ Add paragraph</button>
+            <label className={nafCheckboxLabel}>
+              <input
+                className={nafCheckboxInput}
+                type="checkbox"
+                checked={hasCoverLetter}
+                onChange={(e) => setHasCoverLetter(e.target.checked)}
+              />
+              Include cover letter
+            </label>
           </div>
+
+          {hasCoverLetter && (
+            <>
+              <div className={nafRow}>
+                <div className={nafSection}>
+                  <span className={nafLabel}>Cover letter date</span>
+                  <input
+                    className={nafInput}
+                    value={date}
+                    onChange={(e) => setDate(e.target.value)}
+                  />
+                </div>
+                <div className={nafSection}>
+                  <span className={nafLabel}>Subject role <span className={nafOptional}>(if different)</span></span>
+                  <input
+                    className={nafInput}
+                    placeholder="defaults to Role"
+                    value={subjectRole}
+                    onChange={(e) => setSubjectRole(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className={nafSection}>
+                <span className={nafLabel}>Cover letter paragraphs</span>
+                {paragraphs.map((p, i) => (
+                  <div className={nafParagraphRow} key={i}>
+                    <textarea
+                      className={nafTextarea}
+                      placeholder={`Paragraph ${i + 1}`}
+                      value={p}
+                      rows={4}
+                      onChange={(e) => updateParagraph(i, e.target.value)}
+                    />
+                    {paragraphs.length > 1 && (
+                      <button className={nafRemoveBtn} onClick={() => removeParagraph(i)}>✕</button>
+                    )}
+                  </div>
+                ))}
+                <button className={nafAddBtn} onClick={addParagraph}>+ Add paragraph</button>
+              </div>
+            </>
+          )}
         </div>
 
         {/* ── Code preview ── */}
@@ -185,7 +221,7 @@ export function NewApplicationPage() {
           </div>
           <pre className={napCode}>{code}</pre>
           <p className={napHint}>
-            Save as <code className={napHintCode}>src/data/applications/{filename}</code>, then add the import to{' '}
+            Save as <code className={napHintCode}>private/applications/{filename}</code>, then add the import to{' '}
             <code className={napHintCode}>src/data/applications/index.ts</code>.
           </p>
         </div>

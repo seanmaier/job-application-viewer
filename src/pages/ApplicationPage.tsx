@@ -1,10 +1,7 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { applications } from '../data/applications';
-import type { Profile } from '../types';
-import profileData from '@private/profile.json';
-
-const profile = profileData as Profile;
+import { getProfile } from '../data/profiles';
 import { CVDocument } from '../components/cv/CVDocument';
 import { CoverLetterDocument } from '../components/cover-letter/CoverLetterDocument';
 import { ExportModal } from '../components/ExportModal';
@@ -13,10 +10,10 @@ import { useApplication } from '../hooks/useApplication';
 import { useApplicationStatus } from '../hooks/useApplicationStatus';
 import { STATUS_LABELS, STATUS_COLORS } from '../utils/status';
 import { generateTextExport } from '../utils/textExport';
-import type { ApplicationConfig, ApplicationStatus } from '../types';
+import type { ApplicationConfig, ApplicationStatus, CoverLetter } from '../types';
 
-// Guard component — renders nothing until we confirm the app exists,
-// so inner hooks are never called conditionally.
+const LANG_FLAGS: Record<string, string> = { en: '🇬🇧', de: '🇩🇪' };
+
 export function ApplicationPage() {
   const { id } = useParams<{ id: string }>();
   const staticApp = id ? applications.find((a) => a.id === id) : undefined;
@@ -39,6 +36,9 @@ function ApplicationContent({ staticApp }: { staticApp: ApplicationConfig }) {
   const [exportOpen, setExportOpen] = useState(false);
   const [jsonOpen, setJsonOpen] = useState(false);
 
+  const profile = getProfile(app.language);
+  const langFlag = LANG_FLAGS[app.language ?? 'en'];
+
   return (
     <div className="min-h-screen bg-[color:var(--bg)] print:min-h-0 print:bg-white">
       <div className="sticky top-0 z-10 bg-[color:var(--ink)] flex items-center justify-between px-6 h-[52px] gap-4 print:hidden">
@@ -51,6 +51,7 @@ function ApplicationContent({ staticApp }: { staticApp: ApplicationConfig }) {
         <div className="flex items-center gap-2.5 overflow-hidden">
           <span className="text-[13px] font-semibold text-[color:var(--surface)] whitespace-nowrap">{app.company}</span>
           <span className="text-[12px] text-[color:var(--ink-3)] whitespace-nowrap overflow-hidden text-ellipsis">{app.role}</span>
+          <span className="text-[13px] leading-none" title={`Language: ${app.language ?? 'en'}`}>{langFlag}</span>
           {isDirty && (
             <span className="[font-family:var(--font-mono)] text-[9px] tracking-[0.1em] uppercase text-[color:var(--status-sent)] border border-[color:var(--status-sent)] rounded-[10px] py-px px-[7px] opacity-80">
               edited
@@ -102,7 +103,12 @@ function ApplicationContent({ staticApp }: { staticApp: ApplicationConfig }) {
 
       <div className="pt-10 px-5 pb-20 print:p-0">
         <CVDocument profile={profile} application={{ ...app, status }} />
-        <CoverLetterDocument profile={profile} application={{ ...app, status }} />
+        {app.coverLetter && (
+          <CoverLetterDocument
+            profile={profile}
+            application={{ ...app, status, coverLetter: app.coverLetter as CoverLetter }}
+          />
+        )}
       </div>
 
       {exportOpen && (

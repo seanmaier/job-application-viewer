@@ -55,11 +55,6 @@ export function JsonEditModal({ app, onSave, onClose }: Props) {
       setError('Missing required field: "role"');
       return;
     }
-    if (!cfg.coverLetter || typeof cfg.coverLetter !== 'object') {
-      setError('Missing required field: "coverLetter"');
-      return;
-    }
-
     onSave({ ...(cfg as StorableConfig), id: app.id });
     setSaved(true);
     setTimeout(() => {

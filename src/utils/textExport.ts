@@ -7,7 +7,7 @@ function section(title: string): string {
 }
 
 export function generateTextExport(profile: Profile, application: ApplicationConfig): string {
-  const { coverLetter: cl } = application;
+  const cl = application.coverLetter;
   const lines: string[] = [];
 
   // Header
@@ -16,7 +16,7 @@ export function generateTextExport(profile: Profile, application: ApplicationCon
   lines.push('');
   lines.push(`APPLYING TO: ${application.company}`);
   lines.push(`ROLE:        ${application.role}`);
-  lines.push(`DATE:        ${cl.date}`);
+  if (cl) lines.push(`DATE:        ${cl.date}`);
   if (application.url) lines.push(`POSTING:     ${application.url}`);
 
   // Contact
@@ -81,18 +81,20 @@ export function generateTextExport(profile: Profile, application: ApplicationCon
     lines.push(`${lang.name}: ${lang.level}`);
   });
 
-  // Cover letter
-  lines.push(section('COVER LETTER'));
-  lines.push(`Date: ${cl.date}`);
-  lines.push(`To:   ${cl.recipientName ?? 'Hiring Team'}, ${cl.recipientOrg}`);
-  lines.push('');
-  lines.push(`Re: Application — ${cl.subjectRole}`);
-  lines.push('');
-  cl.paragraphs.forEach((p) => {
-    lines.push(p);
+  // Cover letter (optional)
+  if (cl) {
+    lines.push(section('COVER LETTER'));
+    lines.push(`Date: ${cl.date}`);
+    lines.push(`To:   ${cl.recipientName ?? 'Hiring Team'}, ${cl.recipientOrg}`);
     lines.push('');
-  });
-  lines.push(`Sincerely,\n${profile.name}`);
+    lines.push(`Re: Application — ${cl.subjectRole}`);
+    lines.push('');
+    cl.paragraphs.forEach((p) => {
+      lines.push(p);
+      lines.push('');
+    });
+    lines.push(`Sincerely,\n${profile.name}`);
+  }
 
   return lines.join('\n');
 }
