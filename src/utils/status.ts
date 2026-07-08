@@ -1,13 +1,13 @@
 import type { ApplicationStatus } from '../types';
 
 export const STATUS_LABELS: Record<ApplicationStatus, string> = {
-  drafting:  '✏️  Drafting',
-  ready:     '✅  Ready to send',
-  sent:      '📤  Sent',
-  interview: '🗓  Interview',
-  offer:     '🎉  Offer',
-  rejected:  '✗  Rejected',
-  withdrawn: '—  Withdrawn',
+  drafting:  'drafting',
+  ready:     'ready',
+  sent:      'sent',
+  interview: 'interview',
+  offer:     'offer',
+  rejected:  'rejected',
+  withdrawn: 'withdrawn',
 };
 
 export const STATUS_COLORS: Record<ApplicationStatus, string> = {

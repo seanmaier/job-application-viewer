@@ -68,14 +68,19 @@ export interface CoverLetter {
   paragraphs: string[];
 }
 
+export type AppLanguage = 'en' | 'de';
+export type AppFont = 'sans' | 'serif' | 'mono';
+
 export interface ApplicationConfig {
   id: string;
   company: string;
   role: string;
   status: ApplicationStatus;
+  language?: AppLanguage;
+  font?: AppFont;
   appliedDate?: string;
   url?: string;
   summaryOverride?: string;
   featuredProjectIds?: string[];
-  coverLetter: CoverLetter;
+  coverLetter?: CoverLetter;
 }

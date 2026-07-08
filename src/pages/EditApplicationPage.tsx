@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { applications } from '../data/applications';
-import type { ApplicationConfig, Profile } from '../types';
-import profileData from '@private/profile.json';
+import { getLocalApplications } from '../utils/localApplications';
+import type { ApplicationConfig, AppFont, AppLanguage } from '../types';
+import { ALL_FONTS, FONT_LABELS } from '../utils/fonts';
+import { getProfile } from '../data/profiles';
 import { useApplication } from '../hooks/useApplication';
 import {
   nafSection, nafRow, nafLabel, nafOptional, nafInput, nafTextarea,
@@ -11,8 +13,6 @@ import {
   newAppPreview, napHeader, napFilename, napCode, napHint, napLiveLabel,
   editAppHeader, editAppCompany, editAppHeaderActions, editResetBtn, editSaveBtn, editSaveBtnSaved,
 } from '../styles/formStyles';
-
-const profile = profileData as Profile;
 
 function toId(company: string) {
   return company.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'new-app';
@@ -24,17 +24,21 @@ function generateJson(app: ApplicationConfig): string {
     company: app.company,
     role: app.role,
     status: app.status,
+    language: app.language ?? 'en',
+    font: app.font ?? 'sans',
     ...(app.url && { url: app.url }),
     ...(app.appliedDate && { appliedDate: app.appliedDate }),
     ...(app.summaryOverride && { summaryOverride: app.summaryOverride }),
     ...(app.featuredProjectIds?.length && { featuredProjectIds: app.featuredProjectIds }),
-    coverLetter: {
-      recipientOrg: app.coverLetter.recipientOrg,
-      ...(app.coverLetter.recipientName && { recipientName: app.coverLetter.recipientName }),
-      date: app.coverLetter.date,
-      subjectRole: app.coverLetter.subjectRole,
-      paragraphs: app.coverLetter.paragraphs,
-    },
+    ...(app.coverLetter && {
+      coverLetter: {
+        recipientOrg: app.coverLetter.recipientOrg,
+        ...(app.coverLetter.recipientName && { recipientName: app.coverLetter.recipientName }),
+        date: app.coverLetter.date,
+        subjectRole: app.coverLetter.subjectRole,
+        paragraphs: app.coverLetter.paragraphs,
+      },
+    }),
   };
   return JSON.stringify(obj, null, 2);
 }
@@ -44,19 +48,24 @@ function EditContent({ staticApp }: { staticApp: ApplicationConfig }) {
   const { app, save, reset, isDirty } = useApplication(staticApp);
   const navigate = useNavigate();
 
+  const profile = getProfile(app.language);
+
   const [company, setCompany] = useState(app.company);
   const [role, setRole] = useState(app.role);
   const [url, setUrl] = useState(app.url ?? '');
   const [appliedDate, setAppliedDate] = useState(app.appliedDate ?? '');
+  const [language, setLanguage] = useState<AppLanguage>(app.language ?? 'en');
+  const [font, setFont] = useState<AppFont>(app.font ?? 'sans');
   const [summaryOverride, setSummaryOverride] = useState(app.summaryOverride ?? '');
   const [featuredIds, setFeaturedIds] = useState<string[]>(
     app.featuredProjectIds ?? profile.projects.map((p) => p.id),
   );
-  const [date, setDate] = useState(app.coverLetter.date);
-  const [recipientOrg, setRecipientOrg] = useState(app.coverLetter.recipientOrg);
-  const [recipientName, setRecipientName] = useState(app.coverLetter.recipientName ?? '');
-  const [subjectRole, setSubjectRole] = useState(app.coverLetter.subjectRole);
-  const [paragraphs, setParagraphs] = useState<string[]>([...app.coverLetter.paragraphs]);
+  const [hasCoverLetter, setHasCoverLetter] = useState(!!app.coverLetter);
+  const [date, setDate] = useState(app.coverLetter?.date ?? '');
+  const [recipientOrg, setRecipientOrg] = useState(app.coverLetter?.recipientOrg ?? '');
+  const [recipientName, setRecipientName] = useState(app.coverLetter?.recipientName ?? '');
+  const [subjectRole, setSubjectRole] = useState(app.coverLetter?.subjectRole ?? '');
+  const [paragraphs, setParagraphs] = useState<string[]>([...(app.coverLetter?.paragraphs ?? [''])]);
 
   const [saved, setSaved] = useState(false);
 
@@ -76,17 +85,21 @@ function EditContent({ staticApp }: { staticApp: ApplicationConfig }) {
     id: staticApp.id,
     company,
     role,
+    language,
+    font,
     ...(url && { url }),
     ...(appliedDate && { appliedDate }),
     ...(summaryOverride && { summaryOverride }),
     featuredProjectIds: featuredIds,
-    coverLetter: {
-      recipientOrg,
-      ...(recipientName && { recipientName }),
-      date,
-      subjectRole: subjectRole || role,
-      paragraphs: paragraphs.filter(Boolean),
-    },
+    ...(hasCoverLetter && {
+      coverLetter: {
+        recipientOrg,
+        ...(recipientName && { recipientName }),
+        date,
+        subjectRole: subjectRole || role,
+        paragraphs: paragraphs.filter(Boolean),
+      },
+    }),
   });
 
   const handleSave = () => {
@@ -154,55 +167,39 @@ function EditContent({ staticApp }: { staticApp: ApplicationConfig }) {
 
           <div className={nafRow}>
             <div className={nafSection}>
-              <span className={nafLabel}>
-                Applied date <span className={nafOptional}>(optional)</span>
-              </span>
-              <input
+              <span className={nafLabel}>Language</span>
+              <select
                 className={nafInput}
-                placeholder="e.g. July 5, 2026"
-                value={appliedDate}
-                onChange={(e) => setAppliedDate(e.target.value)}
-              />
+                value={language}
+                onChange={(e) => setLanguage(e.target.value as AppLanguage)}
+              >
+                <option value="en">English 🇬🇧</option>
+                <option value="de">Deutsch 🇩🇪</option>
+              </select>
             </div>
             <div className={nafSection}>
-              <span className={nafLabel}>Cover letter date</span>
-              <input
+              <span className={nafLabel}>Font</span>
+              <select
                 className={nafInput}
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-              />
-            </div>
-          </div>
-
-          <div className={nafRow}>
-            <div className={nafSection}>
-              <span className={nafLabel}>Recipient org</span>
-              <input
-                className={nafInput}
-                value={recipientOrg}
-                onChange={(e) => setRecipientOrg(e.target.value)}
-              />
-            </div>
-            <div className={nafSection}>
-              <span className={nafLabel}>
-                Recipient name <span className={nafOptional}>(optional)</span>
-              </span>
-              <input
-                className={nafInput}
-                placeholder="defaults to Hiring Team"
-                value={recipientName}
-                onChange={(e) => setRecipientName(e.target.value)}
-              />
+                value={font}
+                onChange={(e) => setFont(e.target.value as AppFont)}
+              >
+                {ALL_FONTS.map((f) => (
+                  <option key={f} value={f}>{FONT_LABELS[f]}</option>
+                ))}
+              </select>
             </div>
           </div>
 
           <div className={nafSection}>
-            <span className={nafLabel}>Subject role</span>
+            <span className={nafLabel}>
+              Applied date <span className={nafOptional}>(optional)</span>
+            </span>
             <input
               className={nafInput}
-              placeholder="defaults to Role"
-              value={subjectRole}
-              onChange={(e) => setSubjectRole(e.target.value)}
+              placeholder="e.g. July 5, 2026"
+              value={appliedDate}
+              onChange={(e) => setAppliedDate(e.target.value)}
             />
           </div>
 
@@ -237,41 +234,99 @@ function EditContent({ staticApp }: { staticApp: ApplicationConfig }) {
           </div>
 
           <div className={nafSection}>
-            <span className={nafLabel}>Cover letter paragraphs</span>
-            {paragraphs.map((p, i) => (
-              <div className={nafParagraphRow} key={i}>
-                <textarea
-                  className={nafTextarea}
-                  placeholder={`Paragraph ${i + 1}`}
-                  value={p}
-                  rows={4}
-                  onChange={(e) => updateParagraph(i, e.target.value)}
-                />
-                {paragraphs.length > 1 && (
-                  <button className={nafRemoveBtn} onClick={() => removeParagraph(i)}>
-                    ✕
-                  </button>
-                )}
-              </div>
-            ))}
-            <button className={nafAddBtn} onClick={addParagraph}>
-              + Add paragraph
-            </button>
+            <label className={nafCheckboxLabel}>
+              <input
+                className={nafCheckboxInput}
+                type="checkbox"
+                checked={hasCoverLetter}
+                onChange={(e) => setHasCoverLetter(e.target.checked)}
+              />
+              Include cover letter
+            </label>
           </div>
+
+          {hasCoverLetter && (
+            <>
+              <div className={nafRow}>
+                <div className={nafSection}>
+                  <span className={nafLabel}>Cover letter date</span>
+                  <input
+                    className={nafInput}
+                    value={date}
+                    onChange={(e) => setDate(e.target.value)}
+                  />
+                </div>
+                <div className={nafSection}>
+                  <span className={nafLabel}>Subject role</span>
+                  <input
+                    className={nafInput}
+                    placeholder="defaults to Role"
+                    value={subjectRole}
+                    onChange={(e) => setSubjectRole(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className={nafRow}>
+                <div className={nafSection}>
+                  <span className={nafLabel}>Recipient org</span>
+                  <input
+                    className={nafInput}
+                    value={recipientOrg}
+                    onChange={(e) => setRecipientOrg(e.target.value)}
+                  />
+                </div>
+                <div className={nafSection}>
+                  <span className={nafLabel}>
+                    Recipient name <span className={nafOptional}>(optional)</span>
+                  </span>
+                  <input
+                    className={nafInput}
+                    placeholder="defaults to Hiring Team"
+                    value={recipientName}
+                    onChange={(e) => setRecipientName(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className={nafSection}>
+                <span className={nafLabel}>Cover letter paragraphs</span>
+                {paragraphs.map((p, i) => (
+                  <div className={nafParagraphRow} key={i}>
+                    <textarea
+                      className={nafTextarea}
+                      placeholder={`Paragraph ${i + 1}`}
+                      value={p}
+                      rows={4}
+                      onChange={(e) => updateParagraph(i, e.target.value)}
+                    />
+                    {paragraphs.length > 1 && (
+                      <button className={nafRemoveBtn} onClick={() => removeParagraph(i)}>
+                        ✕
+                      </button>
+                    )}
+                  </div>
+                ))}
+                <button className={nafAddBtn} onClick={addParagraph}>
+                  + Add paragraph
+                </button>
+              </div>
+            </>
+          )}
         </div>
 
         {/* ── Code preview ── */}
         <div className={newAppPreview}>
           <div className={napHeader}>
             <span className={napFilename}>
-              src/data/applications/{toId(company)}.json
+              private/applications/{toId(company)}.json
             </span>
             <span className={napLiveLabel}>live preview</span>
           </div>
           <pre className={napCode}>{generateJson(previewApp)}</pre>
           <p className={napHint}>
             Changes are saved to your browser. Copy the JSON above to update{' '}
-            <code>src/data/applications/{toId(company)}.json</code> permanently.
+            <code>private/applications/{toId(company)}.json</code> permanently.
           </p>
         </div>
       </div>
@@ -281,7 +336,7 @@ function EditContent({ staticApp }: { staticApp: ApplicationConfig }) {
 
 export function EditApplicationPage() {
   const { id } = useParams<{ id: string }>();
-  const staticApp = id ? applications.find((a) => a.id === id) : undefined;
+  const staticApp = id ? [...applications, ...getLocalApplications()].find((a) => a.id === id) : undefined;
 
   if (!staticApp) {
     return (
