@@ -69,6 +69,7 @@ export interface CoverLetter {
 }
 
 export type AppLanguage = 'en' | 'de';
+export type AppFont = 'sans' | 'serif' | 'mono';
 
 export interface ApplicationConfig {
   id: string;
@@ -76,6 +77,7 @@ export interface ApplicationConfig {
   role: string;
   status: ApplicationStatus;
   language?: AppLanguage;
+  font?: AppFont;
   appliedDate?: string;
   url?: string;
   summaryOverride?: string;

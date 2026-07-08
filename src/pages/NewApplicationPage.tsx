@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import type { AppLanguage, ApplicationConfig } from '../types';
+import type { AppFont, AppLanguage, ApplicationConfig } from '../types';
+import { ALL_FONTS, FONT_LABELS } from '../utils/fonts';
 import { getProfile } from '../data/profiles';
 import { saveLocalApplication } from '../utils/localApplications';
 import {
@@ -20,6 +21,7 @@ function buildConfig(
   role: string,
   url: string,
   language: AppLanguage,
+  font: AppFont,
   featuredIds: string[],
   hasCoverLetter: boolean,
   date: string,
@@ -32,6 +34,7 @@ function buildConfig(
     role,
     status: 'drafting',
     language,
+    font,
     ...(url && { url }),
     ...(featuredIds.length > 0 && { featuredProjectIds: featuredIds }),
     ...(hasCoverLetter && {
@@ -52,6 +55,7 @@ export function NewApplicationPage() {
   const [role, setRole] = useState('');
   const [url, setUrl] = useState('');
   const [language, setLanguage] = useState<AppLanguage>('en');
+  const [font, setFont] = useState<AppFont>('sans');
   const [hasCoverLetter, setHasCoverLetter] = useState(false);
   const [date, setDate] = useState('July 8, 2026');
   const [subjectRole, setSubjectRole] = useState('');
@@ -74,7 +78,7 @@ export function NewApplicationPage() {
   const addParagraph = () => setParagraphs((prev) => [...prev, '']);
   const removeParagraph = (i: number) => setParagraphs((prev) => prev.filter((_, idx) => idx !== i));
 
-  const config = buildConfig(company, role, url, language, featuredIds, hasCoverLetter, date, subjectRole, paragraphs.filter(Boolean));
+  const config = buildConfig(company, role, url, language, font, featuredIds, hasCoverLetter, date, subjectRole, paragraphs.filter(Boolean));
   const code = JSON.stringify(config, null, 2);
   const filename = `${config.id || 'company'}.json`;
 
@@ -122,16 +126,17 @@ export function NewApplicationPage() {
             />
           </div>
 
+          <div className={nafSection}>
+            <span className={nafLabel}>Job posting URL <span className={nafOptional}>(optional)</span></span>
+            <input
+              className={nafInput}
+              placeholder="https://..."
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+            />
+          </div>
+
           <div className={nafRow}>
-            <div className={nafSection}>
-              <span className={nafLabel}>Job posting URL <span className={nafOptional}>(optional)</span></span>
-              <input
-                className={nafInput}
-                placeholder="https://..."
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-              />
-            </div>
             <div className={nafSection}>
               <span className={nafLabel}>Language</span>
               <select
@@ -141,6 +146,18 @@ export function NewApplicationPage() {
               >
                 <option value="en">English 🇬🇧</option>
                 <option value="de">Deutsch 🇩🇪</option>
+              </select>
+            </div>
+            <div className={nafSection}>
+              <span className={nafLabel}>Font</span>
+              <select
+                className={nafInput}
+                value={font}
+                onChange={(e) => setFont(e.target.value as AppFont)}
+              >
+                {ALL_FONTS.map((f) => (
+                  <option key={f} value={f}>{FONT_LABELS[f]}</option>
+                ))}
               </select>
             </div>
           </div>

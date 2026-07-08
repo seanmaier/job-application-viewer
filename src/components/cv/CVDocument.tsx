@@ -1,4 +1,6 @@
+import type React from 'react';
 import type { ApplicationConfig, Profile } from '../../types';
+import { FONT_STACKS } from '../../utils/fonts';
 import '../../styles/document.css';
 
 interface Props {
@@ -13,8 +15,12 @@ export function CVDocument({ profile, application }: Props) {
     ? profile.projects.filter((p) => application.featuredProjectIds!.includes(p.id))
     : profile.projects;
 
+  const fontStyle = application.font
+    ? ({ '--font-sans': FONT_STACKS[application.font] } as React.CSSProperties)
+    : undefined;
+
   return (
-    <div className="doc-page">
+    <div className="doc-page" style={fontStyle}>
       <header className="cv-header">
         <div>
           <div className="cv-name">{profile.name}</div>

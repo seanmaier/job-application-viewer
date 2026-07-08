@@ -1,4 +1,6 @@
+import type React from 'react';
 import type { ApplicationConfig, CoverLetter, Profile } from '../../types';
+import { FONT_STACKS } from '../../utils/fonts';
 import '../../styles/document.css';
 
 interface Props {
@@ -8,9 +10,12 @@ interface Props {
 
 export function CoverLetterDocument({ profile, application }: Props) {
   const { coverLetter: cl } = application;
+  const fontStyle = application.font
+    ? ({ '--font-sans': FONT_STACKS[application.font] } as React.CSSProperties)
+    : undefined;
 
   return (
-    <div className="doc-page">
+    <div className="doc-page" style={fontStyle}>
       <header className="cl-header">
         <div>
           <div className="cl-sender-name">{profile.name}</div>

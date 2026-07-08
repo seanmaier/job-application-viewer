@@ -71,7 +71,7 @@ export function JsonEditModal({ app, onSave, onClose }: Props) {
       >
         <div className="flex justify-between items-center py-3 px-5 border-b border-white/7 shrink-0 gap-4">
           <div className="flex items-baseline gap-2.5 overflow-hidden">
-            <span className="[font-family:var(--font-mono)] text-[11px] font-semibold text-[color:var(--surface)] tracking-[0.08em] uppercase shrink-0">JSON Editor</span>
+            <span className="[font-family:var(--font-mono)] text-[11px] font-semibold text-[color:var(--ink-invert)] tracking-[0.08em] uppercase shrink-0">JSON Editor</span>
             <span className="[font-family:var(--font-mono)] text-[11px] text-[#4A5568] whitespace-nowrap overflow-hidden text-ellipsis">{app.company} · {app.role}</span>
           </div>
           <div className="flex items-center gap-2.5 shrink-0">
@@ -87,7 +87,7 @@ export function JsonEditModal({ app, onSave, onClose }: Props) {
               {saved ? 'Saved!' : 'Save'}
             </button>
             <button
-              className="text-[14px] bg-transparent border-none text-[#4A5568] cursor-pointer py-1 px-2 rounded leading-none hover:bg-white/7 hover:text-[color:var(--surface)]"
+              className="text-[14px] bg-transparent border-none text-[#4A5568] cursor-pointer py-1 px-2 rounded leading-none hover:bg-white/7 hover:text-[color:var(--ink-invert)]"
               onClick={onClose}
             >
               ✕

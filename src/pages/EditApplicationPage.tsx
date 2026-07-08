@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { applications } from '../data/applications';
 import { getLocalApplications } from '../utils/localApplications';
-import type { ApplicationConfig, AppLanguage } from '../types';
+import type { ApplicationConfig, AppFont, AppLanguage } from '../types';
+import { ALL_FONTS, FONT_LABELS } from '../utils/fonts';
 import { getProfile } from '../data/profiles';
 import { useApplication } from '../hooks/useApplication';
 import {
@@ -24,6 +25,7 @@ function generateJson(app: ApplicationConfig): string {
     role: app.role,
     status: app.status,
     language: app.language ?? 'en',
+    font: app.font ?? 'sans',
     ...(app.url && { url: app.url }),
     ...(app.appliedDate && { appliedDate: app.appliedDate }),
     ...(app.summaryOverride && { summaryOverride: app.summaryOverride }),
@@ -53,6 +55,7 @@ function EditContent({ staticApp }: { staticApp: ApplicationConfig }) {
   const [url, setUrl] = useState(app.url ?? '');
   const [appliedDate, setAppliedDate] = useState(app.appliedDate ?? '');
   const [language, setLanguage] = useState<AppLanguage>(app.language ?? 'en');
+  const [font, setFont] = useState<AppFont>(app.font ?? 'sans');
   const [summaryOverride, setSummaryOverride] = useState(app.summaryOverride ?? '');
   const [featuredIds, setFeaturedIds] = useState<string[]>(
     app.featuredProjectIds ?? profile.projects.map((p) => p.id),
@@ -83,6 +86,7 @@ function EditContent({ staticApp }: { staticApp: ApplicationConfig }) {
     company,
     role,
     language,
+    font,
     ...(url && { url }),
     ...(appliedDate && { appliedDate }),
     ...(summaryOverride && { summaryOverride }),
@@ -149,18 +153,19 @@ function EditContent({ staticApp }: { staticApp: ApplicationConfig }) {
             <input className={nafInput} value={role} onChange={(e) => setRole(e.target.value)} />
           </div>
 
+          <div className={nafSection}>
+            <span className={nafLabel}>
+              Job posting URL <span className={nafOptional}>(optional)</span>
+            </span>
+            <input
+              className={nafInput}
+              placeholder="https://..."
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+            />
+          </div>
+
           <div className={nafRow}>
-            <div className={nafSection}>
-              <span className={nafLabel}>
-                Job posting URL <span className={nafOptional}>(optional)</span>
-              </span>
-              <input
-                className={nafInput}
-                placeholder="https://..."
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-              />
-            </div>
             <div className={nafSection}>
               <span className={nafLabel}>Language</span>
               <select
@@ -170,6 +175,18 @@ function EditContent({ staticApp }: { staticApp: ApplicationConfig }) {
               >
                 <option value="en">English 🇬🇧</option>
                 <option value="de">Deutsch 🇩🇪</option>
+              </select>
+            </div>
+            <div className={nafSection}>
+              <span className={nafLabel}>Font</span>
+              <select
+                className={nafInput}
+                value={font}
+                onChange={(e) => setFont(e.target.value as AppFont)}
+              >
+                {ALL_FONTS.map((f) => (
+                  <option key={f} value={f}>{FONT_LABELS[f]}</option>
+                ))}
               </select>
             </div>
           </div>
