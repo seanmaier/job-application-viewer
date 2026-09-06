@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, useBlocker } from 'react-router-dom';
 import type {
   AppLanguage, ApplicationConfig, Profile,
   Experience, Project, SkillGroup, HumanLanguage,
@@ -8,6 +8,7 @@ import { getProfile, getStaticProfile } from '../data/profiles';
 import { setProfileOverride, clearProfileOverride, hasProfileOverride } from '../utils/profileStorage';
 import { CVDocument } from '../components/cv/CVDocument';
 import { AutoTextarea } from '../components/AutoTextarea';
+import { UnsavedChangesDialog } from '../components/UnsavedChangesDialog';
 import {
   nafSection, nafRow, nafLabel, nafOptional, nafInput, nafTextarea,
   nafParagraphRow, nafRemoveBtn, nafAddBtn, nafCheckboxLabel, nafCheckboxInput,
@@ -128,6 +129,22 @@ export function ProfilePage() {
     setProfile(getStaticProfile(lang));
     setIsDirty(false);
   };
+
+  // Save/Reset/language-switch all stay on this page, so unlike the
+  // application editor there's no same-tick "skip the blocker" case to
+  // handle — only actual route navigation (the Dashboard link, browser
+  // back/forward) should ever be intercepted while dirty.
+  const blocker = useBlocker(isDirty);
+
+  useEffect(() => {
+    if (!isDirty) return;
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = '';
+    };
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, [isDirty]);
 
   // ── render ────────────────────────────────────────────────────────────────
 
@@ -442,6 +459,17 @@ export function ProfilePage() {
           </div>
         </div>
       </div>
+
+      {blocker.state === 'blocked' && (
+        <UnsavedChangesDialog
+          onCancel={() => blocker.reset()}
+          onDiscard={() => blocker.proceed()}
+          onSave={() => {
+            setProfileOverride(lang, profile);
+            blocker.proceed();
+          }}
+        />
+      )}
     </div>
   );
 }
