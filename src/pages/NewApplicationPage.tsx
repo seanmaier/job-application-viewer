@@ -6,6 +6,7 @@ import { getProfile } from '../data/profiles';
 import { saveLocalApplication } from '../utils/localApplications';
 import { AutoTextarea } from '../components/AutoTextarea';
 import { ImportParagraphsControl } from '../components/ImportParagraphsControl';
+import { formatDateLong } from '../utils/date';
 import {
   nafSection, nafRow, nafLabel, nafOptional, nafInput, nafTextarea,
   nafCheckboxes, nafCheckboxLabel, nafCheckboxInput, nafParagraphRow, nafRemoveBtn, nafAddBtn,
@@ -59,7 +60,7 @@ export function NewApplicationPage() {
   const [language, setLanguage] = useState<AppLanguage>('en');
   const [font, setFont] = useState<AppFont>('sans');
   const [hasCoverLetter, setHasCoverLetter] = useState(false);
-  const [date, setDate] = useState('July 8, 2026');
+  const [dateISO, setDateISO] = useState('');
   const [subjectRole, setSubjectRole] = useState('');
   const [paragraphs, setParagraphs] = useState<string[]>(['']);
   const [copied, setCopied] = useState(false);
@@ -80,7 +81,7 @@ export function NewApplicationPage() {
   const addParagraph = () => setParagraphs((prev) => [...prev, '']);
   const removeParagraph = (i: number) => setParagraphs((prev) => prev.filter((_, idx) => idx !== i));
 
-  const config = buildConfig(company, role, url, language, font, featuredIds, hasCoverLetter, date, subjectRole, paragraphs.filter(Boolean));
+  const config = buildConfig(company, role, url, language, font, featuredIds, hasCoverLetter, formatDateLong(dateISO, language), subjectRole, paragraphs.filter(Boolean));
   const code = JSON.stringify(config, null, 2);
   const filename = `${config.id || 'company'}.json`;
 
@@ -199,9 +200,10 @@ export function NewApplicationPage() {
                 <div className={nafSection}>
                   <span className={nafLabel}>Cover letter date</span>
                   <input
+                    type="date"
                     className={nafInput}
-                    value={date}
-                    onChange={(e) => setDate(e.target.value)}
+                    value={dateISO}
+                    onChange={(e) => setDateISO(e.target.value)}
                   />
                 </div>
                 <div className={nafSection}>

@@ -10,6 +10,7 @@ import { CVDocument } from '../components/cv/CVDocument';
 import { CoverLetterDocument } from '../components/cover-letter/CoverLetterDocument';
 import { AutoTextarea } from '../components/AutoTextarea';
 import { ImportParagraphsControl } from '../components/ImportParagraphsControl';
+import { formatDateLong, parseToIsoDate } from '../utils/date';
 import {
   nafSection, nafRow, nafLabel, nafOptional, nafInput, nafTextarea,
   nafCheckboxes, nafCheckboxLabel, nafCheckboxInput, nafParagraphRow, nafRemoveBtn, nafAddBtn,
@@ -40,7 +41,7 @@ function EditContent({ staticApp }: { staticApp: ApplicationConfig }) {
     app.featuredProjectIds ?? profile.projects.map((p) => p.id),
   );
   const [hasCoverLetter, setHasCoverLetter] = useState(!!app.coverLetter);
-  const [date, setDate] = useState(app.coverLetter?.date ?? '');
+  const [dateISO, setDateISO] = useState(() => parseToIsoDate(app.coverLetter?.date ?? ''));
   const [recipientOrg, setRecipientOrg] = useState(app.coverLetter?.recipientOrg ?? '');
   const [recipientName, setRecipientName] = useState(app.coverLetter?.recipientName ?? '');
   const [subjectRole, setSubjectRole] = useState(app.coverLetter?.subjectRole ?? '');
@@ -74,7 +75,7 @@ function EditContent({ staticApp }: { staticApp: ApplicationConfig }) {
       coverLetter: {
         recipientOrg,
         ...(recipientName && { recipientName }),
-        date,
+        date: formatDateLong(dateISO, language),
         subjectRole: subjectRole || role,
         paragraphs: paragraphs.filter(Boolean),
       },
@@ -229,9 +230,10 @@ function EditContent({ staticApp }: { staticApp: ApplicationConfig }) {
                 <div className={nafSection}>
                   <span className={nafLabel}>Cover letter date</span>
                   <input
+                    type="date"
                     className={nafInput}
-                    value={date}
-                    onChange={(e) => setDate(e.target.value)}
+                    value={dateISO}
+                    onChange={(e) => setDateISO(e.target.value)}
                   />
                 </div>
                 <div className={nafSection}>
