@@ -304,6 +304,7 @@ function EditContent({ staticApp }: { staticApp: ApplicationConfig }) {
                 <CoverLetterDocument
                   profile={profile}
                   application={{ ...previewApp, coverLetter: previewApp.coverLetter as CoverLetter }}
+                  paginate
                 />
               )}
             </div>

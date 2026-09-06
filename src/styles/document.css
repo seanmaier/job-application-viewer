@@ -17,6 +17,7 @@
   --surface:    #FFFFFF;
   --rule:       #DDE3EE;
 
+  position: relative;
   font-family: var(--font-sans);
   background: var(--surface);
   color: var(--ink);
@@ -24,6 +25,31 @@
   margin: 0 auto 48px;
   padding: 52px 52px 56px;
   box-shadow: 0 2px 20px rgba(20, 28, 46, 0.10);
+}
+
+/* ── Off-screen measuring clone for JS-based print-page preview ── */
+.doc-page--measuring {
+  position: absolute;
+  visibility: hidden;
+  pointer-events: none;
+  top: 0;
+  left: -99999px;
+}
+
+/* ── Page-break indicator shown in the live preview only ── */
+.doc-page-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  background: var(--bg);
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  padding: 2px 7px;
 }
 
 /* ── Section label ──────────────────────────────────── */
@@ -300,7 +326,7 @@
   padding-top: 16px;
 }
 
-.cl-body p {
+.cl-paragraph {
   font-size: 13px;
   color: var(--ink);
   line-height: 1.78;
@@ -350,9 +376,15 @@
   .project-entry,
   .cl-header,
   .cl-meta,
-  .cl-body p,
+  .cl-paragraph,
   .cl-sign {
     break-inside: avoid;
     page-break-inside: avoid;
+  }
+
+  /* Live-preview-only pagination aids never appear in the real print output */
+  .doc-page--measuring,
+  .doc-page-badge {
+    display: none;
   }
 }
