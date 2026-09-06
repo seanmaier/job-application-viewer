@@ -438,7 +438,7 @@ export function ProfilePage() {
         {/* Preview */}
         <div className="bg-[#1a2236] overflow-y-auto">
           <div className="py-8 px-5">
-            <CVDocument profile={profile} application={PREVIEW_APP} />
+            <CVDocument profile={profile} application={{ ...PREVIEW_APP, language: lang }} />
           </div>
         </div>
       </div>
