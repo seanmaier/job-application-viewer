@@ -125,6 +125,7 @@ function ApplicationContent({ staticApp }: { staticApp: ApplicationConfig }) {
           <CoverLetterDocument
             profile={profile}
             application={{ ...app, status, coverLetter: app.coverLetter as CoverLetter }}
+            paginate
           />
         )}
       </div>
