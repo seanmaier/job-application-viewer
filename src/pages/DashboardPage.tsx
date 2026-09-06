@@ -27,8 +27,6 @@ export function DashboardPage() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
 
   const [search, setSearch] = useState('');
-  const [companyFilter, setCompanyFilter] = useState('');
-  const [roleFilter, setRoleFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState<ApplicationStatus | ''>('');
   const [sortField, setSortField] = useState<SortField | null>(null);
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
@@ -65,14 +63,9 @@ export function DashboardPage() {
 
   const anySelected = selected.size > 0;
 
-  const companies = [...new Set(allApps.map((a) => a.company))].sort();
-  const roles = [...new Set(allApps.map((a) => a.role))].sort();
-
-  const hasActiveFilter = !!(search || companyFilter || roleFilter || statusFilter);
+  const hasActiveFilter = !!(search || statusFilter);
   const clearFilters = () => {
     setSearch('');
-    setCompanyFilter('');
-    setRoleFilter('');
     setStatusFilter('');
   };
 
@@ -91,8 +84,6 @@ export function DashboardPage() {
     .filter((app) => {
       const q = search.trim().toLowerCase();
       if (q && !app.company.toLowerCase().includes(q) && !app.role.toLowerCase().includes(q)) return false;
-      if (companyFilter && app.company !== companyFilter) return false;
-      if (roleFilter && app.role !== roleFilter) return false;
       if (statusFilter && (statuses[app.id] ?? app.status) !== statusFilter) return false;
       return true;
     })
@@ -136,22 +127,6 @@ export function DashboardPage() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
-        <select
-          className="[font-family:var(--font-mono)] text-[11px] bg-transparent border border-[color:var(--rule)] text-[color:var(--ink-2)] px-2 py-1.5 cursor-pointer"
-          value={companyFilter}
-          onChange={(e) => setCompanyFilter(e.target.value)}
-        >
-          <option value="">all companies</option>
-          {companies.map((c) => <option key={c} value={c}>{c}</option>)}
-        </select>
-        <select
-          className="[font-family:var(--font-mono)] text-[11px] bg-transparent border border-[color:var(--rule)] text-[color:var(--ink-2)] px-2 py-1.5 cursor-pointer"
-          value={roleFilter}
-          onChange={(e) => setRoleFilter(e.target.value)}
-        >
-          <option value="">all roles</option>
-          {roles.map((r) => <option key={r} value={r}>{r}</option>)}
-        </select>
         <select
           className="[font-family:var(--font-mono)] text-[11px] bg-transparent border border-[color:var(--rule)] text-[color:var(--ink-2)] px-2 py-1.5 cursor-pointer"
           value={statusFilter}
