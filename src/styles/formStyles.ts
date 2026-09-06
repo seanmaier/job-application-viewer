@@ -35,4 +35,3 @@ export const editAppCompany = 'text-[color:var(--accent)] font-semibold';
 export const editAppHeaderActions = 'flex items-center gap-2 shrink-0';
 export const editResetBtn = '[font-family:var(--font-mono)] text-[11px] bg-transparent text-[color:var(--ink-3)] border border-white/12 rounded px-3 py-[5px] cursor-pointer tracking-[0.03em] hover:text-[color:var(--status-rejected)] hover:border-[color:var(--status-rejected)]';
 export const editSaveBtn = '[font-family:var(--font-mono)] text-[11px] bg-[color:var(--accent)] text-white border-none rounded px-4 py-1.5 cursor-pointer tracking-[0.03em] transition-colors duration-150 hover:bg-[#1d4ed8]';
-export const editSaveBtnSaved = '[font-family:var(--font-mono)] text-[11px] bg-[color:var(--status-offer)] text-white border-none rounded px-4 py-1.5 cursor-pointer tracking-[0.03em] hover:bg-[color:var(--status-offer)]';

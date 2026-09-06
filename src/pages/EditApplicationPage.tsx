@@ -16,7 +16,7 @@ import {
   nafCheckboxes, nafCheckboxLabel, nafCheckboxInput, nafParagraphRow, nafRemoveBtn, nafAddBtn,
   newAppPage, newAppBack, newAppTitle, newAppBody, newAppForm,
   newAppPreview, napHeader, napFilename, napHint, napLiveLabel,
-  editAppHeader, editAppCompany, editAppHeaderActions, editResetBtn, editSaveBtn, editSaveBtnSaved,
+  editAppHeader, editAppCompany, editAppHeaderActions, editResetBtn, editSaveBtn,
 } from '../styles/formStyles';
 
 function toId(company: string) {
@@ -46,8 +46,6 @@ function EditContent({ staticApp }: { staticApp: ApplicationConfig }) {
   const [recipientName, setRecipientName] = useState(app.coverLetter?.recipientName ?? '');
   const [subjectRole, setSubjectRole] = useState(app.coverLetter?.subjectRole ?? '');
   const [paragraphs, setParagraphs] = useState<string[]>([...(app.coverLetter?.paragraphs ?? [''])]);
-
-  const [saved, setSaved] = useState(false);
 
   const toggleProject = (id: string) =>
     setFeaturedIds((prev) =>
@@ -84,8 +82,7 @@ function EditContent({ staticApp }: { staticApp: ApplicationConfig }) {
 
   const handleSave = () => {
     save(buildConfig());
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+    navigate(`/application/${staticApp.id}`);
   };
 
   const handleReset = () => {
@@ -111,11 +108,8 @@ function EditContent({ staticApp }: { staticApp: ApplicationConfig }) {
               Reset to default
             </button>
           )}
-          <button
-            className={saved ? editSaveBtnSaved : editSaveBtn}
-            onClick={handleSave}
-          >
-            {saved ? 'Saved!' : 'Save changes'}
+          <button className={editSaveBtn} onClick={handleSave}>
+            Save changes
           </button>
         </div>
       </div>
