@@ -2,15 +2,17 @@ import { useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { applications } from '../data/applications';
 import { getLocalApplications } from '../utils/localApplications';
-import type { ApplicationConfig, AppFont, AppLanguage } from '../types';
+import type { ApplicationConfig, AppFont, AppLanguage, CoverLetter } from '../types';
 import { ALL_FONTS, FONT_LABELS } from '../utils/fonts';
 import { getProfile } from '../data/profiles';
 import { useApplication } from '../hooks/useApplication';
+import { CVDocument } from '../components/cv/CVDocument';
+import { CoverLetterDocument } from '../components/cover-letter/CoverLetterDocument';
 import {
   nafSection, nafRow, nafLabel, nafOptional, nafInput, nafTextarea,
   nafCheckboxes, nafCheckboxLabel, nafCheckboxInput, nafParagraphRow, nafRemoveBtn, nafAddBtn,
   newAppPage, newAppBack, newAppTitle, newAppBody, newAppForm,
-  newAppPreview, napHeader, napFilename, napCode, napHint, napLiveLabel,
+  newAppPreview, napHeader, napFilename, napHint, napLiveLabel,
   editAppHeader, editAppCompany, editAppHeaderActions, editResetBtn, editSaveBtn, editSaveBtnSaved,
 } from '../styles/formStyles';
 
@@ -18,37 +20,10 @@ function toId(company: string) {
   return company.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'new-app';
 }
 
-function generateJson(app: ApplicationConfig): string {
-  const obj: Record<string, unknown> = {
-    id: app.id,
-    company: app.company,
-    role: app.role,
-    status: app.status,
-    language: app.language ?? 'en',
-    font: app.font ?? 'sans',
-    ...(app.url && { url: app.url }),
-    ...(app.appliedDate && { appliedDate: app.appliedDate }),
-    ...(app.summaryOverride && { summaryOverride: app.summaryOverride }),
-    ...(app.featuredProjectIds?.length && { featuredProjectIds: app.featuredProjectIds }),
-    ...(app.coverLetter && {
-      coverLetter: {
-        recipientOrg: app.coverLetter.recipientOrg,
-        ...(app.coverLetter.recipientName && { recipientName: app.coverLetter.recipientName }),
-        date: app.coverLetter.date,
-        subjectRole: app.coverLetter.subjectRole,
-        paragraphs: app.coverLetter.paragraphs,
-      },
-    }),
-  };
-  return JSON.stringify(obj, null, 2);
-}
-
 // Inner component — staticApp is guaranteed to exist
 function EditContent({ staticApp }: { staticApp: ApplicationConfig }) {
   const { app, save, reset, isDirty } = useApplication(staticApp);
   const navigate = useNavigate();
-
-  const profile = getProfile(app.language);
 
   const [company, setCompany] = useState(app.company);
   const [role, setRole] = useState(app.role);
@@ -56,6 +31,8 @@ function EditContent({ staticApp }: { staticApp: ApplicationConfig }) {
   const [appliedDate, setAppliedDate] = useState(app.appliedDate ?? '');
   const [language, setLanguage] = useState<AppLanguage>(app.language ?? 'en');
   const [font, setFont] = useState<AppFont>(app.font ?? 'sans');
+
+  const profile = getProfile(language);
   const [summaryOverride, setSummaryOverride] = useState(app.summaryOverride ?? '');
   const [featuredIds, setFeaturedIds] = useState<string[]>(
     app.featuredProjectIds ?? profile.projects.map((p) => p.id),
@@ -315,7 +292,7 @@ function EditContent({ staticApp }: { staticApp: ApplicationConfig }) {
           )}
         </div>
 
-        {/* ── Code preview ── */}
+        {/* ── Live preview ── */}
         <div className={newAppPreview}>
           <div className={napHeader}>
             <span className={napFilename}>
@@ -323,9 +300,20 @@ function EditContent({ staticApp }: { staticApp: ApplicationConfig }) {
             </span>
             <span className={napLiveLabel}>live preview</span>
           </div>
-          <pre className={napCode}>{generateJson(previewApp)}</pre>
+          <div className="flex-1 overflow-y-auto">
+            <div className="py-8 px-5">
+              <CVDocument profile={profile} application={previewApp} />
+              {previewApp.coverLetter && (
+                <CoverLetterDocument
+                  profile={profile}
+                  application={{ ...previewApp, coverLetter: previewApp.coverLetter as CoverLetter }}
+                />
+              )}
+            </div>
+          </div>
           <p className={napHint}>
-            Changes are saved to your browser. Copy the JSON above to update{' '}
+            Changes are saved to your browser as you edit. Use the{' '}
+            <code>JSON</code> button on the application page to copy the config to{' '}
             <code>private/applications/{toId(company)}.json</code> permanently.
           </p>
         </div>
