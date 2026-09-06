@@ -8,6 +8,7 @@ const LANG_FLAGS: Record<string, string> = { en: '🇬🇧', de: '🇩🇪' };
 interface Props {
   application: ApplicationConfig;
   status: ApplicationStatus;
+  appliedDate?: string;
   onStatusChange: (status: ApplicationStatus) => void;
   selected: boolean;
   onSelect: (checked: boolean) => void;
@@ -17,7 +18,7 @@ interface Props {
 }
 
 export function ApplicationCard({
-  application, status, onStatusChange,
+  application, status, appliedDate, onStatusChange,
   selected, onSelect, showCheckbox, selectMode = false, onDelete,
 }: Props) {
   const navigate = useNavigate();
@@ -110,7 +111,7 @@ export function ApplicationCard({
 
       {/* Date */}
       <span className="[font-family:var(--font-mono)] text-[11px] text-[color:var(--ink-3)] w-[90px] shrink-0 text-right">
-        {application.appliedDate ?? ''}
+        {appliedDate ?? ''}
       </span>
 
       {/* Delete (local apps only) */}

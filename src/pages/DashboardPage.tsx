@@ -2,10 +2,12 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { applications as staticApps } from '../data/applications';
 import { getLocalApplications, deleteLocalApplication } from '../utils/localApplications';
+import { getConfigOverride, setConfigOverride } from '../utils/appStorage';
+import { autoAppliedDateFor } from '../utils/autoAppliedDate';
 import { STATUS_LABELS, STATUS_COLORS } from '../utils/status';
 import { ApplicationCard } from '../components/dashboard/ApplicationCard';
 import { ImportApplicationModal } from '../components/ImportApplicationModal';
-import type { ApplicationStatus } from '../types';
+import type { ApplicationConfig, ApplicationStatus } from '../types';
 
 function readStatus(id: string, fallback: ApplicationStatus): ApplicationStatus {
   return (localStorage.getItem(`status-${id}`) as ApplicationStatus | null) ?? fallback;
@@ -23,11 +25,27 @@ export function DashboardPage() {
     Object.fromEntries(allApps.map((a) => [a.id, readStatus(a.id, a.status)])),
   );
 
+  const [appliedDates, setAppliedDates] = useState<Record<string, string | undefined>>(() =>
+    Object.fromEntries(allApps.map((a) => [a.id, getConfigOverride(a.id)?.appliedDate ?? a.appliedDate])),
+  );
+
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [selectMode, setSelectMode] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
 
+  const applyAutoAppliedDate = (app: ApplicationConfig, prevStatus: ApplicationStatus, nextStatus: ApplicationStatus) => {
+    const currentAppliedDate = appliedDates[app.id] ?? app.appliedDate;
+    const autoDate = autoAppliedDateFor(prevStatus, nextStatus, currentAppliedDate, app.language);
+    if (!autoDate) return;
+    const { status: _s, ...rest } = app;
+    const base = getConfigOverride(app.id) ?? rest;
+    setConfigOverride(app.id, { ...base, appliedDate: autoDate });
+    setAppliedDates((prev) => ({ ...prev, [app.id]: autoDate }));
+  };
+
   const handleStatusChange = (id: string, status: ApplicationStatus) => {
+    const app = allApps.find((a) => a.id === id);
+    if (app) applyAutoAppliedDate(app, statuses[id] ?? app.status, status);
     writeStatus(id, status);
     setStatuses((prev) => ({ ...prev, [id]: status }));
   };
@@ -41,6 +59,10 @@ export function DashboardPage() {
   };
 
   const handleBulkStatus = (status: ApplicationStatus) => {
+    selected.forEach((id) => {
+      const app = allApps.find((a) => a.id === id);
+      if (app) applyAutoAppliedDate(app, statuses[id] ?? app.status, status);
+    });
     selected.forEach((id) => writeStatus(id, status));
     setStatuses((prev) => {
       const next = { ...prev };
@@ -141,6 +163,7 @@ export function DashboardPage() {
                 key={app.id}
                 application={app}
                 status={statuses[app.id] ?? app.status}
+                appliedDate={appliedDates[app.id] ?? app.appliedDate}
                 onStatusChange={(s) => handleStatusChange(app.id, s)}
                 selected={selected.has(app.id)}
                 onSelect={(checked) => handleSelect(app.id, checked)}
