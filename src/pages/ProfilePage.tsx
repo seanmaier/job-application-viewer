@@ -131,7 +131,7 @@ export function ProfilePage() {
   // ── render ────────────────────────────────────────────────────────────────
 
   return (
-    <div className="min-h-screen bg-[color:var(--ink)] flex flex-col">
+    <div className="h-screen bg-[color:var(--ink)] flex flex-col">
 
       {/* Header */}
       <div className="bg-[color:var(--ink)] flex items-center justify-between px-6 h-[52px] shrink-0 gap-4">
