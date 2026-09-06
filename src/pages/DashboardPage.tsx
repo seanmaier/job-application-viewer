@@ -7,6 +7,7 @@ import { autoAppliedDateFor } from '../utils/autoAppliedDate';
 import { STATUS_LABELS, STATUS_COLORS } from '../utils/status';
 import { ApplicationCard } from '../components/dashboard/ApplicationCard';
 import { ImportApplicationModal } from '../components/ImportApplicationModal';
+import { BackupModal } from '../components/BackupModal';
 import type { ApplicationConfig, ApplicationStatus } from '../types';
 
 function readStatus(id: string, fallback: ApplicationStatus): ApplicationStatus {
@@ -34,6 +35,7 @@ export function DashboardPage() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [selectMode, setSelectMode] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
+  const [backupOpen, setBackupOpen] = useState(false);
 
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<ApplicationStatus | ''>('');
@@ -172,6 +174,12 @@ export function DashboardPage() {
           >
             import
           </button>
+          <button
+            className="[font-family:var(--font-mono)] text-[11px] text-[color:var(--ink-3)] bg-transparent border border-[color:var(--rule)] px-3 py-1.5 cursor-pointer hover:text-[color:var(--ink-2)] hover:border-[color:var(--ink-2)] transition-colors duration-150"
+            onClick={() => setBackupOpen(true)}
+          >
+            backup
+          </button>
           <Link
             className="[font-family:var(--font-mono)] text-[11px] text-[color:var(--ink-3)] no-underline border border-[color:var(--rule)] px-3 py-1.5 hover:text-[color:var(--accent)] hover:border-[color:var(--accent)] transition-colors duration-150"
             to="/application/new"
@@ -309,6 +317,7 @@ export function DashboardPage() {
       )}
 
       {importOpen && <ImportApplicationModal onClose={() => setImportOpen(false)} />}
+      {backupOpen && <BackupModal onClose={() => setBackupOpen(false)} />}
     </div>
   );
 }
