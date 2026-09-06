@@ -13,7 +13,7 @@ export const nafParagraphRow = 'flex gap-2 items-start mb-2';
 export const nafRemoveBtn = 'text-[12px] bg-transparent border border-[color:var(--rule)] text-[color:var(--ink-3)] rounded px-2 py-[5px] cursor-pointer mt-0.5 shrink-0 hover:border-[color:var(--status-rejected)] hover:text-[color:var(--status-rejected)]';
 export const nafAddBtn = '[font-family:var(--font-mono)] text-[11px] bg-transparent border border-dashed border-[color:var(--rule)] text-[color:var(--ink-3)] rounded-[5px] py-[7px] px-3.5 cursor-pointer text-left transition-[border-color,color] duration-150 hover:border-[color:var(--accent)] hover:text-[color:var(--accent)]';
 
-export const newAppPage = 'min-h-screen bg-[color:var(--bg)] flex flex-col';
+export const newAppPage = 'h-screen bg-[color:var(--bg)] flex flex-col';
 export const newAppHeader = 'bg-[color:var(--ink)] flex items-center gap-5 px-6 h-[52px] shrink-0';
 export const newAppBack = '[font-family:var(--font-mono)] text-[11px] text-[color:var(--ink-3)] no-underline hover:text-[color:var(--ink-invert)]';
 export const newAppTitle = 'text-[13px] font-semibold text-[color:var(--ink-invert)]';
