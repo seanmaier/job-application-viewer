@@ -79,6 +79,9 @@ export interface ApplicationConfig {
   language?: AppLanguage;
   font?: AppFont;
   appliedDate?: string;
+  interviewDate?: string;
+  finalDecisionDate?: string;
+  notes?: string;
   url?: string;
   summaryOverride?: string;
   featuredProjectIds?: string[];

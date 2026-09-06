@@ -9,6 +9,7 @@ interface Props {
   application: ApplicationConfig;
   status: ApplicationStatus;
   appliedDate?: string;
+  notes?: string;
   onStatusChange: (status: ApplicationStatus) => void;
   selected: boolean;
   onSelect: (checked: boolean) => void;
@@ -18,7 +19,7 @@ interface Props {
 }
 
 export function ApplicationCard({
-  application, status, appliedDate, onStatusChange,
+  application, status, appliedDate, notes, onStatusChange,
   selected, onSelect, showCheckbox, selectMode = false, onDelete,
 }: Props) {
   const navigate = useNavigate();
@@ -112,6 +113,14 @@ export function ApplicationCard({
       {/* Date */}
       <span className="[font-family:var(--font-mono)] text-[11px] text-[color:var(--ink-3)] w-[90px] shrink-0 text-right">
         {appliedDate ?? ''}
+      </span>
+
+      {/* Notes */}
+      <span
+        className="[font-family:var(--font-mono)] text-[11px] text-[color:var(--ink-3)] w-[160px] shrink-0 pl-3 truncate"
+        title={notes}
+      >
+        {notes ?? ''}
       </span>
 
       {/* Delete (local apps only) */}

@@ -37,6 +37,9 @@ function EditContent({ staticApp }: { staticApp: ApplicationConfig }) {
   const [role, setRole] = useState(app.role);
   const [url, setUrl] = useState(app.url ?? '');
   const [appliedDate, setAppliedDate] = useState(app.appliedDate ?? '');
+  const [interviewDate, setInterviewDate] = useState(app.interviewDate ?? '');
+  const [finalDecisionDate, setFinalDecisionDate] = useState(app.finalDecisionDate ?? '');
+  const [notes, setNotes] = useState(app.notes ?? '');
   const [language, setLanguage] = useState<AppLanguage>(app.language ?? 'en');
   const [font, setFont] = useState<AppFont>(app.font ?? 'sans');
 
@@ -78,6 +81,9 @@ function EditContent({ staticApp }: { staticApp: ApplicationConfig }) {
     font,
     ...(url && { url }),
     ...(appliedDate && { appliedDate }),
+    ...(interviewDate && { interviewDate }),
+    ...(finalDecisionDate && { finalDecisionDate }),
+    ...(notes && { notes }),
     ...(hasSummaryOverride && { summaryOverride }),
     featuredProjectIds: featuredIds,
     ...(hasSkillGroupsOverride && { skillGroupsOverride }),
@@ -212,6 +218,43 @@ function EditContent({ staticApp }: { staticApp: ApplicationConfig }) {
               placeholder="e.g. July 5, 2026"
               value={appliedDate}
               onChange={(e) => setAppliedDate(e.target.value)}
+            />
+          </div>
+
+          <div className={nafRow}>
+            <div className={nafSection}>
+              <span className={nafLabel}>
+                Interview date <span className={nafOptional}>(optional)</span>
+              </span>
+              <input
+                className={nafInput}
+                placeholder="e.g. July 12, 2026"
+                value={interviewDate}
+                onChange={(e) => setInterviewDate(e.target.value)}
+              />
+            </div>
+            <div className={nafSection}>
+              <span className={nafLabel}>
+                Final decision date <span className={nafOptional}>(optional)</span>
+              </span>
+              <input
+                className={nafInput}
+                placeholder="e.g. July 20, 2026"
+                value={finalDecisionDate}
+                onChange={(e) => setFinalDecisionDate(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className={nafSection}>
+            <span className={nafLabel}>
+              Notes <span className={nafOptional}>(optional)</span>
+            </span>
+            <AutoTextarea
+              className={nafTextarea}
+              placeholder="Anything worth remembering about this application"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
             />
           </div>
 

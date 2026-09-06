@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { applications as staticApps } from '../data/applications';
 import { getLocalApplications, deleteLocalApplication } from '../utils/localApplications';
 import { getConfigOverride, setConfigOverride } from '../utils/appStorage';
-import { autoAppliedDateFor } from '../utils/autoAppliedDate';
+import { autoAppliedDateFor, autoInterviewDateFor, autoFinalDecisionDateFor } from '../utils/autoStatusDates';
 import { STATUS_LABELS, STATUS_COLORS } from '../utils/status';
 import { ApplicationCard } from '../components/dashboard/ApplicationCard';
 import { ImportApplicationModal } from '../components/ImportApplicationModal';
@@ -31,6 +31,18 @@ export function DashboardPage() {
     Object.fromEntries(allApps.map((a) => [a.id, getConfigOverride(a.id)?.appliedDate ?? a.appliedDate])),
   );
 
+  const [interviewDates, setInterviewDates] = useState<Record<string, string | undefined>>(() =>
+    Object.fromEntries(allApps.map((a) => [a.id, getConfigOverride(a.id)?.interviewDate ?? a.interviewDate])),
+  );
+
+  const [finalDecisionDates, setFinalDecisionDates] = useState<Record<string, string | undefined>>(() =>
+    Object.fromEntries(allApps.map((a) => [a.id, getConfigOverride(a.id)?.finalDecisionDate ?? a.finalDecisionDate])),
+  );
+
+  const [notes] = useState<Record<string, string | undefined>>(() =>
+    Object.fromEntries(allApps.map((a) => [a.id, getConfigOverride(a.id)?.notes ?? a.notes])),
+  );
+
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [selectMode, setSelectMode] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
@@ -40,19 +52,28 @@ export function DashboardPage() {
   const [sortField, setSortField] = useState<SortField | null>(null);
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
 
-  const applyAutoAppliedDate = (app: ApplicationConfig, prevStatus: ApplicationStatus, nextStatus: ApplicationStatus) => {
-    const currentAppliedDate = appliedDates[app.id] ?? app.appliedDate;
-    const autoDate = autoAppliedDateFor(prevStatus, nextStatus, currentAppliedDate, app.language);
-    if (!autoDate) return;
+  const applyAutoDates = (app: ApplicationConfig, prevStatus: ApplicationStatus, nextStatus: ApplicationStatus) => {
+    const autoApplied = autoAppliedDateFor(prevStatus, nextStatus, appliedDates[app.id] ?? app.appliedDate, app.language);
+    const autoInterview = autoInterviewDateFor(prevStatus, nextStatus, interviewDates[app.id] ?? app.interviewDate, app.language);
+    const autoFinalDecision = autoFinalDecisionDateFor(prevStatus, nextStatus, finalDecisionDates[app.id] ?? app.finalDecisionDate, app.language);
+    if (!autoApplied && !autoInterview && !autoFinalDecision) return;
+
     const { status: _s, ...rest } = app;
     const base = getConfigOverride(app.id) ?? rest;
-    setConfigOverride(app.id, { ...base, appliedDate: autoDate });
-    setAppliedDates((prev) => ({ ...prev, [app.id]: autoDate }));
+    setConfigOverride(app.id, {
+      ...base,
+      ...(autoApplied && { appliedDate: autoApplied }),
+      ...(autoInterview && { interviewDate: autoInterview }),
+      ...(autoFinalDecision && { finalDecisionDate: autoFinalDecision }),
+    });
+    if (autoApplied) setAppliedDates((prev) => ({ ...prev, [app.id]: autoApplied }));
+    if (autoInterview) setInterviewDates((prev) => ({ ...prev, [app.id]: autoInterview }));
+    if (autoFinalDecision) setFinalDecisionDates((prev) => ({ ...prev, [app.id]: autoFinalDecision }));
   };
 
   const handleStatusChange = (id: string, status: ApplicationStatus) => {
     const app = allApps.find((a) => a.id === id);
-    if (app) applyAutoAppliedDate(app, statuses[id] ?? app.status, status);
+    if (app) applyAutoDates(app, statuses[id] ?? app.status, status);
     writeStatus(id, status);
     setStatuses((prev) => ({ ...prev, [id]: status }));
   };
@@ -68,7 +89,7 @@ export function DashboardPage() {
   const handleBulkStatus = (status: ApplicationStatus) => {
     selected.forEach((id) => {
       const app = allApps.find((a) => a.id === id);
-      if (app) applyAutoAppliedDate(app, statuses[id] ?? app.status, status);
+      if (app) applyAutoDates(app, statuses[id] ?? app.status, status);
     });
     selected.forEach((id) => writeStatus(id, status));
     setStatuses((prev) => {
@@ -237,6 +258,9 @@ export function DashboardPage() {
         >
           applied{sortIndicator('appliedDate')}
         </button>
+        <span className="[font-family:var(--font-mono)] text-[9.5px] uppercase tracking-[0.1em] text-[color:var(--ink-3)] w-[160px] shrink-0 pl-3">
+          notes
+        </span>
         <span className="w-[28px] shrink-0" />
       </div>
 
@@ -258,6 +282,7 @@ export function DashboardPage() {
                 application={app}
                 status={statuses[app.id] ?? app.status}
                 appliedDate={appliedDates[app.id] ?? app.appliedDate}
+                notes={notes[app.id]}
                 onStatusChange={(s) => handleStatusChange(app.id, s)}
                 selected={selected.has(app.id)}
                 onSelect={(checked) => handleSelect(app.id, checked)}
