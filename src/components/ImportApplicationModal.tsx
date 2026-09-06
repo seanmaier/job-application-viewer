@@ -1,37 +1,41 @@
 import { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import type { ApplicationConfig } from '../types';
+import { applications } from '../data/applications';
+import { getLocalApplications, saveLocalApplication } from '../utils/localApplications';
 import { parseApplicationConfig } from '../utils/parseApplicationConfig';
 import { ApplicationConfigPreview } from './ApplicationConfigPreview';
 
-type StorableConfig = Omit<ApplicationConfig, 'status'>;
-
 interface Props {
-  app: ApplicationConfig;
-  onSave: (updated: StorableConfig) => void;
   onClose: () => void;
 }
 
-function toEditable(app: ApplicationConfig): StorableConfig {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { status: _status, ...rest } = app;
-  return rest;
+const PLACEHOLDER = `{
+  "company": "Example Corp",
+  "role": "Backend Engineer",
+  "language": "en",
+  "coverLetter": { "recipientOrg": "Example Corp", "date": "...", "subjectRole": "Backend Engineer", "paragraphs": ["..."] }
+}`;
+
+function uniqueId(candidate: string, existingIds: Set<string>): string {
+  if (!existingIds.has(candidate)) return candidate;
+  let i = 2;
+  while (existingIds.has(`${candidate}-${i}`)) i++;
+  return `${candidate}-${i}`;
 }
 
-export function JsonEditModal({ app, onSave, onClose }: Props) {
-  const [text, setText] = useState(() =>
-    JSON.stringify(toEditable(app), null, 2),
-  );
+export function ImportApplicationModal({ onClose }: Props) {
+  const navigate = useNavigate();
+  const [text, setText] = useState('');
   const [errors, setErrors] = useState<string[]>([]);
   const [previewConfig, setPreviewConfig] = useState<ApplicationConfig | null>(null);
-  const [saved, setSaved] = useState(false);
+  const [idNote, setIdNote] = useState<string | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Focus textarea on open
   useEffect(() => {
     textareaRef.current?.focus();
   }, []);
 
-  // Close on Escape
   useEffect(() => {
     const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
     window.addEventListener('keydown', handler);
@@ -42,24 +46,34 @@ export function JsonEditModal({ app, onSave, onClose }: Props) {
     const result = parseApplicationConfig(text);
     if (!result.ok) {
       setErrors(result.errors);
+      setPreviewConfig(null);
+      setIdNote(null);
       return;
     }
     setErrors([]);
-    setPreviewConfig({ ...result.config, id: app.id, status: app.status });
+
+    const existingIds = new Set([...applications, ...getLocalApplications()].map((a) => a.id));
+    let config = result.config;
+    if (existingIds.has(config.id)) {
+      const newId = uniqueId(config.id, existingIds);
+      setIdNote(`An application with id "${config.id}" already exists — this will be imported as "${newId}" instead.`);
+      config = { ...config, id: newId };
+    } else {
+      setIdNote(null);
+    }
+    setPreviewConfig(config);
   };
 
-  const backToEdit = () => setPreviewConfig(null);
+  const backToEdit = () => {
+    setPreviewConfig(null);
+    setIdNote(null);
+  };
 
-  const handleApply = () => {
+  const handleImport = () => {
     if (!previewConfig) return;
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { status: _status, ...rest } = previewConfig;
-    onSave(rest);
-    setSaved(true);
-    setTimeout(() => {
-      setSaved(false);
-      onClose();
-    }, 800);
+    saveLocalApplication(previewConfig);
+    onClose();
+    navigate(`/application/${previewConfig.id}`);
   };
 
   return (
@@ -69,16 +83,10 @@ export function JsonEditModal({ app, onSave, onClose }: Props) {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex justify-between items-center py-3 px-5 border-b border-white/7 shrink-0 gap-4">
-          <div className="flex items-baseline gap-2.5 overflow-hidden">
-            <span className="[font-family:var(--font-mono)] text-[11px] font-semibold text-[color:var(--ink-invert)] tracking-[0.08em] uppercase shrink-0">
-              {previewConfig ? 'Preview' : 'JSON Editor'}
-            </span>
-            <span className="[font-family:var(--font-mono)] text-[11px] text-[#4A5568] whitespace-nowrap overflow-hidden text-ellipsis">{app.company} · {app.role}</span>
-          </div>
+          <span className="[font-family:var(--font-mono)] text-[11px] font-semibold text-[color:var(--ink-invert)] tracking-[0.08em] uppercase shrink-0">
+            {previewConfig ? 'Preview import' : 'Import application JSON'}
+          </span>
           <div className="flex items-center gap-2.5 shrink-0">
-            {!previewConfig && (
-              <span className="[font-family:var(--font-mono)] text-[10px] text-[#4A5568] italic">status is managed via the toolbar dropdown</span>
-            )}
             {previewConfig ? (
               <>
                 <button
@@ -88,14 +96,10 @@ export function JsonEditModal({ app, onSave, onClose }: Props) {
                   Back to edit
                 </button>
                 <button
-                  className={
-                    saved
-                      ? '[font-family:var(--font-mono)] text-[11px] bg-[color:var(--status-offer)] text-white border-none rounded px-4 py-1.5 pointer-events-none'
-                      : '[font-family:var(--font-mono)] text-[11px] bg-[color:var(--accent)] text-white border-none rounded px-4 py-1.5 cursor-pointer transition-colors duration-150 hover:bg-[#1d4ed8]'
-                  }
-                  onClick={handleApply}
+                  className="[font-family:var(--font-mono)] text-[11px] bg-[color:var(--accent)] text-white border-none rounded px-4 py-1.5 cursor-pointer transition-colors duration-150 hover:bg-[#1d4ed8]"
+                  onClick={handleImport}
                 >
-                  {saved ? 'Saved!' : 'Apply changes'}
+                  Create application
                 </button>
               </>
             ) : (
@@ -121,6 +125,12 @@ export function JsonEditModal({ app, onSave, onClose }: Props) {
           </div>
         )}
 
+        {idNote && (
+          <div className="[font-family:var(--font-mono)] text-[11px] text-[color:var(--status-sent)] bg-[rgba(217,119,6,0.10)] border-b border-[rgba(217,119,6,0.20)] py-2 px-5 shrink-0">
+            {idNote}
+          </div>
+        )}
+
         {previewConfig ? (
           <div className="flex-1 overflow-y-auto bg-[#0f1522]">
             <ApplicationConfigPreview config={previewConfig} />
@@ -131,6 +141,7 @@ export function JsonEditModal({ app, onSave, onClose }: Props) {
             className="flex-1 [font-family:var(--font-mono)] text-[12.5px] leading-[1.65] text-[#c9d1e0] bg-transparent border-none p-5 resize-none outline-none whitespace-pre [overflow-wrap:normal] overflow-auto"
             value={text}
             onChange={(e) => { setText(e.target.value); setErrors([]); }}
+            placeholder={PLACEHOLDER}
             spellCheck={false}
           />
         )}
