@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { applications } from '../data/applications';
 import { getLocalApplications } from '../utils/localApplications';
 import { getProfile } from '../data/profiles';
@@ -12,11 +12,11 @@ import { useApplicationStatus } from '../hooks/useApplicationStatus';
 import { STATUS_LABELS, STATUS_COLORS } from '../utils/status';
 import { FONT_LABELS, ALL_FONTS } from '../utils/fonts';
 import { generateTextExport } from '../utils/textExport';
+import { buildPdfFilename } from '../utils/pdfFilename';
+import type { PrintTarget } from '../utils/pdfFilename';
 import type { ApplicationConfig, ApplicationStatus, AppFont, CoverLetter } from '../types';
 
 const LANG_FLAGS: Record<string, string> = { en: '🇬🇧', de: '🇩🇪' };
-
-type PrintTarget = 'both' | 'cv' | 'coverLetter';
 
 export function ApplicationPage() {
   const { id } = useParams<{ id: string }>();
@@ -40,13 +40,29 @@ function ApplicationContent({ staticApp }: { staticApp: ApplicationConfig }) {
   const [exportOpen, setExportOpen] = useState(false);
   const [jsonOpen, setJsonOpen] = useState(false);
   const [printTarget, setPrintTarget] = useState<PrintTarget>('both');
+  const navigate = useNavigate();
 
   const profile = getProfile(app.language);
   const langFlag = LANG_FLAGS[app.language ?? 'en'];
+  const effectivePrintTarget: PrintTarget = app.coverLetter ? printTarget : 'cv';
 
   const handleFontChange = (font: AppFont) => {
     const { status: _s, ...rest } = app;
     save({ ...rest, font });
+  };
+
+  const handlePrint = () => {
+    if (!profile.name.trim()) {
+      const goToProfile = confirm(
+        'Your profile has no name set yet, so the exported PDF can\'t be named properly. Set one now?',
+      );
+      if (goToProfile) navigate('/profile');
+      return;
+    }
+    const prev = document.title;
+    document.title = buildPdfFilename(effectivePrintTarget, app.language ?? 'en', profile.name);
+    window.print();
+    document.title = prev;
   };
 
   return (
@@ -121,12 +137,7 @@ function ApplicationContent({ staticApp }: { staticApp: ApplicationConfig }) {
           )}
           <button
             className="[font-family:var(--font-mono)] text-[11px] bg-transparent text-[color:var(--accent)] border border-[color:var(--accent)] rounded px-3.5 py-[5px] cursor-pointer tracking-[0.04em] hover:bg-[color:var(--accent)] hover:text-[color:var(--ink)]"
-            onClick={() => {
-              const prev = document.title;
-              document.title = `${app.company} - ${app.role} · ${profile.name}`;
-              window.print();
-              document.title = prev;
-            }}
+            onClick={handlePrint}
           >
             Print / PDF
           </button>
@@ -134,11 +145,11 @@ function ApplicationContent({ staticApp }: { staticApp: ApplicationConfig }) {
       </div>
 
       <div className="pt-10 px-5 pb-20 print:p-0">
-        <div className={printTarget === 'coverLetter' ? 'print:hidden' : undefined}>
+        <div className={effectivePrintTarget === 'coverLetter' ? 'print:hidden' : undefined}>
           <CVDocument profile={profile} application={{ ...app, status }} />
         </div>
         {app.coverLetter && (
-          <div className={printTarget === 'cv' ? 'print:hidden' : undefined}>
+          <div className={effectivePrintTarget === 'cv' ? 'print:hidden' : undefined}>
             <CoverLetterDocument
               profile={profile}
               application={{ ...app, status, coverLetter: app.coverLetter as CoverLetter }}
