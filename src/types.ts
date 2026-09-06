@@ -82,5 +82,6 @@ export interface ApplicationConfig {
   url?: string;
   summaryOverride?: string;
   featuredProjectIds?: string[];
+  skillGroupsOverride?: SkillGroup[];
   coverLetter?: CoverLetter;
 }

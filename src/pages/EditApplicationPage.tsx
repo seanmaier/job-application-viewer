@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useParams, Link, useNavigate, useBlocker } from 'react-router-dom';
 import { applications } from '../data/applications';
 import { getLocalApplications } from '../utils/localApplications';
-import type { ApplicationConfig, AppFont, AppLanguage, CoverLetter } from '../types';
+import type { ApplicationConfig, AppFont, AppLanguage, CoverLetter, SkillGroup } from '../types';
 import { ALL_FONTS, FONT_LABELS } from '../utils/fonts';
 import { getProfile } from '../data/profiles';
 import { useApplication } from '../hooks/useApplication';
@@ -11,6 +11,9 @@ import { CoverLetterDocument } from '../components/cover-letter/CoverLetterDocum
 import { AutoTextarea } from '../components/AutoTextarea';
 import { ImportParagraphsControl } from '../components/ImportParagraphsControl';
 import { ExportParagraphsButton } from '../components/ExportParagraphsButton';
+import { SkillGroupsEditor } from '../components/SkillGroupsEditor';
+import { ExportSkillGroupsButton } from '../components/ExportSkillGroupsButton';
+import { ImportSkillGroupsModal } from '../components/ImportSkillGroupsModal';
 import { UnsavedChangesDialog } from '../components/UnsavedChangesDialog';
 import { formatDateLong, parseToIsoDate } from '../utils/date';
 import {
@@ -42,6 +45,11 @@ function EditContent({ staticApp }: { staticApp: ApplicationConfig }) {
   const [featuredIds, setFeaturedIds] = useState<string[]>(
     app.featuredProjectIds ?? profile.projects.map((p) => p.id),
   );
+  const [hasSkillGroupsOverride, setHasSkillGroupsOverride] = useState(!!app.skillGroupsOverride);
+  const [skillGroupsOverride, setSkillGroupsOverride] = useState<SkillGroup[]>(
+    app.skillGroupsOverride ?? profile.skillGroups,
+  );
+  const [importSkillGroupsOpen, setImportSkillGroupsOpen] = useState(false);
   const [hasCoverLetter, setHasCoverLetter] = useState(!!app.coverLetter);
   const [dateISO, setDateISO] = useState(() => parseToIsoDate(app.coverLetter?.date ?? ''));
   const [recipientOrg, setRecipientOrg] = useState(app.coverLetter?.recipientOrg ?? '');
@@ -71,6 +79,7 @@ function EditContent({ staticApp }: { staticApp: ApplicationConfig }) {
     ...(appliedDate && { appliedDate }),
     ...(summaryOverride && { summaryOverride }),
     featuredProjectIds: featuredIds,
+    ...(hasSkillGroupsOverride && { skillGroupsOverride }),
     ...(hasCoverLetter && {
       coverLetter: {
         recipientOrg,
@@ -239,6 +248,31 @@ function EditContent({ staticApp }: { staticApp: ApplicationConfig }) {
               <input
                 className={nafCheckboxInput}
                 type="checkbox"
+                checked={hasSkillGroupsOverride}
+                onChange={(e) => setHasSkillGroupsOverride(e.target.checked)}
+              />
+              Override skill groups for this application
+            </label>
+          </div>
+
+          {hasSkillGroupsOverride && (
+            <div className={nafSection}>
+              <span className={nafLabel}>
+                Skill groups override <span className={nafOptional}>(replaces the profile's skill groups on this application only)</span>
+              </span>
+              <div className="flex gap-2">
+                <button className={nafAddBtn} onClick={() => setImportSkillGroupsOpen(true)}>Import from JSON</button>
+                <ExportSkillGroupsButton skillGroups={skillGroupsOverride} />
+              </div>
+              <SkillGroupsEditor skillGroups={skillGroupsOverride} onChange={setSkillGroupsOverride} />
+            </div>
+          )}
+
+          <div className={nafSection}>
+            <label className={nafCheckboxLabel}>
+              <input
+                className={nafCheckboxInput}
+                type="checkbox"
                 checked={hasCoverLetter}
                 onChange={(e) => setHasCoverLetter(e.target.checked)}
               />
@@ -354,6 +388,15 @@ function EditContent({ staticApp }: { staticApp: ApplicationConfig }) {
             save(buildConfig());
             blocker.proceed();
           }}
+        />
+      )}
+
+      {importSkillGroupsOpen && (
+        <ImportSkillGroupsModal
+          application={previewApp}
+          profile={profile}
+          onApply={setSkillGroupsOverride}
+          onClose={() => setImportSkillGroupsOpen(false)}
         />
       )}
     </div>
