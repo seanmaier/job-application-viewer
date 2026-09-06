@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { applications } from '../data/applications';
 import { getLocalApplications } from '../utils/localApplications';
@@ -13,8 +13,11 @@ import { STATUS_LABELS, STATUS_COLORS } from '../utils/status';
 import { FONT_LABELS, ALL_FONTS } from '../utils/fonts';
 import { generateTextExport } from '../utils/textExport';
 import { buildPdfFilename } from '../utils/pdfFilename';
-import type { PrintTarget } from '../utils/pdfFilename';
 import { autoAppliedDateFor } from '../utils/autoAppliedDate';
+import { sanitizeFolderName, renderPageCanvases, buildPdfBlob, writeApplicationPdfs } from '../utils/pdfExport';
+import {
+  isFileSystemAccessSupported, getSavedExportFolder, chooseExportFolder, ensureExportFolderPermission,
+} from '../utils/exportFolder';
 import type { ApplicationConfig, ApplicationStatus, AppFont, CoverLetter } from '../types';
 
 const LANG_FLAGS: Record<string, string> = { en: '🇬🇧', de: '🇩🇪' };
@@ -40,12 +43,19 @@ function ApplicationContent({ staticApp }: { staticApp: ApplicationConfig }) {
   const [status, setStatus] = useApplicationStatus(staticApp.id, staticApp.status);
   const [exportOpen, setExportOpen] = useState(false);
   const [jsonOpen, setJsonOpen] = useState(false);
-  const [printTarget, setPrintTarget] = useState<PrintTarget>('both');
+  const [exportFolderName, setExportFolderName] = useState<string | null>(null);
+  const [downloading, setDownloading] = useState(false);
   const navigate = useNavigate();
+
+  const cvExportRef = useRef<HTMLDivElement>(null);
+  const clExportRef = useRef<HTMLDivElement>(null);
 
   const profile = getProfile(app.language);
   const langFlag = LANG_FLAGS[app.language ?? 'en'];
-  const effectivePrintTarget: PrintTarget = app.coverLetter ? printTarget : 'cv';
+
+  useEffect(() => {
+    getSavedExportFolder().then((handle) => setExportFolderName(handle?.name ?? null));
+  }, []);
 
   const handleFontChange = (font: AppFont) => {
     const { status: _s, ...rest } = app;
@@ -61,18 +71,69 @@ function ApplicationContent({ staticApp }: { staticApp: ApplicationConfig }) {
     setStatus(newStatus);
   };
 
-  const handlePrint = () => {
+  const handleChooseFolder = async () => {
+    if (!isFileSystemAccessSupported()) {
+      alert('Your browser doesn\'t support choosing a save folder. Try Chrome or Edge.');
+      return;
+    }
+    const handle = await chooseExportFolder();
+    if (handle) setExportFolderName(handle.name);
+  };
+
+  const handleDownload = async () => {
+    if (!isFileSystemAccessSupported()) {
+      alert('Your browser doesn\'t support saving directly to a folder. Try Chrome or Edge.');
+      return;
+    }
     if (!profile.name.trim()) {
       const goToProfile = confirm(
-        'Your profile has no name set yet, so the exported PDF can\'t be named properly. Set one now?',
+        'Your profile has no name set yet, so the exported files can\'t be named properly. Set one now?',
       );
       if (goToProfile) navigate('/profile');
       return;
     }
-    const prev = document.title;
-    document.title = buildPdfFilename(effectivePrintTarget, app.language ?? 'en', profile.name);
-    window.print();
-    document.title = prev;
+
+    let handle = await getSavedExportFolder();
+    if (!handle) {
+      handle = await chooseExportFolder();
+      if (!handle) return;
+      setExportFolderName(handle.name);
+    }
+
+    const hasPermission = await ensureExportFolderPermission(handle);
+    if (!hasPermission) {
+      alert('Permission to write to the export folder was denied.');
+      return;
+    }
+
+    setDownloading(true);
+    try {
+      const cvPages = cvExportRef.current
+        ? Array.from(cvExportRef.current.querySelectorAll(':scope > .doc-page')) as HTMLElement[]
+        : [];
+      const clPages = clExportRef.current
+        ? Array.from(clExportRef.current.querySelectorAll(':scope > .doc-page')) as HTMLElement[]
+        : [];
+
+      const cvCanvases = await renderPageCanvases(cvPages);
+      const clCanvases = clPages.length > 0 ? await renderPageCanvases(clPages) : [];
+
+      const lang = app.language ?? 'en';
+      const files: Array<{ filename: string; blob: Blob }> = [
+        { filename: `${buildPdfFilename('cv', lang, profile.name)}.pdf`, blob: buildPdfBlob(cvCanvases) },
+      ];
+      if (clCanvases.length > 0) {
+        files.push({ filename: `${buildPdfFilename('coverLetter', lang, profile.name)}.pdf`, blob: buildPdfBlob(clCanvases) });
+        files.push({ filename: `${buildPdfFilename('both', lang, profile.name)}.pdf`, blob: buildPdfBlob([...cvCanvases, ...clCanvases]) });
+      }
+
+      await writeApplicationPdfs(handle, sanitizeFolderName(app.company), files);
+    } catch (e) {
+      console.error(e);
+      alert('Something went wrong while exporting. Please try again.');
+    } finally {
+      setDownloading(false);
+    }
   };
 
   return (
@@ -134,32 +195,51 @@ function ApplicationContent({ staticApp }: { staticApp: ApplicationConfig }) {
           >
             LLM Export
           </button>
-          {app.coverLetter && (
-            <select
-              className="[font-family:var(--font-mono)] text-[11px] bg-white/7 border border-white/12 rounded px-2.5 py-[5px] cursor-pointer text-[color:var(--ink-2)]"
-              value={printTarget}
-              onChange={(e) => setPrintTarget(e.target.value as PrintTarget)}
+          {exportFolderName && (
+            <span
+              className="[font-family:var(--font-mono)] text-[10px] text-[color:var(--ink-3)] whitespace-nowrap"
+              title="Export folder"
             >
-              <option value="both" className="text-[color:var(--ink-invert)] bg-[color:var(--surface)]">Print: Both</option>
-              <option value="cv" className="text-[color:var(--ink-invert)] bg-[color:var(--surface)]">Print: CV only</option>
-              <option value="coverLetter" className="text-[color:var(--ink-invert)] bg-[color:var(--surface)]">Print: Cover letter only</option>
-            </select>
+              📁 {exportFolderName}
+            </span>
           )}
           <button
-            className="[font-family:var(--font-mono)] text-[11px] bg-transparent text-[color:var(--accent)] border border-[color:var(--accent)] rounded px-3.5 py-[5px] cursor-pointer tracking-[0.04em] hover:bg-[color:var(--accent)] hover:text-[color:var(--ink)]"
-            onClick={handlePrint}
+            className="[font-family:var(--font-mono)] text-[11px] bg-transparent text-[color:var(--ink-3)] border border-white/12 rounded px-3 py-[5px] cursor-pointer hover:text-[color:var(--ink-invert)] hover:border-white/25"
+            onClick={handleChooseFolder}
           >
-            Print / PDF
+            {exportFolderName ? 'change folder' : 'choose folder'}
+          </button>
+          <button
+            className="[font-family:var(--font-mono)] text-[11px] bg-transparent text-[color:var(--accent)] border border-[color:var(--accent)] rounded px-3.5 py-[5px] cursor-pointer tracking-[0.04em] hover:bg-[color:var(--accent)] hover:text-[color:var(--ink)] disabled:opacity-50 disabled:cursor-not-allowed"
+            onClick={handleDownload}
+            disabled={downloading}
+          >
+            {downloading ? 'Downloading…' : 'Download'}
           </button>
         </div>
       </div>
 
       <div className="pt-10 px-5 pb-20 print:p-0">
-        <div className={effectivePrintTarget === 'coverLetter' ? 'print:hidden' : undefined}>
+        <CVDocument profile={profile} application={{ ...app, status }} />
+        {app.coverLetter && (
+          <CoverLetterDocument
+            profile={profile}
+            application={{ ...app, status, coverLetter: app.coverLetter as CoverLetter }}
+            paginate
+          />
+        )}
+      </div>
+
+      {/* Off-screen, A4-accurate copies rasterized for the PDF download — kept
+          separate from the on-screen view above so its layout never affects it. */}
+      {/* Intentionally off-screen rather than visibility/display-hidden — html2canvas
+          needs the browser to actually paint this content, which hidden elements aren't. */}
+      <div className="pdf-export-root" style={{ position: 'absolute', top: 0, left: '-9999px' }}>
+        <div ref={cvExportRef}>
           <CVDocument profile={profile} application={{ ...app, status }} />
         </div>
         {app.coverLetter && (
-          <div className={effectivePrintTarget === 'cv' ? 'print:hidden' : undefined}>
+          <div ref={clExportRef}>
             <CoverLetterDocument
               profile={profile}
               application={{ ...app, status, coverLetter: app.coverLetter as CoverLetter }}

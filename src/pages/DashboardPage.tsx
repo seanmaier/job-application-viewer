@@ -17,6 +17,8 @@ function writeStatus(id: string, status: ApplicationStatus) {
   localStorage.setItem(`status-${id}`, status);
 }
 
+type SortField = 'company' | 'role' | 'status' | 'appliedDate';
+
 export function DashboardPage() {
   const [localApps, setLocalApps] = useState(() => getLocalApplications());
   const allApps = [...staticApps, ...localApps];
@@ -32,6 +34,11 @@ export function DashboardPage() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [selectMode, setSelectMode] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
+
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<ApplicationStatus | ''>('');
+  const [sortField, setSortField] = useState<SortField | null>(null);
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
 
   const applyAutoAppliedDate = (app: ApplicationConfig, prevStatus: ApplicationStatus, nextStatus: ApplicationStatus) => {
     const currentAppliedDate = appliedDates[app.id] ?? app.appliedDate;
@@ -99,6 +106,41 @@ export function DashboardPage() {
 
   const anySelected = selected.size > 0;
 
+  const hasActiveFilter = !!(search || statusFilter);
+  const clearFilters = () => {
+    setSearch('');
+    setStatusFilter('');
+  };
+
+  const toggleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortField(field);
+      setSortDir('asc');
+    }
+  };
+
+  const sortIndicator = (field: SortField) => (sortField === field ? (sortDir === 'asc' ? ' ▲' : ' ▼') : '');
+
+  const visibleApps = allApps
+    .filter((app) => {
+      const q = search.trim().toLowerCase();
+      if (q && !app.company.toLowerCase().includes(q) && !app.role.toLowerCase().includes(q)) return false;
+      if (statusFilter && (statuses[app.id] ?? app.status) !== statusFilter) return false;
+      return true;
+    })
+    .sort((a, b) => {
+      if (!sortField) return 0;
+      const value = (app: typeof a) => {
+        if (sortField === 'status') return statuses[app.id] ?? app.status;
+        if (sortField === 'appliedDate') return appliedDates[app.id] ?? app.appliedDate ?? '';
+        return app[sortField] ?? '';
+      };
+      const cmp = value(a).localeCompare(value(b));
+      return sortDir === 'asc' ? cmp : -cmp;
+    });
+
   return (
     <div className="min-h-screen bg-[color:var(--bg)] pt-12 px-8 pb-32 max-w-[900px] mx-auto">
       <header className="mb-8 flex items-baseline justify-between gap-6">
@@ -139,14 +181,62 @@ export function DashboardPage() {
         </div>
       </header>
 
+      {/* Search + filters */}
+      <div className="flex items-center gap-2 mb-4">
+        <input
+          className="[font-family:var(--font-mono)] text-[12px] bg-transparent border border-[color:var(--rule)] text-[color:var(--ink-invert)] px-3 py-1.5 flex-1 outline-none focus:border-[color:var(--accent)] placeholder:text-[color:var(--ink-3)]"
+          placeholder="search company or role..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+        <select
+          className="[font-family:var(--font-mono)] text-[11px] bg-transparent border border-[color:var(--rule)] text-[color:var(--ink-2)] px-2 py-1.5 cursor-pointer"
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value as ApplicationStatus | '')}
+        >
+          <option value="">all statuses</option>
+          {(Object.entries(STATUS_LABELS) as [ApplicationStatus, string][]).map(([v, l]) => (
+            <option key={v} value={v}>{l}</option>
+          ))}
+        </select>
+        {hasActiveFilter && (
+          <button
+            className="[font-family:var(--font-mono)] text-[11px] text-[color:var(--ink-3)] bg-transparent border-none cursor-pointer hover:text-[color:var(--status-rejected)] transition-colors"
+            onClick={clearFilters}
+          >
+            clear
+          </button>
+        )}
+      </div>
+
       {/* Column headers */}
       <div className="flex items-center border-b border-[color:var(--rule)] pb-1.5">
         <span className="w-[28px] shrink-0" />
-        <span className="[font-family:var(--font-mono)] text-[9.5px] uppercase tracking-[0.1em] text-[color:var(--ink-3)] w-[190px] shrink-0">company</span>
-        <span className="[font-family:var(--font-mono)] text-[9.5px] uppercase tracking-[0.1em] text-[color:var(--ink-3)] flex-1">role</span>
+        <button
+          className="[font-family:var(--font-mono)] text-[9.5px] uppercase tracking-[0.1em] text-[color:var(--ink-3)] hover:text-[color:var(--ink-2)] bg-transparent border-none cursor-pointer text-left p-0 w-[190px] shrink-0"
+          onClick={() => toggleSort('company')}
+        >
+          company{sortIndicator('company')}
+        </button>
+        <button
+          className="[font-family:var(--font-mono)] text-[9.5px] uppercase tracking-[0.1em] text-[color:var(--ink-3)] hover:text-[color:var(--ink-2)] bg-transparent border-none cursor-pointer text-left p-0 flex-1"
+          onClick={() => toggleSort('role')}
+        >
+          role{sortIndicator('role')}
+        </button>
         <span className="w-[28px] shrink-0" />
-        <span className="[font-family:var(--font-mono)] text-[9.5px] uppercase tracking-[0.1em] text-[color:var(--ink-3)] w-[116px] shrink-0 text-right pr-1">status</span>
-        <span className="[font-family:var(--font-mono)] text-[9.5px] uppercase tracking-[0.1em] text-[color:var(--ink-3)] w-[90px] shrink-0 text-right">applied</span>
+        <button
+          className="[font-family:var(--font-mono)] text-[9.5px] uppercase tracking-[0.1em] text-[color:var(--ink-3)] hover:text-[color:var(--ink-2)] bg-transparent border-none cursor-pointer text-right p-0 w-[116px] shrink-0 pr-1"
+          onClick={() => toggleSort('status')}
+        >
+          status{sortIndicator('status')}
+        </button>
+        <button
+          className="[font-family:var(--font-mono)] text-[9.5px] uppercase tracking-[0.1em] text-[color:var(--ink-3)] hover:text-[color:var(--ink-2)] bg-transparent border-none cursor-pointer text-right p-0 w-[90px] shrink-0"
+          onClick={() => toggleSort('appliedDate')}
+        >
+          applied{sortIndicator('appliedDate')}
+        </button>
         <span className="w-[28px] shrink-0" />
       </div>
 
@@ -154,9 +244,13 @@ export function DashboardPage() {
         <p className="[font-family:var(--font-mono)] text-[12px] text-[color:var(--ink-3)] py-10">
           no applications found.
         </p>
+      ) : visibleApps.length === 0 ? (
+        <p className="[font-family:var(--font-mono)] text-[12px] text-[color:var(--ink-3)] py-10">
+          no applications match your search/filters.
+        </p>
       ) : (
         <div>
-          {allApps.map((app) => {
+          {visibleApps.map((app) => {
             const isLocal = !staticApps.some((s) => s.id === app.id);
             return (
               <ApplicationCard

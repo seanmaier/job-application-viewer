@@ -36,6 +36,22 @@
   left: -99999px;
 }
 
+/* ── A4-accurate sizing for PDF export rasterization (html2canvas) ──
+   Mirrors the @media print .doc-page rules below, but as a plain
+   descendant selector (so CVDocument/CoverLetterDocument don't need an
+   export-aware className prop): PDF export renders an off-screen copy
+   wrapped in .pdf-export-root, on a normal (non-print) page where the
+   @media print query never activates. 38px/45px ≈ 10mm/12mm and 1123px
+   ≈ 297mm at the same ~3.78px/mm scale the 794px width already uses
+   (794px / 210mm). */
+.pdf-export-root .doc-page {
+  width: 794px;
+  min-height: 1123px;
+  margin: 0;
+  padding: 38px 45px;
+  box-shadow: none;
+}
+
 /* ── Page-break indicator shown in the live preview only ── */
 .doc-page-badge {
   position: absolute;
