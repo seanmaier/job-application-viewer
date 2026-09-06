@@ -10,6 +10,7 @@ import { CVDocument } from '../components/cv/CVDocument';
 import { CoverLetterDocument } from '../components/cover-letter/CoverLetterDocument';
 import { AutoTextarea } from '../components/AutoTextarea';
 import { ImportParagraphsControl } from '../components/ImportParagraphsControl';
+import { ExportParagraphsButton } from '../components/ExportParagraphsButton';
 import { formatDateLong, parseToIsoDate } from '../utils/date';
 import {
   nafSection, nafRow, nafLabel, nafOptional, nafInput, nafTextarea,
@@ -266,6 +267,7 @@ function EditContent({ staticApp }: { staticApp: ApplicationConfig }) {
               <div className={nafSection}>
                 <span className={nafLabel}>Cover letter paragraphs</span>
                 <ImportParagraphsControl onImport={setParagraphs} />
+                <ExportParagraphsButton paragraphs={paragraphs} />
                 {paragraphs.map((p, i) => (
                   <div className={nafParagraphRow} key={i}>
                     <AutoTextarea

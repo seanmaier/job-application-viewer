@@ -6,6 +6,7 @@ import { getProfile } from '../data/profiles';
 import { saveLocalApplication } from '../utils/localApplications';
 import { AutoTextarea } from '../components/AutoTextarea';
 import { ImportParagraphsControl } from '../components/ImportParagraphsControl';
+import { ExportParagraphsButton } from '../components/ExportParagraphsButton';
 import { formatDateLong } from '../utils/date';
 import {
   nafSection, nafRow, nafLabel, nafOptional, nafInput, nafTextarea,
@@ -220,6 +221,7 @@ export function NewApplicationPage() {
               <div className={nafSection}>
                 <span className={nafLabel}>Cover letter paragraphs</span>
                 <ImportParagraphsControl onImport={setParagraphs} />
+                <ExportParagraphsButton paragraphs={paragraphs} />
                 {paragraphs.map((p, i) => (
                   <div className={nafParagraphRow} key={i}>
                     <AutoTextarea
