@@ -41,7 +41,8 @@ function EditContent({ staticApp }: { staticApp: ApplicationConfig }) {
   const [font, setFont] = useState<AppFont>(app.font ?? 'sans');
 
   const profile = getProfile(language);
-  const [summaryOverride, setSummaryOverride] = useState(app.summaryOverride ?? '');
+  const [hasSummaryOverride, setHasSummaryOverride] = useState(!!app.summaryOverride);
+  const [summaryOverride, setSummaryOverride] = useState(app.summaryOverride ?? profile.summary);
   const [featuredIds, setFeaturedIds] = useState<string[]>(
     app.featuredProjectIds ?? profile.projects.map((p) => p.id),
   );
@@ -77,7 +78,7 @@ function EditContent({ staticApp }: { staticApp: ApplicationConfig }) {
     font,
     ...(url && { url }),
     ...(appliedDate && { appliedDate }),
-    ...(summaryOverride && { summaryOverride }),
+    ...(hasSummaryOverride && { summaryOverride }),
     featuredProjectIds: featuredIds,
     ...(hasSkillGroupsOverride && { skillGroupsOverride }),
     ...(hasCoverLetter && {
@@ -215,16 +216,29 @@ function EditContent({ staticApp }: { staticApp: ApplicationConfig }) {
           </div>
 
           <div className={nafSection}>
-            <span className={nafLabel}>
-              Profile summary override <span className={nafOptional}>(optional)</span>
-            </span>
-            <AutoTextarea
-              className={nafTextarea}
-              placeholder="Leave empty to use the default profile summary"
-              value={summaryOverride}
-              onChange={(e) => setSummaryOverride(e.target.value)}
-            />
+            <label className={nafCheckboxLabel}>
+              <input
+                className={nafCheckboxInput}
+                type="checkbox"
+                checked={hasSummaryOverride}
+                onChange={(e) => setHasSummaryOverride(e.target.checked)}
+              />
+              Override profile summary for this application
+            </label>
           </div>
+
+          {hasSummaryOverride && (
+            <div className={nafSection}>
+              <span className={nafLabel}>
+                Profile summary override <span className={nafOptional}>(replaces the profile's summary on this application only)</span>
+              </span>
+              <AutoTextarea
+                className={nafTextarea}
+                value={summaryOverride}
+                onChange={(e) => setSummaryOverride(e.target.value)}
+              />
+            </div>
+          )}
 
           <div className={nafSection}>
             <span className={nafLabel}>Featured projects</span>
