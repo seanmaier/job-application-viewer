@@ -38,6 +38,8 @@ export function CVDocument({ profile, application }: Props) {
     ? profile.projects.filter((p) => application.featuredProjectIds!.includes(p.id))
     : profile.projects;
 
+  const skillGroups = application.skillGroupsOverride ?? profile.skillGroups;
+
   const fontStyle = application.font
     ? ({ '--font-sans': FONT_STACKS[application.font] } as React.CSSProperties)
     : undefined;
@@ -62,7 +64,7 @@ export function CVDocument({ profile, application }: Props) {
 
       <div className="cv-body">
         <aside>
-          {profile.skillGroups.map((group) => (
+          {skillGroups.map((group) => (
             <div className="sidebar-section" key={group.label}>
               <span className="doc-label">{group.label}</span>
               <div className="skill-tags">

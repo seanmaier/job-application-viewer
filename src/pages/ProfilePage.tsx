@@ -2,16 +2,17 @@ import { useEffect, useState } from 'react';
 import { Link, useBlocker } from 'react-router-dom';
 import type {
   AppLanguage, ApplicationConfig, Profile,
-  Experience, Project, SkillGroup, HumanLanguage,
+  Experience, Project, HumanLanguage,
 } from '../types';
 import { getProfile, getStaticProfile } from '../data/profiles';
 import { setProfileOverride, clearProfileOverride, hasProfileOverride } from '../utils/profileStorage';
 import { CVDocument } from '../components/cv/CVDocument';
 import { AutoTextarea } from '../components/AutoTextarea';
 import { UnsavedChangesDialog } from '../components/UnsavedChangesDialog';
+import { SkillGroupsEditor } from '../components/SkillGroupsEditor';
 import {
   nafSection, nafRow, nafLabel, nafOptional, nafInput, nafTextarea,
-  nafParagraphRow, nafRemoveBtn, nafAddBtn, nafCheckboxLabel, nafCheckboxInput,
+  nafParagraphRow, nafRemoveBtn, nafAddBtn,
 } from '../styles/formStyles';
 
 // ── helpers ─────────────────────────────────────────────────────────────────
@@ -76,12 +77,6 @@ export function ProfilePage() {
 
   const setProj = (i: number, patch: Partial<Project>) =>
     set({ projects: at(profile.projects, i, patch) });
-
-  const setSkillGroup = (i: number, patch: Partial<SkillGroup>) =>
-    set({ skillGroups: at(profile.skillGroups, i, patch) });
-
-  const setSkill = (gi: number, si: number, val: string) =>
-    setSkillGroup(gi, { skills: profile.skillGroups[gi].skills.map((s, i) => (i === si ? val : s)) });
 
   const setLangItem = (i: number, patch: Partial<HumanLanguage>) =>
     set({ languages: at(profile.languages, i, patch) });
@@ -375,44 +370,7 @@ export function ProfilePage() {
 
           {/* ── Skill groups ── */}
           <SectionHeader title="skill groups" />
-          <div className="flex flex-col gap-3">
-            {profile.skillGroups.map((group, gi) => (
-              <EntryCard key={gi} onRemove={() => set({ skillGroups: without(profile.skillGroups, gi) })}>
-                <div className={nafRow}>
-                  <div className={nafSection}>
-                    <span className={nafLabel}>Label</span>
-                    <input className={nafInput} value={group.label} onChange={(e) => setSkillGroup(gi, { label: e.target.value })} />
-                  </div>
-                  <div className="flex items-end pb-1">
-                    <label className={nafCheckboxLabel}>
-                      <input
-                        type="checkbox"
-                        className={nafCheckboxInput}
-                        checked={group.variant === 'learning'}
-                        onChange={(e) => setSkillGroup(gi, { variant: e.target.checked ? 'learning' : undefined })}
-                      />
-                      learning variant
-                    </label>
-                  </div>
-                </div>
-                <div className={nafSection}>
-                  <span className={nafLabel}>Skills</span>
-                  {group.skills.map((skill, si) => (
-                    <div key={si} className={nafParagraphRow}>
-                      <input className={nafInput} value={skill} onChange={(e) => setSkill(gi, si, e.target.value)} />
-                      {group.skills.length > 1 && (
-                        <button className={nafRemoveBtn} onClick={() => setSkillGroup(gi, { skills: without(group.skills, si) })}>✕</button>
-                      )}
-                    </div>
-                  ))}
-                  <button className={nafAddBtn} onClick={() => setSkillGroup(gi, { skills: [...group.skills, ''] })}>+ Add skill</button>
-                </div>
-              </EntryCard>
-            ))}
-            <button className={nafAddBtn} onClick={() => set({ skillGroups: [...profile.skillGroups, { label: '', skills: [''] }] })}>
-              + Add skill group
-            </button>
-          </div>
+          <SkillGroupsEditor skillGroups={profile.skillGroups} onChange={(skillGroups) => set({ skillGroups })} />
 
           {/* ── Languages ── */}
           <SectionHeader title="languages" />
