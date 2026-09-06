@@ -227,7 +227,7 @@ export function DashboardPage() {
           status{sortIndicator('status')}
         </button>
         <button
-          className="[font-family:var(--font-mono)] text-[9.5px] uppercase tracking-[0.1em] text-[color:var(--ink-3)] hover:text-[color:var(--ink-2)] bg-transparent border-none cursor-pointer text-right p-0 w-[100px] shrink-0"
+          className="[font-family:var(--font-mono)] text-[9.5px] uppercase tracking-[0.1em] text-[color:var(--ink-3)] hover:text-[color:var(--ink-2)] bg-transparent border-none cursor-pointer text-right p-0 w-[100px] shrink-0 ml-2"
           onClick={() => toggleSort('appliedDate')}
         >
           applied{sortIndicator('appliedDate')}

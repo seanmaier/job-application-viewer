@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { formatDateLong, parseToIsoDate } from '../../utils/date';
+import { formatDateNumeric, parseToIsoDate } from '../../utils/date';
 import type { AppLanguage } from '../../types';
 
 interface Props {
@@ -31,7 +31,7 @@ export function EditableCell({
   const commit = () => {
     setEditing(false);
     if (draft === toDraft(value)) return;
-    onCommit(isDate ? formatDateLong(draft, language ?? 'en') : draft);
+    onCommit(isDate ? formatDateNumeric(draft, language ?? 'en') : draft);
   };
 
   const cancel = () => {

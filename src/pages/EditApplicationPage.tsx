@@ -15,7 +15,7 @@ import { SkillGroupsEditor } from '../components/SkillGroupsEditor';
 import { ExportSkillGroupsButton } from '../components/ExportSkillGroupsButton';
 import { ImportSkillGroupsModal } from '../components/ImportSkillGroupsModal';
 import { UnsavedChangesDialog } from '../components/UnsavedChangesDialog';
-import { formatDateLong, parseToIsoDate } from '../utils/date';
+import { formatDateLong, formatDateNumeric, parseToIsoDate } from '../utils/date';
 import {
   nafSection, nafRow, nafLabel, nafOptional, nafInput, nafTextarea,
   nafCheckboxes, nafCheckboxLabel, nafCheckboxInput, nafParagraphRow, nafRemoveBtn, nafAddBtn,
@@ -79,9 +79,9 @@ function EditContent({ staticApp }: { staticApp: ApplicationConfig }) {
     language,
     font,
     ...(url && { url }),
-    ...(appliedDateISO && { appliedDate: formatDateLong(appliedDateISO, language) }),
-    ...(interviewDateISO && { interviewDate: formatDateLong(interviewDateISO, language) }),
-    ...(finalDecisionDateISO && { finalDecisionDate: formatDateLong(finalDecisionDateISO, language) }),
+    ...(appliedDateISO && { appliedDate: formatDateNumeric(appliedDateISO, language) }),
+    ...(interviewDateISO && { interviewDate: formatDateNumeric(interviewDateISO, language) }),
+    ...(finalDecisionDateISO && { finalDecisionDate: formatDateNumeric(finalDecisionDateISO, language) }),
     ...(app.notes && { notes: app.notes }),
     ...(hasSummaryOverride && { summaryOverride }),
     featuredProjectIds: featuredIds,

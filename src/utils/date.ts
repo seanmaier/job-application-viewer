@@ -10,6 +10,14 @@ export function formatDateLong(isoDate: string, language: AppLanguage): string {
   return new Intl.DateTimeFormat(LOCALES[language], { year: 'numeric', month: 'long', day: 'numeric' }).format(date);
 }
 
+/** Formats an ISO "YYYY-MM-DD" date with the month numeric, so it stays short in a narrow column. */
+export function formatDateNumeric(isoDate: string, language: AppLanguage): string {
+  if (!isoDate) return '';
+  const date = new Date(`${isoDate}T00:00:00`);
+  if (Number.isNaN(date.getTime())) return '';
+  return new Intl.DateTimeFormat(LOCALES[language], { year: 'numeric', month: '2-digit', day: '2-digit' }).format(date);
+}
+
 /** Best-effort parse of a freeform display date (e.g. "July 5, 2026") back to "YYYY-MM-DD" for <input type="date">. */
 export function parseToIsoDate(value: string): string {
   if (!value) return '';

@@ -8,10 +8,8 @@ const LANG_FLAGS: Record<string, string> = { en: '🇬🇧', de: '🇩🇪' };
 
 export type DateFieldName = 'appliedDate' | 'interviewDate' | 'finalDecisionDate';
 
-const dateCellClass = '[font-family:var(--font-mono)] text-[11px] text-[color:var(--ink-3)] w-[100px] shrink-0 text-right truncate';
-const dateInputClass = '[font-family:var(--font-mono)] text-[11px] bg-[color:var(--surface)] border border-[color:var(--rule)] rounded px-1 py-0.5 w-[100px] shrink-0 text-right';
-const dateCellClassSpaced = `${dateCellClass} ml-2`;
-const dateInputClassSpaced = `${dateInputClass} ml-2`;
+const dateCellClass = '[font-family:var(--font-mono)] text-[11px] text-[color:var(--ink-3)] w-[100px] shrink-0 text-right truncate ml-2';
+const dateInputClass = '[font-family:var(--font-mono)] text-[11px] bg-[color:var(--surface)] border border-[color:var(--rule)] rounded px-1 py-0.5 w-[100px] shrink-0 text-right ml-2 text-[color:var(--ink-invert)] [color-scheme:dark]';
 
 interface Props {
   application: ApplicationConfig;
@@ -121,8 +119,8 @@ export function ApplicationCard({
       <EditableCell
         value={interviewDate ?? ''}
         onCommit={(v) => onFieldChange('interviewDate', v)}
-        className={dateCellClassSpaced}
-        editClassName={dateInputClassSpaced}
+        className={dateCellClass}
+        editClassName={dateInputClass}
         isDate
         language={application.language}
         title="Click to edit interview date"
@@ -132,8 +130,8 @@ export function ApplicationCard({
       <EditableCell
         value={finalDecisionDate ?? ''}
         onCommit={(v) => onFieldChange('finalDecisionDate', v)}
-        className={dateCellClassSpaced}
-        editClassName={dateInputClassSpaced}
+        className={dateCellClass}
+        editClassName={dateInputClass}
         isDate
         language={application.language}
         title="Click to edit final decision date"

@@ -1,5 +1,5 @@
 import type { ApplicationStatus, AppLanguage } from '../types';
-import { formatDateLong } from './date';
+import { formatDateNumeric } from './date';
 
 function todayIso(): string {
   const d = new Date();
@@ -15,14 +15,14 @@ function autoDateFor(
   language: AppLanguage | undefined,
 ): string | undefined {
   if (!shouldTrigger || currentValue) return undefined;
-  return formatDateLong(todayIso(), language ?? 'en');
+  return formatDateNumeric(todayIso(), language ?? 'en');
 }
 
 /**
- * Returns today's date (month spelled out, per language) if this status
- * transition should auto-fill the applied date — drafting/ready -> sent,
- * and nothing set yet. A manually-set date is never overwritten. Returns
- * undefined when auto-fill doesn't apply.
+ * Returns today's date (numeric, per language) if this status transition
+ * should auto-fill the applied date — drafting/ready -> sent, and nothing
+ * set yet. A manually-set date is never overwritten. Returns undefined
+ * when auto-fill doesn't apply.
  */
 export function autoAppliedDateFor(
   prevStatus: ApplicationStatus,
