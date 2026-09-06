@@ -13,6 +13,7 @@ import { STATUS_LABELS, STATUS_COLORS } from '../utils/status';
 import { FONT_LABELS, ALL_FONTS } from '../utils/fonts';
 import { generateTextExport } from '../utils/textExport';
 import { buildPdfFilename } from '../utils/pdfFilename';
+import { autoAppliedDateFor } from '../utils/autoAppliedDate';
 import { sanitizeFolderName, renderPageCanvases, buildPdfBlob, writeApplicationPdfs } from '../utils/pdfExport';
 import {
   isFileSystemAccessSupported, getSavedExportFolder, chooseExportFolder, ensureExportFolderPermission,
@@ -59,6 +60,15 @@ function ApplicationContent({ staticApp }: { staticApp: ApplicationConfig }) {
   const handleFontChange = (font: AppFont) => {
     const { status: _s, ...rest } = app;
     save({ ...rest, font });
+  };
+
+  const handleStatusChange = (newStatus: ApplicationStatus) => {
+    const autoDate = autoAppliedDateFor(status, newStatus, app.appliedDate, app.language);
+    if (autoDate) {
+      const { status: _s, ...rest } = app;
+      save({ ...rest, appliedDate: autoDate });
+    }
+    setStatus(newStatus);
   };
 
   const handleChooseFolder = async () => {
@@ -161,7 +171,7 @@ function ApplicationContent({ staticApp }: { staticApp: ApplicationConfig }) {
             className="[font-family:var(--font-mono)] text-[11px] bg-white/7 border border-white/12 rounded px-2.5 py-[5px] cursor-pointer min-w-[140px]"
             value={status}
             style={{ color: STATUS_COLORS[status] }}
-            onChange={(e) => setStatus(e.target.value as ApplicationStatus)}
+            onChange={(e) => handleStatusChange(e.target.value as ApplicationStatus)}
           >
             {Object.entries(STATUS_LABELS).map(([value, label]) => (
               <option key={value} value={value} className="text-[color:var(--ink-invert)] bg-[color:var(--surface)]">{label}</option>
