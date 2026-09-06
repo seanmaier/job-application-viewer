@@ -8,6 +8,7 @@ import { getProfile } from '../data/profiles';
 import { useApplication } from '../hooks/useApplication';
 import { CVDocument } from '../components/cv/CVDocument';
 import { CoverLetterDocument } from '../components/cover-letter/CoverLetterDocument';
+import { AutoTextarea } from '../components/AutoTextarea';
 import {
   nafSection, nafRow, nafLabel, nafOptional, nafInput, nafTextarea,
   nafCheckboxes, nafCheckboxLabel, nafCheckboxInput, nafParagraphRow, nafRemoveBtn, nafAddBtn,
@@ -184,10 +185,9 @@ function EditContent({ staticApp }: { staticApp: ApplicationConfig }) {
             <span className={nafLabel}>
               Profile summary override <span className={nafOptional}>(optional)</span>
             </span>
-            <textarea
+            <AutoTextarea
               className={nafTextarea}
               placeholder="Leave empty to use the default profile summary"
-              rows={3}
               value={summaryOverride}
               onChange={(e) => setSummaryOverride(e.target.value)}
             />
@@ -270,11 +270,10 @@ function EditContent({ staticApp }: { staticApp: ApplicationConfig }) {
                 <span className={nafLabel}>Cover letter paragraphs</span>
                 {paragraphs.map((p, i) => (
                   <div className={nafParagraphRow} key={i}>
-                    <textarea
+                    <AutoTextarea
                       className={nafTextarea}
                       placeholder={`Paragraph ${i + 1}`}
                       value={p}
-                      rows={4}
                       onChange={(e) => updateParagraph(i, e.target.value)}
                     />
                     {paragraphs.length > 1 && (

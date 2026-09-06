@@ -4,6 +4,7 @@ import type { AppFont, AppLanguage, ApplicationConfig } from '../types';
 import { ALL_FONTS, FONT_LABELS } from '../utils/fonts';
 import { getProfile } from '../data/profiles';
 import { saveLocalApplication } from '../utils/localApplications';
+import { AutoTextarea } from '../components/AutoTextarea';
 import {
   nafSection, nafRow, nafLabel, nafOptional, nafInput, nafTextarea,
   nafCheckboxes, nafCheckboxLabel, nafCheckboxInput, nafParagraphRow, nafRemoveBtn, nafAddBtn,
@@ -217,11 +218,10 @@ export function NewApplicationPage() {
                 <span className={nafLabel}>Cover letter paragraphs</span>
                 {paragraphs.map((p, i) => (
                   <div className={nafParagraphRow} key={i}>
-                    <textarea
+                    <AutoTextarea
                       className={nafTextarea}
                       placeholder={`Paragraph ${i + 1}`}
                       value={p}
-                      rows={4}
                       onChange={(e) => updateParagraph(i, e.target.value)}
                     />
                     {paragraphs.length > 1 && (
