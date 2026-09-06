@@ -9,6 +9,7 @@ import { useApplication } from '../hooks/useApplication';
 import { CVDocument } from '../components/cv/CVDocument';
 import { CoverLetterDocument } from '../components/cover-letter/CoverLetterDocument';
 import { AutoTextarea } from '../components/AutoTextarea';
+import { ImportParagraphsControl } from '../components/ImportParagraphsControl';
 import {
   nafSection, nafRow, nafLabel, nafOptional, nafInput, nafTextarea,
   nafCheckboxes, nafCheckboxLabel, nafCheckboxInput, nafParagraphRow, nafRemoveBtn, nafAddBtn,
@@ -268,6 +269,7 @@ function EditContent({ staticApp }: { staticApp: ApplicationConfig }) {
 
               <div className={nafSection}>
                 <span className={nafLabel}>Cover letter paragraphs</span>
+                <ImportParagraphsControl onImport={setParagraphs} />
                 {paragraphs.map((p, i) => (
                   <div className={nafParagraphRow} key={i}>
                     <AutoTextarea
