@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
+import { useParams, Link, useNavigate, useBlocker } from 'react-router-dom';
 import { applications } from '../data/applications';
 import { getLocalApplications } from '../utils/localApplications';
 import type { ApplicationConfig, AppFont, AppLanguage, CoverLetter } from '../types';
@@ -11,6 +11,7 @@ import { CoverLetterDocument } from '../components/cover-letter/CoverLetterDocum
 import { AutoTextarea } from '../components/AutoTextarea';
 import { ImportParagraphsControl } from '../components/ImportParagraphsControl';
 import { ExportParagraphsButton } from '../components/ExportParagraphsButton';
+import { UnsavedChangesDialog } from '../components/UnsavedChangesDialog';
 import { formatDateLong, parseToIsoDate } from '../utils/date';
 import {
   nafSection, nafRow, nafLabel, nafOptional, nafInput, nafTextarea,
@@ -81,14 +82,40 @@ function EditContent({ staticApp }: { staticApp: ApplicationConfig }) {
     }),
   });
 
+  // Snapshot of the form's initial values — never updated, since saving or
+  // resetting always immediately navigates away rather than staying on the page.
+  const [initialSnapshot] = useState(() => JSON.stringify(buildConfig()));
+  const isFormDirty = JSON.stringify(buildConfig()) !== initialSnapshot;
+
+  // Save/Reset trigger their own deliberate navigation right after already
+  // persisting or discarding the changes — never block those. skipBlockRef is
+  // mutated synchronously right before calling navigate() in the same event
+  // handler, before React re-renders, so this must read it live via a
+  // function (a plain boolean would bake in a stale snapshot from the last
+  // render and still block that same-tick navigation).
+  const skipBlockRef = useRef(false);
+  const blocker = useBlocker(() => isFormDirty && !skipBlockRef.current);
+
+  useEffect(() => {
+    if (!isFormDirty) return;
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = '';
+    };
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, [isFormDirty]);
+
   const handleSave = () => {
     save(buildConfig());
+    skipBlockRef.current = true;
     navigate(`/application/${staticApp.id}`);
   };
 
   const handleReset = () => {
     if (!confirm('Reset all edits and restore the original config?')) return;
     reset();
+    skipBlockRef.current = true;
     navigate(`/application/${staticApp.id}`);
   };
 
@@ -318,6 +345,17 @@ function EditContent({ staticApp }: { staticApp: ApplicationConfig }) {
           </p>
         </div>
       </div>
+
+      {blocker.state === 'blocked' && (
+        <UnsavedChangesDialog
+          onCancel={() => blocker.reset()}
+          onDiscard={() => blocker.proceed()}
+          onSave={() => {
+            save(buildConfig());
+            blocker.proceed();
+          }}
+        />
+      )}
     </div>
   );
 }
