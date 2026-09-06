@@ -2,45 +2,26 @@ import { useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { applications } from '../data/applications';
 import { getLocalApplications } from '../utils/localApplications';
-import type { ApplicationConfig, AppFont, AppLanguage } from '../types';
+import type { ApplicationConfig, AppFont, AppLanguage, CoverLetter } from '../types';
 import { ALL_FONTS, FONT_LABELS } from '../utils/fonts';
 import { getProfile } from '../data/profiles';
 import { useApplication } from '../hooks/useApplication';
+import { CVDocument } from '../components/cv/CVDocument';
+import { CoverLetterDocument } from '../components/cover-letter/CoverLetterDocument';
+import { AutoTextarea } from '../components/AutoTextarea';
+import { ImportParagraphsControl } from '../components/ImportParagraphsControl';
+import { ExportParagraphsButton } from '../components/ExportParagraphsButton';
+import { formatDateLong, parseToIsoDate } from '../utils/date';
 import {
   nafSection, nafRow, nafLabel, nafOptional, nafInput, nafTextarea,
   nafCheckboxes, nafCheckboxLabel, nafCheckboxInput, nafParagraphRow, nafRemoveBtn, nafAddBtn,
   newAppPage, newAppBack, newAppTitle, newAppBody, newAppForm,
-  newAppPreview, napHeader, napFilename, napCode, napHint, napLiveLabel,
-  editAppHeader, editAppCompany, editAppHeaderActions, editResetBtn, editSaveBtn, editSaveBtnSaved,
+  newAppPreview, napHeader, napFilename, napHint, napLiveLabel,
+  editAppHeader, editAppCompany, editAppHeaderActions, editResetBtn, editSaveBtn,
 } from '../styles/formStyles';
 
 function toId(company: string) {
   return company.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'new-app';
-}
-
-function generateJson(app: ApplicationConfig): string {
-  const obj: Record<string, unknown> = {
-    id: app.id,
-    company: app.company,
-    role: app.role,
-    status: app.status,
-    language: app.language ?? 'en',
-    font: app.font ?? 'sans',
-    ...(app.url && { url: app.url }),
-    ...(app.appliedDate && { appliedDate: app.appliedDate }),
-    ...(app.summaryOverride && { summaryOverride: app.summaryOverride }),
-    ...(app.featuredProjectIds?.length && { featuredProjectIds: app.featuredProjectIds }),
-    ...(app.coverLetter && {
-      coverLetter: {
-        recipientOrg: app.coverLetter.recipientOrg,
-        ...(app.coverLetter.recipientName && { recipientName: app.coverLetter.recipientName }),
-        date: app.coverLetter.date,
-        subjectRole: app.coverLetter.subjectRole,
-        paragraphs: app.coverLetter.paragraphs,
-      },
-    }),
-  };
-  return JSON.stringify(obj, null, 2);
 }
 
 // Inner component — staticApp is guaranteed to exist
@@ -48,26 +29,24 @@ function EditContent({ staticApp }: { staticApp: ApplicationConfig }) {
   const { app, save, reset, isDirty } = useApplication(staticApp);
   const navigate = useNavigate();
 
-  const profile = getProfile(app.language);
-
   const [company, setCompany] = useState(app.company);
   const [role, setRole] = useState(app.role);
   const [url, setUrl] = useState(app.url ?? '');
   const [appliedDate, setAppliedDate] = useState(app.appliedDate ?? '');
   const [language, setLanguage] = useState<AppLanguage>(app.language ?? 'en');
   const [font, setFont] = useState<AppFont>(app.font ?? 'sans');
+
+  const profile = getProfile(language);
   const [summaryOverride, setSummaryOverride] = useState(app.summaryOverride ?? '');
   const [featuredIds, setFeaturedIds] = useState<string[]>(
     app.featuredProjectIds ?? profile.projects.map((p) => p.id),
   );
   const [hasCoverLetter, setHasCoverLetter] = useState(!!app.coverLetter);
-  const [date, setDate] = useState(app.coverLetter?.date ?? '');
+  const [dateISO, setDateISO] = useState(() => parseToIsoDate(app.coverLetter?.date ?? ''));
   const [recipientOrg, setRecipientOrg] = useState(app.coverLetter?.recipientOrg ?? '');
   const [recipientName, setRecipientName] = useState(app.coverLetter?.recipientName ?? '');
   const [subjectRole, setSubjectRole] = useState(app.coverLetter?.subjectRole ?? '');
   const [paragraphs, setParagraphs] = useState<string[]>([...(app.coverLetter?.paragraphs ?? [''])]);
-
-  const [saved, setSaved] = useState(false);
 
   const toggleProject = (id: string) =>
     setFeaturedIds((prev) =>
@@ -95,7 +74,7 @@ function EditContent({ staticApp }: { staticApp: ApplicationConfig }) {
       coverLetter: {
         recipientOrg,
         ...(recipientName && { recipientName }),
-        date,
+        date: formatDateLong(dateISO, language),
         subjectRole: subjectRole || role,
         paragraphs: paragraphs.filter(Boolean),
       },
@@ -104,8 +83,7 @@ function EditContent({ staticApp }: { staticApp: ApplicationConfig }) {
 
   const handleSave = () => {
     save(buildConfig());
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+    navigate(`/application/${staticApp.id}`);
   };
 
   const handleReset = () => {
@@ -131,11 +109,8 @@ function EditContent({ staticApp }: { staticApp: ApplicationConfig }) {
               Reset to default
             </button>
           )}
-          <button
-            className={saved ? editSaveBtnSaved : editSaveBtn}
-            onClick={handleSave}
-          >
-            {saved ? 'Saved!' : 'Save changes'}
+          <button className={editSaveBtn} onClick={handleSave}>
+            Save changes
           </button>
         </div>
       </div>
@@ -207,10 +182,9 @@ function EditContent({ staticApp }: { staticApp: ApplicationConfig }) {
             <span className={nafLabel}>
               Profile summary override <span className={nafOptional}>(optional)</span>
             </span>
-            <textarea
+            <AutoTextarea
               className={nafTextarea}
               placeholder="Leave empty to use the default profile summary"
-              rows={3}
               value={summaryOverride}
               onChange={(e) => setSummaryOverride(e.target.value)}
             />
@@ -251,9 +225,10 @@ function EditContent({ staticApp }: { staticApp: ApplicationConfig }) {
                 <div className={nafSection}>
                   <span className={nafLabel}>Cover letter date</span>
                   <input
+                    type="date"
                     className={nafInput}
-                    value={date}
-                    onChange={(e) => setDate(e.target.value)}
+                    value={dateISO}
+                    onChange={(e) => setDateISO(e.target.value)}
                   />
                 </div>
                 <div className={nafSection}>
@@ -291,13 +266,14 @@ function EditContent({ staticApp }: { staticApp: ApplicationConfig }) {
 
               <div className={nafSection}>
                 <span className={nafLabel}>Cover letter paragraphs</span>
+                <ImportParagraphsControl onImport={setParagraphs} />
+                <ExportParagraphsButton paragraphs={paragraphs} />
                 {paragraphs.map((p, i) => (
                   <div className={nafParagraphRow} key={i}>
-                    <textarea
+                    <AutoTextarea
                       className={nafTextarea}
                       placeholder={`Paragraph ${i + 1}`}
                       value={p}
-                      rows={4}
                       onChange={(e) => updateParagraph(i, e.target.value)}
                     />
                     {paragraphs.length > 1 && (
@@ -315,7 +291,7 @@ function EditContent({ staticApp }: { staticApp: ApplicationConfig }) {
           )}
         </div>
 
-        {/* ── Code preview ── */}
+        {/* ── Live preview ── */}
         <div className={newAppPreview}>
           <div className={napHeader}>
             <span className={napFilename}>
@@ -323,9 +299,21 @@ function EditContent({ staticApp }: { staticApp: ApplicationConfig }) {
             </span>
             <span className={napLiveLabel}>live preview</span>
           </div>
-          <pre className={napCode}>{generateJson(previewApp)}</pre>
+          <div className="flex-1 overflow-y-auto">
+            <div className="py-8 px-5">
+              <CVDocument profile={profile} application={previewApp} />
+              {previewApp.coverLetter && (
+                <CoverLetterDocument
+                  profile={profile}
+                  application={{ ...previewApp, coverLetter: previewApp.coverLetter as CoverLetter }}
+                  paginate
+                />
+              )}
+            </div>
+          </div>
           <p className={napHint}>
-            Changes are saved to your browser. Copy the JSON above to update{' '}
+            Changes are saved to your browser as you edit. Use the{' '}
+            <code>JSON</code> button on the application page to copy the config to{' '}
             <code>private/applications/{toId(company)}.json</code> permanently.
           </p>
         </div>

@@ -8,7 +8,29 @@ interface Props {
   application: ApplicationConfig;
 }
 
+const LABELS = {
+  en: {
+    contact: 'Contact',
+    education: 'Education',
+    languages: 'Languages',
+    beyondWork: 'Beyond work',
+    profile: 'Profile',
+    experience: 'Experience',
+    projects: 'Projects',
+  },
+  de: {
+    contact: 'Kontakt',
+    education: 'Ausbildung',
+    languages: 'Sprachen',
+    beyondWork: 'Neben der Arbeit',
+    profile: 'Profil',
+    experience: 'Berufserfahrung',
+    projects: 'Projekte',
+  },
+} as const;
+
 export function CVDocument({ profile, application }: Props) {
+  const t = LABELS[application.language ?? 'en'];
   const summary = application.summaryOverride ?? profile.summary;
 
   const projects = application.featuredProjectIds
@@ -26,7 +48,7 @@ export function CVDocument({ profile, application }: Props) {
           <div className="cv-name">{profile.name}</div>
           <div className="cv-role">{profile.role}</div>
         </div>
-        <nav className="cv-contact" aria-label="Contact">
+        <nav className="cv-contact" aria-label={t.contact}>
           <a href={`mailto:${profile.email}`}>{profile.email}</a>
           <br />
           <a href={`https://${profile.website}`} target="_blank" rel="noopener">{profile.website}</a>
@@ -58,7 +80,7 @@ export function CVDocument({ profile, application }: Props) {
           ))}
 
           <div className="sidebar-section">
-            <span className="doc-label">Education</span>
+            <span className="doc-label">{t.education}</span>
             <div className="edu-degree">{profile.education.degree}</div>
             <div className="edu-school">
               {profile.education.school}
@@ -73,7 +95,7 @@ export function CVDocument({ profile, application }: Props) {
           </div>
 
           <div className="sidebar-section">
-            <span className="doc-label">Languages</span>
+            <span className="doc-label">{t.languages}</span>
             <ul className="sidebar-list">
               {profile.languages.map((lang) => (
                 <li key={lang.name}>
@@ -84,7 +106,7 @@ export function CVDocument({ profile, application }: Props) {
           </div>
 
           <div className="sidebar-section">
-            <span className="doc-label">Beyond work</span>
+            <span className="doc-label">{t.beyondWork}</span>
             <ul className="sidebar-list">
               {profile.interests.map((interest) => (
                 <li key={interest}>{interest}</li>
@@ -95,12 +117,12 @@ export function CVDocument({ profile, application }: Props) {
 
         <main>
           <section className="main-section">
-            <span className="doc-label">Profile</span>
+            <span className="doc-label">{t.profile}</span>
             <p className="summary-text">{summary}</p>
           </section>
 
           <section className="main-section">
-            <span className="doc-label">Experience</span>
+            <span className="doc-label">{t.experience}</span>
             {profile.experience.map((exp) => (
               <div className="exp-entry" key={exp.company + exp.dates}>
                 <div className="exp-header">
@@ -123,7 +145,7 @@ export function CVDocument({ profile, application }: Props) {
           </section>
 
           <section className="main-section">
-            <span className="doc-label">Projects</span>
+            <span className="doc-label">{t.projects}</span>
             {projects.map((project) => (
               <div className="project-entry" key={project.id}>
                 <div className="project-header">

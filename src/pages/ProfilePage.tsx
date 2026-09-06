@@ -7,6 +7,7 @@ import type {
 import { getProfile, getStaticProfile } from '../data/profiles';
 import { setProfileOverride, clearProfileOverride, hasProfileOverride } from '../utils/profileStorage';
 import { CVDocument } from '../components/cv/CVDocument';
+import { AutoTextarea } from '../components/AutoTextarea';
 import {
   nafSection, nafRow, nafLabel, nafOptional, nafInput, nafTextarea,
   nafParagraphRow, nafRemoveBtn, nafAddBtn, nafCheckboxLabel, nafCheckboxInput,
@@ -131,7 +132,7 @@ export function ProfilePage() {
   // ── render ────────────────────────────────────────────────────────────────
 
   return (
-    <div className="min-h-screen bg-[color:var(--ink)] flex flex-col">
+    <div className="h-screen bg-[color:var(--ink)] flex flex-col">
 
       {/* Header */}
       <div className="bg-[color:var(--ink)] flex items-center justify-between px-6 h-[52px] shrink-0 gap-4">
@@ -236,9 +237,8 @@ export function ProfilePage() {
 
           {/* ── Summary ── */}
           <SectionHeader title="summary" />
-          <textarea
+          <AutoTextarea
             className={nafTextarea}
-            rows={5}
             value={profile.summary}
             onChange={(e) => set({ summary: e.target.value })}
           />
@@ -308,7 +308,7 @@ export function ProfilePage() {
                 </div>
                 <div className={nafSection}>
                   <span className={nafLabel}>Description</span>
-                  <textarea className={nafTextarea} rows={3} value={proj.description} onChange={(e) => setProj(pi, { description: e.target.value })} />
+                  <AutoTextarea className={nafTextarea} value={proj.description} onChange={(e) => setProj(pi, { description: e.target.value })} />
                 </div>
                 <div className={nafRow}>
                   <div className={nafSection}>
@@ -438,7 +438,7 @@ export function ProfilePage() {
         {/* Preview */}
         <div className="bg-[#1a2236] overflow-y-auto">
           <div className="py-8 px-5">
-            <CVDocument profile={profile} application={PREVIEW_APP} />
+            <CVDocument profile={profile} application={{ ...PREVIEW_APP, language: lang }} />
           </div>
         </div>
       </div>

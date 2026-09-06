@@ -16,6 +16,8 @@ import type { ApplicationConfig, ApplicationStatus, AppFont, CoverLetter } from 
 
 const LANG_FLAGS: Record<string, string> = { en: '🇬🇧', de: '🇩🇪' };
 
+type PrintTarget = 'both' | 'cv' | 'coverLetter';
+
 export function ApplicationPage() {
   const { id } = useParams<{ id: string }>();
   const staticApp = id ? [...applications, ...getLocalApplications()].find((a) => a.id === id) : undefined;
@@ -37,6 +39,7 @@ function ApplicationContent({ staticApp }: { staticApp: ApplicationConfig }) {
   const [status, setStatus] = useApplicationStatus(staticApp.id, staticApp.status);
   const [exportOpen, setExportOpen] = useState(false);
   const [jsonOpen, setJsonOpen] = useState(false);
+  const [printTarget, setPrintTarget] = useState<PrintTarget>('both');
 
   const profile = getProfile(app.language);
   const langFlag = LANG_FLAGS[app.language ?? 'en'];
@@ -105,6 +108,17 @@ function ApplicationContent({ staticApp }: { staticApp: ApplicationConfig }) {
           >
             LLM Export
           </button>
+          {app.coverLetter && (
+            <select
+              className="[font-family:var(--font-mono)] text-[11px] bg-white/7 border border-white/12 rounded px-2.5 py-[5px] cursor-pointer text-[color:var(--ink-2)]"
+              value={printTarget}
+              onChange={(e) => setPrintTarget(e.target.value as PrintTarget)}
+            >
+              <option value="both" className="text-[color:var(--ink-invert)] bg-[color:var(--surface)]">Print: Both</option>
+              <option value="cv" className="text-[color:var(--ink-invert)] bg-[color:var(--surface)]">Print: CV only</option>
+              <option value="coverLetter" className="text-[color:var(--ink-invert)] bg-[color:var(--surface)]">Print: Cover letter only</option>
+            </select>
+          )}
           <button
             className="[font-family:var(--font-mono)] text-[11px] bg-transparent text-[color:var(--accent)] border border-[color:var(--accent)] rounded px-3.5 py-[5px] cursor-pointer tracking-[0.04em] hover:bg-[color:var(--accent)] hover:text-[color:var(--ink)]"
             onClick={() => {
@@ -120,12 +134,17 @@ function ApplicationContent({ staticApp }: { staticApp: ApplicationConfig }) {
       </div>
 
       <div className="pt-10 px-5 pb-20 print:p-0">
-        <CVDocument profile={profile} application={{ ...app, status }} />
+        <div className={printTarget === 'coverLetter' ? 'print:hidden' : undefined}>
+          <CVDocument profile={profile} application={{ ...app, status }} />
+        </div>
         {app.coverLetter && (
-          <CoverLetterDocument
-            profile={profile}
-            application={{ ...app, status, coverLetter: app.coverLetter as CoverLetter }}
-          />
+          <div className={printTarget === 'cv' ? 'print:hidden' : undefined}>
+            <CoverLetterDocument
+              profile={profile}
+              application={{ ...app, status, coverLetter: app.coverLetter as CoverLetter }}
+              paginate
+            />
+          </div>
         )}
       </div>
 
