@@ -17,14 +17,22 @@ export function AutoTextarea({ className, ...rest }: Props) {
       ? parseFloat(style.borderTopWidth) + parseFloat(style.borderBottomWidth)
       : 0;
     el.style.height = 'auto';
-    el.style.height = `${el.scrollHeight + borderY}px`;
+    const height = `${el.scrollHeight + borderY}px`;
+    el.style.height = height;
+    // A flex item's automatic minimum size resolves to 0 when its overflow
+    // isn't visible (which is exactly our case), letting flex-shrink crush it
+    // below content size in a tight column. An explicit min-height (unlike
+    // flex-shrink: 0) blocks only that height-axis shrink, without also
+    // preventing width-axis shrink where the textarea sits in a row
+    // alongside another element (e.g. a remove button).
+    el.style.minHeight = height;
   }, [rest.value]);
 
   return (
     <textarea
       ref={ref}
       className={className}
-      style={{ resize: 'none', overflow: 'hidden', flexShrink: 0 }}
+      style={{ resize: 'none', overflow: 'hidden' }}
       {...rest}
     />
   );
