@@ -31,13 +31,15 @@ Your profile and application data live in `private/`, which is gitignored and
 never committed. Set it up from the provided examples:
 
 ```bash
-cp private/profile.example.json private/profile.json
+cp private/profiles/en.example.json private/profiles/en.json
+cp private/profiles/de.example.json private/profiles/de.json
 cp private/applications/example.json private/applications/<your-application-id>.json
 ```
 
-Fill in your own details, then register the new application file in
-`src/data/applications/index.ts`, importing it via the `@private/applications/...`
-alias.
+Fill in your own details. Application files under `private/applications/` are
+picked up automatically — no need to register them anywhere. The app also
+runs fine with none of this in place (e.g. straight after cloning); it just
+falls back to the example profile and shows an empty dashboard.
 
 Then start the dev server:
 
