@@ -4,6 +4,7 @@ import { applications as staticApps } from '../data/applications';
 import { getLocalApplications, deleteLocalApplication } from '../utils/localApplications';
 import { STATUS_LABELS, STATUS_COLORS } from '../utils/status';
 import { ApplicationCard } from '../components/dashboard/ApplicationCard';
+import { ImportApplicationModal } from '../components/ImportApplicationModal';
 import type { ApplicationStatus } from '../types';
 
 function readStatus(id: string, fallback: ApplicationStatus): ApplicationStatus {
@@ -23,6 +24,7 @@ export function DashboardPage() {
   );
 
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [importOpen, setImportOpen] = useState(false);
 
   const handleStatusChange = (id: string, status: ApplicationStatus) => {
     writeStatus(id, status);
@@ -71,6 +73,12 @@ export function DashboardPage() {
           >
             profile
           </Link>
+          <button
+            className="[font-family:var(--font-mono)] text-[11px] text-[color:var(--ink-3)] bg-transparent border border-[color:var(--rule)] px-3 py-1.5 cursor-pointer hover:text-[color:var(--ink-2)] hover:border-[color:var(--ink-2)] transition-colors duration-150"
+            onClick={() => setImportOpen(true)}
+          >
+            import
+          </button>
           <Link
             className="[font-family:var(--font-mono)] text-[11px] text-[color:var(--ink-3)] no-underline border border-[color:var(--rule)] px-3 py-1.5 hover:text-[color:var(--accent)] hover:border-[color:var(--accent)] transition-colors duration-150"
             to="/application/new"
@@ -144,6 +152,8 @@ export function DashboardPage() {
           </button>
         </div>
       )}
+
+      {importOpen && <ImportApplicationModal onClose={() => setImportOpen(false)} />}
     </div>
   );
 }
