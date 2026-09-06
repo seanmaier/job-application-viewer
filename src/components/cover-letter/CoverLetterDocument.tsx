@@ -4,6 +4,7 @@ import type { ApplicationConfig, CoverLetter, Profile } from '../../types';
 import { FONT_STACKS } from '../../utils/fonts';
 import { usePagedBlocks } from './usePagedBlocks';
 import type { Block } from './usePagedBlocks';
+import { joinLines } from '../../utils/lines';
 import '../../styles/document.css';
 
 interface Props {
@@ -45,13 +46,12 @@ export function CoverLetterDocument({ profile, application, paginate = false }: 
             <div className="cl-sender-sub">{profile.role}</div>
           </div>
           <nav className="cl-contact-right" aria-label={t.contact}>
-            <a href={`mailto:${profile.email}`}>{profile.email}</a>
-            <br />
-            <a href={`https://${profile.website}`} target="_blank" rel="noopener">{profile.website}</a>
-            <br />
-            <a href={`https://${profile.github}`} target="_blank" rel="noopener">{profile.github}</a>
-            <br />
-            {profile.city}
+            {joinLines([
+              profile.email && <a href={`mailto:${profile.email}`}>{profile.email}</a>,
+              profile.website && <a href={`https://${profile.website}`} target="_blank" rel="noopener">{profile.website}</a>,
+              profile.github && <a href={`https://${profile.github}`} target="_blank" rel="noopener">{profile.github}</a>,
+              profile.city,
+            ])}
           </nav>
         </header>
       ),
@@ -60,13 +60,13 @@ export function CoverLetterDocument({ profile, application, paginate = false }: 
       key: 'meta',
       node: (
         <div className="cl-meta">
-          <div className="cl-date">{cl.date}</div>
+          {cl.date && <div className="cl-date">{cl.date}</div>}
           <div className="cl-recipient">
-            {cl.recipientName ?? t.recipientFallback}
-            <br />
-            {cl.recipientOrg}
-            <br />
-            {profile.city}
+            {joinLines([
+              cl.recipientName ?? t.recipientFallback,
+              cl.recipientOrg,
+              profile.city,
+            ])}
           </div>
         </div>
       ),

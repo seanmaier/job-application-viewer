@@ -1,6 +1,7 @@
 import type React from 'react';
 import type { ApplicationConfig, Profile } from '../../types';
 import { FONT_STACKS } from '../../utils/fonts';
+import { joinLines } from '../../utils/lines';
 import '../../styles/document.css';
 
 interface Props {
@@ -49,15 +50,13 @@ export function CVDocument({ profile, application }: Props) {
           <div className="cv-role">{profile.role}</div>
         </div>
         <nav className="cv-contact" aria-label={t.contact}>
-          <a href={`mailto:${profile.email}`}>{profile.email}</a>
-          <br />
-          <a href={`https://${profile.website}`} target="_blank" rel="noopener">{profile.website}</a>
-          <br />
-          <a href={`https://${profile.github}`} target="_blank" rel="noopener">{profile.github}</a>
-          <br />
-          <a href={`https://${profile.linkedin}`} target="_blank" rel="noopener">{profile.linkedin}</a>
-          <br />
-          {profile.city}
+          {joinLines([
+            profile.email && <a href={`mailto:${profile.email}`}>{profile.email}</a>,
+            profile.website && <a href={`https://${profile.website}`} target="_blank" rel="noopener">{profile.website}</a>,
+            profile.github && <a href={`https://${profile.github}`} target="_blank" rel="noopener">{profile.github}</a>,
+            profile.linkedin && <a href={`https://${profile.linkedin}`} target="_blank" rel="noopener">{profile.linkedin}</a>,
+            profile.city,
+          ])}
         </nav>
       </header>
 
