@@ -12,12 +12,13 @@ interface Props {
   selected: boolean;
   onSelect: (checked: boolean) => void;
   showCheckbox: boolean;
+  selectMode?: boolean;
   onDelete?: () => void;
 }
 
 export function ApplicationCard({
   application, status, onStatusChange,
-  selected, onSelect, showCheckbox, onDelete,
+  selected, onSelect, showCheckbox, selectMode = false, onDelete,
 }: Props) {
   const navigate = useNavigate();
   const [editingStatus, setEditingStatus] = useState(false);
@@ -39,7 +40,7 @@ export function ApplicationCard({
   return (
     <div
       className={`group flex items-center border-b border-[color:var(--rule)] py-2.5 cursor-pointer transition-colors duration-100 ${selected ? 'bg-[color:var(--surface)]' : 'hover:bg-[color:var(--surface)]'}`}
-      onClick={() => navigate(`/application/${application.id}`)}
+      onClick={() => (selectMode ? onSelect(!selected) : navigate(`/application/${application.id}`))}
     >
       {/* Checkbox */}
       <div className="w-[28px] shrink-0 flex items-center justify-center">

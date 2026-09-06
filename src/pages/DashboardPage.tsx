@@ -23,6 +23,7 @@ export function DashboardPage() {
   );
 
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [selectMode, setSelectMode] = useState(false);
 
   const handleStatusChange = (id: string, status: ApplicationStatus) => {
     writeStatus(id, status);
@@ -54,6 +55,24 @@ export function DashboardPage() {
     setSelected((prev) => { const next = new Set(prev); next.delete(id); return next; });
   };
 
+  const toggleSelectMode = () => {
+    setSelectMode((prev) => !prev);
+    setSelected(new Set());
+  };
+
+  const handleBulkDelete = () => {
+    const deletableIds = [...selected].filter((id) => !staticApps.some((s) => s.id === id));
+    if (deletableIds.length === 0) return;
+    const skipped = selected.size - deletableIds.length;
+    const message =
+      `Delete ${deletableIds.length} selected application${deletableIds.length === 1 ? '' : 's'}? This cannot be undone.` +
+      (skipped > 0 ? ` (${skipped} selected application${skipped === 1 ? '' : 's'} can't be deleted and will be kept.)` : '');
+    if (!confirm(message)) return;
+    deletableIds.forEach((id) => deleteLocalApplication(id));
+    setLocalApps(getLocalApplications());
+    setSelected(new Set());
+  };
+
   const anySelected = selected.size > 0;
 
   return (
@@ -65,6 +84,16 @@ export function DashboardPage() {
           <span className="text-[color:var(--ink-3)] animate-pulse"> _</span>
         </div>
         <div className="flex items-center gap-2">
+          <button
+            className={`[font-family:var(--font-mono)] text-[11px] bg-transparent border px-3 py-1.5 cursor-pointer transition-colors duration-150 ${
+              selectMode
+                ? 'text-[color:var(--accent)] border-[color:var(--accent)]'
+                : 'text-[color:var(--ink-3)] border-[color:var(--rule)] hover:text-[color:var(--ink-2)] hover:border-[color:var(--ink-2)]'
+            }`}
+            onClick={toggleSelectMode}
+          >
+            {selectMode ? 'done' : 'select'}
+          </button>
           <Link
             className="[font-family:var(--font-mono)] text-[11px] text-[color:var(--ink-3)] no-underline border border-[color:var(--rule)] px-3 py-1.5 hover:text-[color:var(--ink-2)] hover:border-[color:var(--ink-2)] transition-colors duration-150"
             to="/profile"
@@ -107,7 +136,8 @@ export function DashboardPage() {
                 onStatusChange={(s) => handleStatusChange(app.id, s)}
                 selected={selected.has(app.id)}
                 onSelect={(checked) => handleSelect(app.id, checked)}
-                showCheckbox={anySelected}
+                showCheckbox={selectMode || anySelected}
+                selectMode={selectMode}
                 onDelete={isLocal ? () => handleDelete(app.id) : undefined}
               />
             );
@@ -135,6 +165,14 @@ export function DashboardPage() {
               </button>
             ))}
           </div>
+          <span className="text-[color:var(--rule)] select-none">|</span>
+          <button
+            className="[font-family:var(--font-mono)] text-[10.5px] bg-transparent border-none cursor-pointer px-2 py-0.5 hover:opacity-70 transition-opacity"
+            style={{ color: 'var(--status-rejected)' }}
+            onClick={handleBulkDelete}
+          >
+            delete
+          </button>
           <span className="text-[color:var(--rule)] select-none">|</span>
           <button
             className="[font-family:var(--font-mono)] text-[11px] text-[color:var(--ink-3)] bg-transparent border-none cursor-pointer hover:text-[color:var(--status-rejected)] transition-colors"
