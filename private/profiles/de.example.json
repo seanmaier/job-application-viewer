@@ -1,0 +1,44 @@
+{
+  "name": "Jane Doe",
+  "role": "Softwareentwicklerin · Backend & Verteilte Systeme",
+  "email": "jane.doe@example.com",
+  "website": "janedoe.example",
+  "github": "github.com/janedoe",
+  "linkedin": "linkedin.com/in/janedoe",
+  "city": "Berlin, Deutschland",
+  "summary": "Ein bis zwei Sätze, die deinen Hintergrund und die Art von Entwicklungsarbeit beschreiben, die dich interessiert.",
+  "experience": [
+    {
+      "title": "Softwareentwicklerin",
+      "company": "Example Corp",
+      "dates": "Jan 2024 – Heute",
+      "bullets": [
+        "Ein konkreter Erfolg mit eingesetzten Technologien und Umfang",
+        "Ein weiterer Punkt zu Verantwortlichkeiten oder Wirkung"
+      ]
+    }
+  ],
+  "projects": [
+    {
+      "id": "example-project",
+      "name": "Beispielprojekt",
+      "stack": "TypeScript · React · PostgreSQL",
+      "description": "Kurze Beschreibung, was das Projekt macht und warum es bemerkenswert ist.",
+      "link": "https://github.com/janedoe/example-project",
+      "linkLabel": "github ↗"
+    }
+  ],
+  "education": {
+    "degree": "Informatik",
+    "school": "Beispiel-Universität",
+    "dates": "2020 – 2024"
+  },
+  "skillGroups": [
+    { "label": "Sprachen", "skills": ["TypeScript", "Python"] },
+    { "label": "Frameworks", "skills": ["React", "FastAPI"] }
+  ],
+  "languages": [
+    { "name": "Deutsch", "level": "Muttersprache" }
+  ],
+  "interests": ["Lesen", "Wandern"]
+}
