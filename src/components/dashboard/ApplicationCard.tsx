@@ -1,16 +1,27 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { STATUS_LABELS, STATUS_COLORS } from '../../utils/status';
+import { EditableCell } from './EditableCell';
 import type { ApplicationConfig, ApplicationStatus } from '../../types';
 
 const LANG_FLAGS: Record<string, string> = { en: '🇬🇧', de: '🇩🇪' };
+
+export type DateFieldName = 'appliedDate' | 'interviewDate' | 'finalDecisionDate';
+
+const dateCellClass = '[font-family:var(--font-mono)] text-[11px] text-[color:var(--ink-3)] w-[100px] shrink-0 text-right truncate';
+const dateInputClass = '[font-family:var(--font-mono)] text-[11px] bg-[color:var(--surface)] border border-[color:var(--rule)] rounded px-1 py-0.5 w-[100px] shrink-0 text-right';
+const dateCellClassSpaced = `${dateCellClass} ml-2`;
+const dateInputClassSpaced = `${dateInputClass} ml-2`;
 
 interface Props {
   application: ApplicationConfig;
   status: ApplicationStatus;
   appliedDate?: string;
+  interviewDate?: string;
+  finalDecisionDate?: string;
   notes?: string;
   onStatusChange: (status: ApplicationStatus) => void;
+  onFieldChange: (field: DateFieldName | 'notes', value: string) => void;
   selected: boolean;
   onSelect: (checked: boolean) => void;
   showCheckbox: boolean;
@@ -19,7 +30,7 @@ interface Props {
 }
 
 export function ApplicationCard({
-  application, status, appliedDate, notes, onStatusChange,
+  application, status, appliedDate, interviewDate, finalDecisionDate, notes, onStatusChange, onFieldChange,
   selected, onSelect, showCheckbox, selectMode = false, onDelete,
 }: Props) {
   const navigate = useNavigate();
@@ -110,18 +121,42 @@ export function ApplicationCard({
         )}
       </div>
 
-      {/* Date */}
-      <span className="[font-family:var(--font-mono)] text-[11px] text-[color:var(--ink-3)] w-[90px] shrink-0 text-right">
-        {appliedDate ?? ''}
-      </span>
+      {/* Applied date */}
+      <EditableCell
+        value={appliedDate ?? ''}
+        onCommit={(v) => onFieldChange('appliedDate', v)}
+        className={dateCellClass}
+        editClassName={dateInputClass}
+        title="Click to edit applied date"
+      />
+
+      {/* Interview date */}
+      <EditableCell
+        value={interviewDate ?? ''}
+        onCommit={(v) => onFieldChange('interviewDate', v)}
+        className={dateCellClassSpaced}
+        editClassName={dateInputClassSpaced}
+        title="Click to edit interview date"
+      />
+
+      {/* Final decision date */}
+      <EditableCell
+        value={finalDecisionDate ?? ''}
+        onCommit={(v) => onFieldChange('finalDecisionDate', v)}
+        className={dateCellClassSpaced}
+        editClassName={dateInputClassSpaced}
+        title="Click to edit final decision date"
+      />
 
       {/* Notes */}
-      <span
-        className="[font-family:var(--font-mono)] text-[11px] text-[color:var(--ink-3)] w-[160px] shrink-0 pl-3 truncate"
-        title={notes}
-      >
-        {notes ?? ''}
-      </span>
+      <EditableCell
+        value={notes ?? ''}
+        onCommit={(v) => onFieldChange('notes', v)}
+        className="[font-family:var(--font-mono)] text-[11px] text-[color:var(--ink-3)] w-[170px] shrink-0 pl-3 truncate"
+        editClassName="[font-family:var(--font-mono)] text-[11px] bg-[color:var(--surface)] border border-[color:var(--rule)] rounded px-1.5 py-1 w-[170px] shrink-0 ml-3 resize-none"
+        multiline
+        title="Click to edit notes"
+      />
 
       {/* Delete (local apps only) */}
       {onDelete ? (

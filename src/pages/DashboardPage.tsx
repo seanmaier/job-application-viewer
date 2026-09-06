@@ -6,6 +6,7 @@ import { getConfigOverride, setConfigOverride } from '../utils/appStorage';
 import { autoAppliedDateFor, autoInterviewDateFor, autoFinalDecisionDateFor } from '../utils/autoStatusDates';
 import { STATUS_LABELS, STATUS_COLORS } from '../utils/status';
 import { ApplicationCard } from '../components/dashboard/ApplicationCard';
+import type { DateFieldName } from '../components/dashboard/ApplicationCard';
 import { ImportApplicationModal } from '../components/ImportApplicationModal';
 import type { ApplicationConfig, ApplicationStatus } from '../types';
 
@@ -17,7 +18,7 @@ function writeStatus(id: string, status: ApplicationStatus) {
   localStorage.setItem(`status-${id}`, status);
 }
 
-type SortField = 'company' | 'role' | 'status' | 'appliedDate';
+type SortField = 'company' | 'role' | 'status' | 'appliedDate' | 'interviewDate' | 'finalDecisionDate';
 
 export function DashboardPage() {
   const [localApps, setLocalApps] = useState(() => getLocalApplications());
@@ -39,7 +40,7 @@ export function DashboardPage() {
     Object.fromEntries(allApps.map((a) => [a.id, getConfigOverride(a.id)?.finalDecisionDate ?? a.finalDecisionDate])),
   );
 
-  const [notes] = useState<Record<string, string | undefined>>(() =>
+  const [notes, setNotes] = useState<Record<string, string | undefined>>(() =>
     Object.fromEntries(allApps.map((a) => [a.id, getConfigOverride(a.id)?.notes ?? a.notes])),
   );
 
@@ -76,6 +77,33 @@ export function DashboardPage() {
     if (app) applyAutoDates(app, statuses[id] ?? app.status, status);
     writeStatus(id, status);
     setStatuses((prev) => ({ ...prev, [id]: status }));
+  };
+
+  const handleFieldChange = (id: string, field: DateFieldName | 'notes', value: string) => {
+    const app = allApps.find((a) => a.id === id);
+    if (!app) return;
+    const { status: _s, ...rest } = app;
+    const base = getConfigOverride(id) ?? rest;
+    const trimmed = value.trim() || undefined;
+
+    switch (field) {
+      case 'appliedDate':
+        setConfigOverride(id, { ...base, appliedDate: trimmed });
+        setAppliedDates((prev) => ({ ...prev, [id]: trimmed }));
+        break;
+      case 'interviewDate':
+        setConfigOverride(id, { ...base, interviewDate: trimmed });
+        setInterviewDates((prev) => ({ ...prev, [id]: trimmed }));
+        break;
+      case 'finalDecisionDate':
+        setConfigOverride(id, { ...base, finalDecisionDate: trimmed });
+        setFinalDecisionDates((prev) => ({ ...prev, [id]: trimmed }));
+        break;
+      case 'notes':
+        setConfigOverride(id, { ...base, notes: trimmed });
+        setNotes((prev) => ({ ...prev, [id]: trimmed }));
+        break;
+    }
   };
 
   const handleSelect = (id: string, checked: boolean) => {
@@ -156,6 +184,8 @@ export function DashboardPage() {
       const value = (app: typeof a) => {
         if (sortField === 'status') return statuses[app.id] ?? app.status;
         if (sortField === 'appliedDate') return appliedDates[app.id] ?? app.appliedDate ?? '';
+        if (sortField === 'interviewDate') return interviewDates[app.id] ?? app.interviewDate ?? '';
+        if (sortField === 'finalDecisionDate') return finalDecisionDates[app.id] ?? app.finalDecisionDate ?? '';
         return app[sortField] ?? '';
       };
       const cmp = value(a).localeCompare(value(b));
@@ -163,7 +193,7 @@ export function DashboardPage() {
     });
 
   return (
-    <div className="min-h-screen bg-[color:var(--bg)] pt-12 px-8 pb-32 max-w-[900px] mx-auto">
+    <div className="min-h-screen bg-[color:var(--bg)] pt-12 px-8 pb-32 max-w-[1220px] mx-auto">
       <header className="mb-8 flex items-baseline justify-between gap-6">
         <div className="[font-family:var(--font-mono)] text-[15px]">
           <span className="text-[color:var(--ink-3)]">~/</span>
@@ -253,12 +283,24 @@ export function DashboardPage() {
           status{sortIndicator('status')}
         </button>
         <button
-          className="[font-family:var(--font-mono)] text-[9.5px] uppercase tracking-[0.1em] text-[color:var(--ink-3)] hover:text-[color:var(--ink-2)] bg-transparent border-none cursor-pointer text-right p-0 w-[90px] shrink-0"
+          className="[font-family:var(--font-mono)] text-[9.5px] uppercase tracking-[0.1em] text-[color:var(--ink-3)] hover:text-[color:var(--ink-2)] bg-transparent border-none cursor-pointer text-right p-0 w-[100px] shrink-0"
           onClick={() => toggleSort('appliedDate')}
         >
           applied{sortIndicator('appliedDate')}
         </button>
-        <span className="[font-family:var(--font-mono)] text-[9.5px] uppercase tracking-[0.1em] text-[color:var(--ink-3)] w-[160px] shrink-0 pl-3">
+        <button
+          className="[font-family:var(--font-mono)] text-[9.5px] uppercase tracking-[0.1em] text-[color:var(--ink-3)] hover:text-[color:var(--ink-2)] bg-transparent border-none cursor-pointer text-right p-0 w-[100px] shrink-0 ml-2"
+          onClick={() => toggleSort('interviewDate')}
+        >
+          interview{sortIndicator('interviewDate')}
+        </button>
+        <button
+          className="[font-family:var(--font-mono)] text-[9.5px] uppercase tracking-[0.1em] text-[color:var(--ink-3)] hover:text-[color:var(--ink-2)] bg-transparent border-none cursor-pointer text-right p-0 w-[100px] shrink-0 ml-2"
+          onClick={() => toggleSort('finalDecisionDate')}
+        >
+          decision{sortIndicator('finalDecisionDate')}
+        </button>
+        <span className="[font-family:var(--font-mono)] text-[9.5px] uppercase tracking-[0.1em] text-[color:var(--ink-3)] w-[170px] shrink-0 pl-3">
           notes
         </span>
         <span className="w-[28px] shrink-0" />
@@ -282,8 +324,11 @@ export function DashboardPage() {
                 application={app}
                 status={statuses[app.id] ?? app.status}
                 appliedDate={appliedDates[app.id] ?? app.appliedDate}
+                interviewDate={interviewDates[app.id] ?? app.interviewDate}
+                finalDecisionDate={finalDecisionDates[app.id] ?? app.finalDecisionDate}
                 notes={notes[app.id]}
                 onStatusChange={(s) => handleStatusChange(app.id, s)}
+                onFieldChange={(field, value) => handleFieldChange(app.id, field, value)}
                 selected={selected.has(app.id)}
                 onSelect={(checked) => handleSelect(app.id, checked)}
                 showCheckbox={selectMode || anySelected}
