@@ -22,16 +22,12 @@ interface Props {
   notes?: string;
   onStatusChange: (status: ApplicationStatus) => void;
   onFieldChange: (field: DateFieldName | 'notes', value: string) => void;
-  selected: boolean;
-  onSelect: (checked: boolean) => void;
-  showCheckbox: boolean;
-  selectMode?: boolean;
   onDelete?: () => void;
 }
 
 export function ApplicationCard({
   application, status, appliedDate, interviewDate, finalDecisionDate, notes, onStatusChange, onFieldChange,
-  selected, onSelect, showCheckbox, selectMode = false, onDelete,
+  onDelete,
 }: Props) {
   const navigate = useNavigate();
   const [editingStatus, setEditingStatus] = useState(false);
@@ -52,20 +48,9 @@ export function ApplicationCard({
 
   return (
     <div
-      className={`group flex items-center border-b border-[color:var(--rule)] py-2.5 cursor-pointer transition-colors duration-100 ${selected ? 'bg-[color:var(--surface)]' : 'hover:bg-[color:var(--surface)]'}`}
-      onClick={() => (selectMode ? onSelect(!selected) : navigate(`/application/${application.id}`))}
+      className="group flex items-center border-b border-[color:var(--rule)] py-2.5 cursor-pointer transition-colors duration-100 hover:bg-[color:var(--surface)]"
+      onClick={() => navigate(`/application/${application.id}`)}
     >
-      {/* Checkbox */}
-      <div className="w-[28px] shrink-0 flex items-center justify-center">
-        <input
-          type="checkbox"
-          checked={selected}
-          className={`w-3 h-3 accent-[var(--accent)] cursor-pointer transition-opacity duration-100 ${showCheckbox ? 'opacity-100' : 'opacity-0 group-hover:opacity-60'}`}
-          onChange={(e) => { e.stopPropagation(); onSelect(e.target.checked); }}
-          onClick={(e) => e.stopPropagation()}
-        />
-      </div>
-
       {/* Company */}
       <div className="flex items-center gap-1.5 w-[190px] shrink-0 min-w-0">
         <span className="[font-family:var(--font-mono)] text-[12.5px] text-[color:var(--ink-invert)] truncate">{application.company}</span>
@@ -127,6 +112,8 @@ export function ApplicationCard({
         onCommit={(v) => onFieldChange('appliedDate', v)}
         className={dateCellClass}
         editClassName={dateInputClass}
+        isDate
+        language={application.language}
         title="Click to edit applied date"
       />
 
@@ -136,6 +123,8 @@ export function ApplicationCard({
         onCommit={(v) => onFieldChange('interviewDate', v)}
         className={dateCellClassSpaced}
         editClassName={dateInputClassSpaced}
+        isDate
+        language={application.language}
         title="Click to edit interview date"
       />
 
@@ -145,6 +134,8 @@ export function ApplicationCard({
         onCommit={(v) => onFieldChange('finalDecisionDate', v)}
         className={dateCellClassSpaced}
         editClassName={dateInputClassSpaced}
+        isDate
+        language={application.language}
         title="Click to edit final decision date"
       />
 

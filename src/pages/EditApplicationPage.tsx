@@ -36,9 +36,9 @@ function EditContent({ staticApp }: { staticApp: ApplicationConfig }) {
   const [company, setCompany] = useState(app.company);
   const [role, setRole] = useState(app.role);
   const [url, setUrl] = useState(app.url ?? '');
-  const [appliedDate, setAppliedDate] = useState(app.appliedDate ?? '');
-  const [interviewDate, setInterviewDate] = useState(app.interviewDate ?? '');
-  const [finalDecisionDate, setFinalDecisionDate] = useState(app.finalDecisionDate ?? '');
+  const [appliedDateISO, setAppliedDateISO] = useState(() => parseToIsoDate(app.appliedDate ?? ''));
+  const [interviewDateISO, setInterviewDateISO] = useState(() => parseToIsoDate(app.interviewDate ?? ''));
+  const [finalDecisionDateISO, setFinalDecisionDateISO] = useState(() => parseToIsoDate(app.finalDecisionDate ?? ''));
   const [language, setLanguage] = useState<AppLanguage>(app.language ?? 'en');
   const [font, setFont] = useState<AppFont>(app.font ?? 'sans');
 
@@ -79,9 +79,9 @@ function EditContent({ staticApp }: { staticApp: ApplicationConfig }) {
     language,
     font,
     ...(url && { url }),
-    ...(appliedDate && { appliedDate }),
-    ...(interviewDate && { interviewDate }),
-    ...(finalDecisionDate && { finalDecisionDate }),
+    ...(appliedDateISO && { appliedDate: formatDateLong(appliedDateISO, language) }),
+    ...(interviewDateISO && { interviewDate: formatDateLong(interviewDateISO, language) }),
+    ...(finalDecisionDateISO && { finalDecisionDate: formatDateLong(finalDecisionDateISO, language) }),
     ...(app.notes && { notes: app.notes }),
     ...(hasSummaryOverride && { summaryOverride }),
     featuredProjectIds: featuredIds,
@@ -213,10 +213,10 @@ function EditContent({ staticApp }: { staticApp: ApplicationConfig }) {
               Applied date <span className={nafOptional}>(optional)</span>
             </span>
             <input
+              type="date"
               className={nafInput}
-              placeholder="e.g. July 5, 2026"
-              value={appliedDate}
-              onChange={(e) => setAppliedDate(e.target.value)}
+              value={appliedDateISO}
+              onChange={(e) => setAppliedDateISO(e.target.value)}
             />
           </div>
 
@@ -226,10 +226,10 @@ function EditContent({ staticApp }: { staticApp: ApplicationConfig }) {
                 Interview date <span className={nafOptional}>(optional)</span>
               </span>
               <input
+                type="date"
                 className={nafInput}
-                placeholder="e.g. July 12, 2026"
-                value={interviewDate}
-                onChange={(e) => setInterviewDate(e.target.value)}
+                value={interviewDateISO}
+                onChange={(e) => setInterviewDateISO(e.target.value)}
               />
             </div>
             <div className={nafSection}>
@@ -237,10 +237,10 @@ function EditContent({ staticApp }: { staticApp: ApplicationConfig }) {
                 Final decision date <span className={nafOptional}>(optional)</span>
               </span>
               <input
+                type="date"
                 className={nafInput}
-                placeholder="e.g. July 20, 2026"
-                value={finalDecisionDate}
-                onChange={(e) => setFinalDecisionDate(e.target.value)}
+                value={finalDecisionDateISO}
+                onChange={(e) => setFinalDecisionDateISO(e.target.value)}
               />
             </div>
           </div>
