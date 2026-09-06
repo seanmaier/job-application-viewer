@@ -323,9 +323,8 @@
     box-shadow: none;
     margin: 0;
     width: 210mm;
-    height: 297mm;
+    min-height: 297mm;
     padding: 10mm 12mm;
-    overflow: hidden;
     break-after: page;
     page-break-after: always;
   }
@@ -344,4 +343,16 @@
 
   .exp-entry,
   .project-entry { border-left-color: var(--accent) !important; }
+
+  /* Content taller than one A4 page flows onto a following page instead of
+     being clipped — keep individual entries/paragraphs from splitting mid-block */
+  .exp-entry,
+  .project-entry,
+  .cl-header,
+  .cl-meta,
+  .cl-body p,
+  .cl-sign {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
 }
