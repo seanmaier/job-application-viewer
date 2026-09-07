@@ -15,7 +15,7 @@ import { SkillGroupsEditor } from '../components/SkillGroupsEditor';
 import { ExportSkillGroupsButton } from '../components/ExportSkillGroupsButton';
 import { ImportSkillGroupsModal } from '../components/ImportSkillGroupsModal';
 import { UnsavedChangesDialog } from '../components/UnsavedChangesDialog';
-import { formatDateLong, parseToIsoDate } from '../utils/date';
+import { formatDateLong, formatDateNumeric, parseToIsoDate } from '../utils/date';
 import {
   nafSection, nafRow, nafLabel, nafOptional, nafInput, nafTextarea,
   nafCheckboxes, nafCheckboxLabel, nafCheckboxInput, nafParagraphRow, nafRemoveBtn, nafAddBtn,
@@ -36,7 +36,9 @@ function EditContent({ staticApp }: { staticApp: ApplicationConfig }) {
   const [company, setCompany] = useState(app.company);
   const [role, setRole] = useState(app.role);
   const [url, setUrl] = useState(app.url ?? '');
-  const [appliedDate, setAppliedDate] = useState(app.appliedDate ?? '');
+  const [appliedDateISO, setAppliedDateISO] = useState(() => parseToIsoDate(app.appliedDate ?? ''));
+  const [interviewDateISO, setInterviewDateISO] = useState(() => parseToIsoDate(app.interviewDate ?? ''));
+  const [finalDecisionDateISO, setFinalDecisionDateISO] = useState(() => parseToIsoDate(app.finalDecisionDate ?? ''));
   const [language, setLanguage] = useState<AppLanguage>(app.language ?? 'en');
   const [font, setFont] = useState<AppFont>(app.font ?? 'sans');
 
@@ -77,7 +79,10 @@ function EditContent({ staticApp }: { staticApp: ApplicationConfig }) {
     language,
     font,
     ...(url && { url }),
-    ...(appliedDate && { appliedDate }),
+    ...(appliedDateISO && { appliedDate: formatDateNumeric(appliedDateISO, language) }),
+    ...(interviewDateISO && { interviewDate: formatDateNumeric(interviewDateISO, language) }),
+    ...(finalDecisionDateISO && { finalDecisionDate: formatDateNumeric(finalDecisionDateISO, language) }),
+    ...(app.notes && { notes: app.notes }),
     ...(hasSummaryOverride && { summaryOverride }),
     featuredProjectIds: featuredIds,
     ...(hasSkillGroupsOverride && { skillGroupsOverride }),
@@ -208,11 +213,36 @@ function EditContent({ staticApp }: { staticApp: ApplicationConfig }) {
               Applied date <span className={nafOptional}>(optional)</span>
             </span>
             <input
+              type="date"
               className={nafInput}
-              placeholder="e.g. July 5, 2026"
-              value={appliedDate}
-              onChange={(e) => setAppliedDate(e.target.value)}
+              value={appliedDateISO}
+              onChange={(e) => setAppliedDateISO(e.target.value)}
             />
+          </div>
+
+          <div className={nafRow}>
+            <div className={nafSection}>
+              <span className={nafLabel}>
+                Interview date <span className={nafOptional}>(optional)</span>
+              </span>
+              <input
+                type="date"
+                className={nafInput}
+                value={interviewDateISO}
+                onChange={(e) => setInterviewDateISO(e.target.value)}
+              />
+            </div>
+            <div className={nafSection}>
+              <span className={nafLabel}>
+                Final decision date <span className={nafOptional}>(optional)</span>
+              </span>
+              <input
+                type="date"
+                className={nafInput}
+                value={finalDecisionDateISO}
+                onChange={(e) => setFinalDecisionDateISO(e.target.value)}
+              />
+            </div>
           </div>
 
           <div className={nafSection}>
