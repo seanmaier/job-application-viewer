@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useBlocker } from 'react-router-dom';
 import type {
   AppLanguage, ApplicationConfig, Profile,
@@ -6,6 +6,7 @@ import type {
 } from '../types';
 import { getProfile, getStaticProfile } from '../data/profiles';
 import { setProfileOverride, clearProfileOverride, hasProfileOverride } from '../utils/profileStorage';
+import { parseProfile } from '../utils/parseProfile';
 import { CVDocument } from '../components/cv/CVDocument';
 import { AutoTextarea } from '../components/AutoTextarea';
 import { UnsavedChangesDialog } from '../components/UnsavedChangesDialog';
@@ -60,7 +61,10 @@ export function ProfilePage() {
   const [isDirty, setIsDirty] = useState(false);
   const [saved, setSaved] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [imported, setImported] = useState(false);
+  const [importErrors, setImportErrors] = useState<string[] | null>(null);
   const [hasOverride, setHasOverride] = useState(() => hasProfileOverride('en'));
+  const importInputRef = useRef<HTMLInputElement>(null);
 
   // ── updaters ──────────────────────────────────────────────────────────────
 
@@ -91,6 +95,7 @@ export function ProfilePage() {
     setProfile(getProfile(l));
     setIsDirty(false);
     setHasOverride(hasProfileOverride(l));
+    setImportErrors(null);
   };
 
   const handleSave = () => {
@@ -112,9 +117,34 @@ export function ProfilePage() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${lang}.json`;
+    const today = new Date().toISOString().slice(0, 10);
+    a.download = `profile-${lang}-${today}.json`;
     a.click();
     URL.revokeObjectURL(url);
+  };
+
+  const handleImportClick = () => {
+    setImportErrors(null);
+    importInputRef.current?.click();
+  };
+
+  const handleImportFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = ''; // allow re-selecting the same file later
+    if (!file) return;
+
+    const text = await file.text();
+    const result = parseProfile(text);
+    if (!result.ok) {
+      setImportErrors(result.errors);
+      return;
+    }
+
+    setImportErrors(null);
+    setProfile(result.profile);
+    setIsDirty(true);
+    setImported(true);
+    setTimeout(() => setImported(false), 2000);
   };
 
   const handleReset = () => {
@@ -123,6 +153,7 @@ export function ProfilePage() {
     setHasOverride(false);
     setProfile(getStaticProfile(lang));
     setIsDirty(false);
+    setImportErrors(null);
   };
 
   // Save/Reset/language-switch all stay on this page, so unlike the
@@ -194,6 +225,16 @@ export function ProfilePage() {
           <button className="[font-family:var(--font-mono)] text-[11px] bg-white/7 text-[color:var(--ink-invert)] border border-white/18 rounded px-3.5 py-[5px] cursor-pointer hover:bg-white/14" onClick={handleDownload}>
             Download
           </button>
+          <input
+            ref={importInputRef}
+            type="file"
+            accept=".json,application/json"
+            className="hidden"
+            onChange={handleImportFile}
+          />
+          <button className="[font-family:var(--font-mono)] text-[11px] bg-white/7 text-[color:var(--ink-invert)] border border-white/18 rounded px-3.5 py-[5px] cursor-pointer hover:bg-white/14" onClick={handleImportClick}>
+            {imported ? 'Imported!' : 'Import'}
+          </button>
           {hasOverride && (
             <button className="[font-family:var(--font-mono)] text-[11px] bg-transparent text-[color:var(--ink-3)] border border-white/12 rounded px-3 py-[5px] cursor-pointer hover:text-[color:var(--status-rejected)] hover:border-[color:var(--status-rejected)] transition-colors" onClick={handleReset}>
               Reset
@@ -201,6 +242,13 @@ export function ProfilePage() {
           )}
         </div>
       </div>
+
+      {importErrors && (
+        <div className="[font-family:var(--font-mono)] text-[11px] text-[color:var(--status-rejected)] bg-[rgba(220,38,38,0.10)] border-b border-[rgba(220,38,38,0.20)] py-2 px-6 shrink-0 flex flex-col gap-1">
+          <span className="font-semibold">Couldn't import that file — it doesn't look like a profile:</span>
+          {importErrors.map((err, i) => <div key={i}>{err}</div>)}
+        </div>
+      )}
 
       {/* Body */}
       <div className="grid grid-cols-[520px_1fr] flex-1 overflow-hidden">
