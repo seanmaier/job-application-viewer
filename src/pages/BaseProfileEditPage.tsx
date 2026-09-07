@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useParams, Link, useNavigate, useBlocker } from 'react-router-dom';
 import type {
   ApplicationConfig, BaseProfile, Profile,
@@ -7,6 +7,7 @@ import type {
 import {
   getBaseProfile, saveBaseProfile, deleteBaseProfile, applicationsUsingBaseProfile,
 } from '../utils/baseProfiles';
+import { parseProfile } from '../utils/parseProfile';
 import { CVDocument } from '../components/cv/CVDocument';
 import { AutoTextarea } from '../components/AutoTextarea';
 import { UnsavedChangesDialog } from '../components/UnsavedChangesDialog';
@@ -78,6 +79,10 @@ function BaseProfileEditContent({ stored }: { stored: BaseProfile }) {
   const [profile, setProfile] = useState<Profile>(stored.profile);
   const [isDirty, setIsDirty] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [imported, setImported] = useState(false);
+  const [importErrors, setImportErrors] = useState<string[] | null>(null);
+  const importInputRef = useRef<HTMLInputElement>(null);
 
   // ── updaters ──────────────────────────────────────────────────────────────
 
@@ -125,6 +130,47 @@ function BaseProfileEditContent({ stored }: { stored: BaseProfile }) {
     if (!confirm(message)) return;
     deleteBaseProfile(stored.id);
     navigate('/profiles');
+  };
+
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(JSON.stringify(profile, null, 2));
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleDownload = () => {
+    const blob = new Blob([JSON.stringify(profile, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    const today = new Date().toISOString().slice(0, 10);
+    a.download = `profile-${stored.language}-${today}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleImportClick = () => {
+    setImportErrors(null);
+    importInputRef.current?.click();
+  };
+
+  const handleImportFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = ''; // allow re-selecting the same file later
+    if (!file) return;
+
+    const text = await file.text();
+    const result = parseProfile(text);
+    if (!result.ok) {
+      setImportErrors(result.errors);
+      return;
+    }
+
+    setImportErrors(null);
+    setProfile(result.profile);
+    setIsDirty(true);
+    setImported(true);
+    setTimeout(() => setImported(false), 2000);
   };
 
   const blocker = useBlocker(isDirty);
@@ -176,8 +222,32 @@ function BaseProfileEditContent({ stored }: { stored: BaseProfile }) {
           >
             Delete
           </button>
+
+          <button className="[font-family:var(--font-mono)] text-[11px] bg-white/7 text-[color:var(--ink-invert)] border border-white/18 rounded px-3.5 py-[5px] cursor-pointer hover:bg-white/14" onClick={handleCopy}>
+            {copied ? 'Copied!' : 'Copy JSON'}
+          </button>
+          <button className="[font-family:var(--font-mono)] text-[11px] bg-white/7 text-[color:var(--ink-invert)] border border-white/18 rounded px-3.5 py-[5px] cursor-pointer hover:bg-white/14" onClick={handleDownload}>
+            Download
+          </button>
+          <input
+            ref={importInputRef}
+            type="file"
+            accept=".json,application/json"
+            className="hidden"
+            onChange={handleImportFile}
+          />
+          <button className="[font-family:var(--font-mono)] text-[11px] bg-white/7 text-[color:var(--ink-invert)] border border-white/18 rounded px-3.5 py-[5px] cursor-pointer hover:bg-white/14" onClick={handleImportClick}>
+            {imported ? 'Imported!' : 'Import'}
+          </button>
         </div>
       </div>
+
+      {importErrors && (
+        <div className="[font-family:var(--font-mono)] text-[11px] text-[color:var(--status-rejected)] bg-[rgba(220,38,38,0.10)] border-b border-[rgba(220,38,38,0.20)] py-2 px-6 shrink-0 flex flex-col gap-1">
+          <span className="font-semibold">Couldn't import that file — it doesn't look like a profile:</span>
+          {importErrors.map((err, i) => <div key={i}>{err}</div>)}
+        </div>
+      )}
 
       {/* Body */}
       <div className="grid grid-cols-[520px_1fr] flex-1 overflow-hidden">

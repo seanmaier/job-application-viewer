@@ -13,7 +13,7 @@ import { STATUS_LABELS, STATUS_COLORS } from '../utils/status';
 import { FONT_LABELS, ALL_FONTS } from '../utils/fonts';
 import { generateTextExport } from '../utils/textExport';
 import { buildPdfFilename } from '../utils/pdfFilename';
-import { autoAppliedDateFor } from '../utils/autoAppliedDate';
+import { autoAppliedDateFor, autoInterviewDateFor, autoFinalDecisionDateFor } from '../utils/autoStatusDates';
 import { sanitizeFolderName, renderPageCanvases, buildPdfBlob, writeApplicationPdfs } from '../utils/pdfExport';
 import {
   isFileSystemAccessSupported, getSavedExportFolder, chooseExportFolder, ensureExportFolderPermission,
@@ -63,10 +63,17 @@ function ApplicationContent({ staticApp }: { staticApp: ApplicationConfig }) {
   };
 
   const handleStatusChange = (newStatus: ApplicationStatus) => {
-    const autoDate = autoAppliedDateFor(status, newStatus, app.appliedDate, app.language);
-    if (autoDate) {
+    const autoApplied = autoAppliedDateFor(status, newStatus, app.appliedDate, app.language);
+    const autoInterview = autoInterviewDateFor(status, newStatus, app.interviewDate, app.language);
+    const autoFinalDecision = autoFinalDecisionDateFor(status, newStatus, app.finalDecisionDate, app.language);
+    if (autoApplied || autoInterview || autoFinalDecision) {
       const { status: _s, ...rest } = app;
-      save({ ...rest, appliedDate: autoDate });
+      save({
+        ...rest,
+        ...(autoApplied && { appliedDate: autoApplied }),
+        ...(autoInterview && { interviewDate: autoInterview }),
+        ...(autoFinalDecision && { finalDecisionDate: autoFinalDecision }),
+      });
     }
     setStatus(newStatus);
   };
