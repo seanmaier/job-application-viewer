@@ -84,7 +84,7 @@ export function validateApplicationConfig(input: unknown): ParseResult {
     }
   }
 
-  for (const key of ['appliedDate', 'url', 'summaryOverride'] as const) {
+  for (const key of ['appliedDate', 'url', 'baseProfileId', 'summaryOverride'] as const) {
     if (input[key] !== undefined && !isString(input[key])) {
       errors.push(`"${key}" must be a string.`);
     }
@@ -108,6 +108,7 @@ export function validateApplicationConfig(input: unknown): ParseResult {
     ...(font && { font }),
     ...(isString(input.appliedDate) && input.appliedDate && { appliedDate: input.appliedDate }),
     ...(isString(input.url) && input.url && { url: input.url }),
+    ...(isString(input.baseProfileId) && input.baseProfileId && { baseProfileId: input.baseProfileId }),
     ...(isString(input.summaryOverride) && input.summaryOverride && { summaryOverride: input.summaryOverride }),
     ...(Array.isArray(input.featuredProjectIds) && { featuredProjectIds: input.featuredProjectIds as string[] }),
     ...(coverLetter && { coverLetter }),

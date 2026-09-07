@@ -5,6 +5,7 @@ import { getLocalApplications } from '../utils/localApplications';
 import type { ApplicationConfig, AppFont, AppLanguage, CoverLetter, SkillGroup } from '../types';
 import { ALL_FONTS, FONT_LABELS } from '../utils/fonts';
 import { getProfile } from '../data/profiles';
+import { getBaseProfiles } from '../utils/baseProfiles';
 import { useApplication } from '../hooks/useApplication';
 import { CVDocument } from '../components/cv/CVDocument';
 import { CoverLetterDocument } from '../components/cover-letter/CoverLetterDocument';
@@ -24,6 +25,8 @@ import {
   editAppHeader, editAppCompany, editAppHeaderActions, editResetBtn, editSaveBtn,
 } from '../styles/formStyles';
 
+const LANG_FLAGS: Record<AppLanguage, string> = { en: '🇬🇧', de: '🇩🇪' };
+
 function toId(company: string) {
   return company.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'new-app';
 }
@@ -39,8 +42,18 @@ function EditContent({ staticApp }: { staticApp: ApplicationConfig }) {
   const [appliedDate, setAppliedDate] = useState(app.appliedDate ?? '');
   const [language, setLanguage] = useState<AppLanguage>(app.language ?? 'en');
   const [font, setFont] = useState<AppFont>(app.font ?? 'sans');
+  const [baseProfiles] = useState(() => getBaseProfiles());
+  const [baseProfileId, setBaseProfileId] = useState<string | ''>(app.baseProfileId ?? '');
 
-  const profile = getProfile(language);
+  const selectedBaseProfile = baseProfileId ? baseProfiles.find((p) => p.id === baseProfileId) : undefined;
+  const profile = selectedBaseProfile?.profile ?? getProfile(language);
+
+  const handleBaseProfileChange = (id: string) => {
+    setBaseProfileId(id);
+    const bp = baseProfiles.find((p) => p.id === id);
+    if (bp) setLanguage(bp.language);
+  };
+
   const [hasSummaryOverride, setHasSummaryOverride] = useState(!!app.summaryOverride);
   const [summaryOverride, setSummaryOverride] = useState(app.summaryOverride ?? profile.summary);
   const [featuredIds, setFeaturedIds] = useState<string[]>(
@@ -76,6 +89,7 @@ function EditContent({ staticApp }: { staticApp: ApplicationConfig }) {
     role,
     language,
     font,
+    ...(baseProfileId && { baseProfileId }),
     ...(url && { url }),
     ...(appliedDate && { appliedDate }),
     ...(hasSummaryOverride && { summaryOverride }),
@@ -155,6 +169,20 @@ function EditContent({ staticApp }: { staticApp: ApplicationConfig }) {
       <div className={newAppBody}>
         {/* ── Form ── */}
         <div className={newAppForm}>
+          <div className={nafSection}>
+            <span className={nafLabel}>Base profile</span>
+            <select
+              className={nafInput}
+              value={baseProfileId}
+              onChange={(e) => handleBaseProfileChange(e.target.value)}
+            >
+              <option value="">language default ({language})</option>
+              {baseProfiles.map((bp) => (
+                <option key={bp.id} value={bp.id}>{LANG_FLAGS[bp.language]} {bp.name}</option>
+              ))}
+            </select>
+          </div>
+
           <div className={nafSection}>
             <span className={nafLabel}>Company</span>
             <input className={nafInput} value={company} onChange={(e) => setCompany(e.target.value)} />

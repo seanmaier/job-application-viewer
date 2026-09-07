@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
-import { Link, useBlocker } from 'react-router-dom';
+import { useParams, Link, useNavigate, useBlocker } from 'react-router-dom';
 import type {
-  AppLanguage, ApplicationConfig, Profile,
+  ApplicationConfig, BaseProfile, Profile,
   Experience, Project, HumanLanguage,
 } from '../types';
-import { getProfile, getStaticProfile } from '../data/profiles';
-import { setProfileOverride, clearProfileOverride, hasProfileOverride } from '../utils/profileStorage';
+import {
+  getBaseProfile, saveBaseProfile, deleteBaseProfile, applicationsUsingBaseProfile,
+} from '../utils/baseProfiles';
 import { CVDocument } from '../components/cv/CVDocument';
 import { AutoTextarea } from '../components/AutoTextarea';
 import { UnsavedChangesDialog } from '../components/UnsavedChangesDialog';
@@ -50,22 +51,43 @@ function EntryCard({ children, onRemove, removeLabel = 'Remove' }: {
 
 // ── constants ────────────────────────────────────────────────────────────────
 
-const PREVIEW_APP: ApplicationConfig = { id: 'profile-preview', company: '', role: '', status: 'drafting' };
+const LANG_FLAGS: Record<string, string> = { en: '🇬🇧', de: '🇩🇪' };
+const PREVIEW_APP: ApplicationConfig = { id: 'base-profile-preview', company: '', role: '', status: 'drafting' };
 
 // ── page ─────────────────────────────────────────────────────────────────────
 
-export function ProfilePage() {
-  const [lang, setLang] = useState<AppLanguage>('en');
-  const [profile, setProfile] = useState<Profile>(() => getProfile('en'));
+export function BaseProfileEditPage() {
+  const { id } = useParams<{ id: string }>();
+  const stored = id ? getBaseProfile(id) : undefined;
+
+  if (!id || !stored) {
+    return (
+      <div className="py-20 px-10 [font-family:var(--font-mono)] text-[color:var(--ink-2)] flex flex-col gap-4">
+        <p>Base profile not found.</p>
+        <Link className="text-[color:var(--accent)]" to="/profiles">← Back to base profiles</Link>
+      </div>
+    );
+  }
+
+  return <BaseProfileEditContent stored={stored} />;
+}
+
+function BaseProfileEditContent({ stored }: { stored: BaseProfile }) {
+  const navigate = useNavigate();
+  const [name, setName] = useState(stored.name);
+  const [profile, setProfile] = useState<Profile>(stored.profile);
   const [isDirty, setIsDirty] = useState(false);
   const [saved, setSaved] = useState(false);
-  const [copied, setCopied] = useState(false);
-  const [hasOverride, setHasOverride] = useState(() => hasProfileOverride('en'));
 
   // ── updaters ──────────────────────────────────────────────────────────────
 
   const set = (patch: Partial<Profile>) => {
     setProfile((p) => ({ ...p, ...patch }));
+    setIsDirty(true);
+  };
+
+  const setName_ = (value: string) => {
+    setName(value);
     setIsDirty(true);
   };
 
@@ -86,49 +108,25 @@ export function ProfilePage() {
 
   // ── actions ───────────────────────────────────────────────────────────────
 
-  const switchLang = (l: AppLanguage) => {
-    setLang(l);
-    setProfile(getProfile(l));
-    setIsDirty(false);
-    setHasOverride(hasProfileOverride(l));
-  };
-
   const handleSave = () => {
-    setProfileOverride(lang, profile);
-    setHasOverride(true);
+    saveBaseProfile({ id: stored.id, name: name.trim() || stored.name, language: stored.language, profile });
     setIsDirty(false);
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   };
 
-  const handleCopy = async () => {
-    await navigator.clipboard.writeText(JSON.stringify(profile, null, 2));
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  const handleDelete = () => {
+    const usedBy = applicationsUsingBaseProfile(stored.id);
+    const message = usedBy.length > 0
+      ? `"${stored.name}" is used by ${usedBy.length} application${usedBy.length === 1 ? '' : 's'} ` +
+        `(${usedBy.map((a) => a.company).join(', ')}). Deleting it will fall them back to the ` +
+        `language default profile. Delete anyway?`
+      : `Delete base profile "${stored.name}"? This cannot be undone.`;
+    if (!confirm(message)) return;
+    deleteBaseProfile(stored.id);
+    navigate('/profiles');
   };
 
-  const handleDownload = () => {
-    const blob = new Blob([JSON.stringify(profile, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${lang}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
-  const handleReset = () => {
-    if (!confirm('Remove browser override and restore the file version?')) return;
-    clearProfileOverride(lang);
-    setHasOverride(false);
-    setProfile(getStaticProfile(lang));
-    setIsDirty(false);
-  };
-
-  // Save/Reset/language-switch all stay on this page, so unlike the
-  // application editor there's no same-tick "skip the blocker" case to
-  // handle — only actual route navigation (the Dashboard link, browser
-  // back/forward) should ever be intercepted while dirty.
   const blocker = useBlocker(isDirty);
 
   useEffect(() => {
@@ -149,19 +147,15 @@ export function ProfilePage() {
       {/* Header */}
       <div className="bg-[color:var(--ink)] flex items-center justify-between px-6 h-[52px] shrink-0 gap-4">
         <div className="flex items-center gap-5 min-w-0">
-          <Link className="[font-family:var(--font-mono)] text-[11px] text-[color:var(--ink-3)] no-underline hover:text-[color:var(--ink-invert)]" to="/">
-            ← Dashboard
+          <Link className="[font-family:var(--font-mono)] text-[11px] text-[color:var(--ink-3)] no-underline hover:text-[color:var(--ink-invert)]" to="/profiles">
+            ← Base profiles
           </Link>
-          <div className="[font-family:var(--font-mono)] text-[13px] flex items-center gap-2">
+          <div className="[font-family:var(--font-mono)] text-[13px] flex items-center gap-2 min-w-0">
             <span className="text-[color:var(--ink-3)]">~/</span>
-            <span className="text-[color:var(--ink-invert)] font-semibold">profile</span>
-            {hasOverride && !isDirty && (
-              <span className="text-[9px] tracking-[0.1em] uppercase text-[color:var(--status-sent)] border border-[color:var(--status-sent)] rounded-[10px] py-px px-[7px] opacity-80">
-                local override
-              </span>
-            )}
+            <span className="text-[color:var(--ink-invert)] font-semibold truncate">{stored.name}</span>
+            <span className="text-[12px]" title={stored.language}>{LANG_FLAGS[stored.language]}</span>
             {isDirty && (
-              <span className="text-[9px] tracking-[0.1em] uppercase text-[color:var(--status-sent)] border border-[color:var(--status-sent)] rounded-[10px] py-px px-[7px] opacity-80">
+              <span className="text-[9px] tracking-[0.1em] uppercase text-[color:var(--status-sent)] border border-[color:var(--status-sent)] rounded-[10px] py-px px-[7px] opacity-80 shrink-0">
                 unsaved
               </span>
             )}
@@ -169,36 +163,19 @@ export function ProfilePage() {
         </div>
 
         <div className="flex items-center gap-2.5 shrink-0">
-          <div className="flex items-center gap-0 border border-white/12 rounded overflow-hidden">
-            {(['en', 'de'] as AppLanguage[]).map((l) => (
-              <button
-                key={l}
-                className={`[font-family:var(--font-mono)] text-[11px] px-3 py-[5px] border-none cursor-pointer transition-colors duration-100 ${
-                  lang === l ? 'bg-[color:var(--accent)] text-[color:var(--ink)]' : 'bg-transparent text-[color:var(--ink-3)] hover:text-[color:var(--ink-invert)]'
-                }`}
-                onClick={() => switchLang(l)}
-              >{l}</button>
-            ))}
-          </div>
-
           <button
             className={`[font-family:var(--font-mono)] text-[11px] border-none rounded px-4 py-[5px] cursor-pointer transition-colors duration-150 ${
               saved ? 'bg-[color:var(--status-offer)] text-white pointer-events-none' : 'bg-[color:var(--accent)] text-[color:var(--ink)] hover:opacity-90'
             }`}
             onClick={handleSave}
-          >{saved ? 'Saved!' : 'Save to browser'}</button>
+          >{saved ? 'Saved!' : 'Save'}</button>
 
-          <button className="[font-family:var(--font-mono)] text-[11px] bg-white/7 text-[color:var(--ink-invert)] border border-white/18 rounded px-3.5 py-[5px] cursor-pointer hover:bg-white/14" onClick={handleCopy}>
-            {copied ? 'Copied!' : 'Copy JSON'}
+          <button
+            className="[font-family:var(--font-mono)] text-[11px] bg-transparent text-[color:var(--ink-3)] border border-white/12 rounded px-3 py-[5px] cursor-pointer hover:text-[color:var(--status-rejected)] hover:border-[color:var(--status-rejected)] transition-colors"
+            onClick={handleDelete}
+          >
+            Delete
           </button>
-          <button className="[font-family:var(--font-mono)] text-[11px] bg-white/7 text-[color:var(--ink-invert)] border border-white/18 rounded px-3.5 py-[5px] cursor-pointer hover:bg-white/14" onClick={handleDownload}>
-            Download
-          </button>
-          {hasOverride && (
-            <button className="[font-family:var(--font-mono)] text-[11px] bg-transparent text-[color:var(--ink-3)] border border-white/12 rounded px-3 py-[5px] cursor-pointer hover:text-[color:var(--status-rejected)] hover:border-[color:var(--status-rejected)] transition-colors" onClick={handleReset}>
-              Reset
-            </button>
-          )}
         </div>
       </div>
 
@@ -207,6 +184,13 @@ export function ProfilePage() {
 
         {/* Form */}
         <div className="py-7 px-7 overflow-y-auto bg-[color:var(--bg)] flex flex-col gap-6 border-r border-[color:var(--rule)]">
+
+          {/* ── Base profile name ── */}
+          <SectionHeader title="base profile" />
+          <div className={nafSection}>
+            <span className={nafLabel}>Name <span className={nafOptional}>(used to pick this profile when creating an application)</span></span>
+            <input className={nafInput} value={name} onChange={(e) => setName_(e.target.value)} />
+          </div>
 
           {/* ── Basics ── */}
           <SectionHeader title="basics" />
@@ -413,7 +397,7 @@ export function ProfilePage() {
         {/* Preview */}
         <div className="bg-[#1a2236] overflow-y-auto">
           <div className="py-8 px-5">
-            <CVDocument profile={profile} application={{ ...PREVIEW_APP, language: lang }} />
+            <CVDocument profile={profile} application={{ ...PREVIEW_APP, language: stored.language }} />
           </div>
         </div>
       </div>
@@ -423,7 +407,7 @@ export function ProfilePage() {
           onCancel={() => blocker.reset()}
           onDiscard={() => blocker.proceed()}
           onSave={() => {
-            setProfileOverride(lang, profile);
+            saveBaseProfile({ id: stored.id, name: name.trim() || stored.name, language: stored.language, profile });
             blocker.proceed();
           }}
         />
