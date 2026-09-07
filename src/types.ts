@@ -71,6 +71,16 @@ export interface CoverLetter {
 export type AppLanguage = 'en' | 'de';
 export type AppFont = 'sans' | 'serif' | 'mono';
 
+// A named, reusable profile a user can maintain independently of any single
+// application — e.g. "Backend (EN)" vs "Frontend (DE)" — so applying for
+// different kinds of roles no longer means overwriting the one base profile.
+export interface BaseProfile {
+  id: string;
+  name: string;
+  language: AppLanguage;
+  profile: Profile;
+}
+
 export interface ApplicationConfig {
   id: string;
   company: string;
@@ -83,6 +93,7 @@ export interface ApplicationConfig {
   finalDecisionDate?: string;
   notes?: string;
   url?: string;
+  baseProfileId?: string;
   summaryOverride?: string;
   featuredProjectIds?: string[];
   skillGroupsOverride?: SkillGroup[];

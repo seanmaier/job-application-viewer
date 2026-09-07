@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { applications } from '../data/applications';
 import { getLocalApplications } from '../utils/localApplications';
-import { getProfile } from '../data/profiles';
+import { resolveApplicationProfile } from '../utils/baseProfiles';
 import { CVDocument } from '../components/cv/CVDocument';
 import { CoverLetterDocument } from '../components/cover-letter/CoverLetterDocument';
 import { ExportModal } from '../components/ExportModal';
@@ -50,7 +50,7 @@ function ApplicationContent({ staticApp }: { staticApp: ApplicationConfig }) {
   const cvExportRef = useRef<HTMLDivElement>(null);
   const clExportRef = useRef<HTMLDivElement>(null);
 
-  const profile = getProfile(app.language);
+  const profile = resolveApplicationProfile(app);
   const langFlag = LANG_FLAGS[app.language ?? 'en'];
 
   useEffect(() => {
@@ -96,7 +96,7 @@ function ApplicationContent({ staticApp }: { staticApp: ApplicationConfig }) {
       const goToProfile = confirm(
         'Your profile has no name set yet, so the exported files can\'t be named properly. Set one now?',
       );
-      if (goToProfile) navigate('/profile');
+      if (goToProfile) navigate(app.baseProfileId ? `/profiles/${app.baseProfileId}` : '/profiles');
       return;
     }
 

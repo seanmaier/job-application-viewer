@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import type { AppFont, AppLanguage, ApplicationConfig } from '../types';
+import type { AppFont, AppLanguage, ApplicationConfig, BaseProfile } from '../types';
 import { ALL_FONTS, FONT_LABELS } from '../utils/fonts';
 import { getProfile } from '../data/profiles';
+import { getBaseProfiles } from '../utils/baseProfiles';
 import { saveLocalApplication } from '../utils/localApplications';
 import { AutoTextarea } from '../components/AutoTextarea';
 import { ImportParagraphsControl } from '../components/ImportParagraphsControl';
@@ -16,6 +17,8 @@ import {
   editSaveBtn,
 } from '../styles/formStyles';
 
+const LANG_FLAGS: Record<AppLanguage, string> = { en: '🇬🇧', de: '🇩🇪' };
+
 function toId(company: string): string {
   return company.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'new-app';
 }
@@ -26,6 +29,7 @@ function buildConfig(
   url: string,
   language: AppLanguage,
   font: AppFont,
+  baseProfileId: string | undefined,
   featuredIds: string[],
   hasCoverLetter: boolean,
   date: string,
@@ -40,6 +44,7 @@ function buildConfig(
     language,
     font,
     ...(url && { url }),
+    ...(baseProfileId && { baseProfileId }),
     ...(featuredIds.length > 0 && { featuredProjectIds: featuredIds }),
     ...(hasCoverLetter && {
       coverLetter: {
@@ -52,8 +57,76 @@ function buildConfig(
   };
 }
 
+// ── base profile selection screen ────────────────────────────────────────────
+
+function ChooseBaseProfileScreen({
+  baseProfiles, onChoose, onSkip,
+}: {
+  baseProfiles: BaseProfile[];
+  onChoose: (bp: BaseProfile) => void;
+  onSkip: () => void;
+}) {
+  return (
+    <div className={newAppPage}>
+      <div className={newAppHeader}>
+        <Link className={newAppBack} to="/">← Dashboard</Link>
+        <span className={newAppTitle}>New Application</span>
+      </div>
+
+      <div className="flex-1 overflow-y-auto flex justify-center">
+        <div className="w-full max-w-[560px] pt-14 px-6 flex flex-col gap-5">
+          <div>
+            <h1 className="text-[15px] font-semibold text-[color:var(--ink-invert)] m-0 mb-1.5">
+              Choose a base profile
+            </h1>
+            <p className="[font-family:var(--font-mono)] text-[11.5px] text-[color:var(--ink-3)] m-0">
+              Applications resolve their CV content from a base profile. Pick which one this application should use.
+            </p>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            {baseProfiles.map((bp) => (
+              <button
+                key={bp.id}
+                className="flex items-center gap-3 text-left bg-[color:var(--surface)] border border-[color:var(--rule)] rounded-[6px] py-3 px-4 cursor-pointer transition-colors duration-100 hover:border-[color:var(--accent)]"
+                onClick={() => onChoose(bp)}
+              >
+                <span className="text-[14px] leading-none">{LANG_FLAGS[bp.language]}</span>
+                <span className="[font-family:var(--font-sans)] text-[13px] text-[color:var(--ink-invert)]">{bp.name}</span>
+              </button>
+            ))}
+          </div>
+
+          <div className="flex items-center gap-3 mt-1">
+            <button
+              className="[font-family:var(--font-mono)] text-[11px] bg-transparent text-[color:var(--ink-3)] border border-white/12 rounded px-3.5 py-[6px] cursor-pointer hover:text-[color:var(--ink-invert)]"
+              onClick={onSkip}
+            >
+              Skip — use language default
+            </button>
+            <Link
+              className="[font-family:var(--font-mono)] text-[11px] text-[color:var(--ink-3)] no-underline hover:text-[color:var(--accent)]"
+              to="/profiles"
+            >
+              Manage base profiles →
+            </Link>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── page ─────────────────────────────────────────────────────────────────────
+
 export function NewApplicationPage() {
   const navigate = useNavigate();
+  const [baseProfiles] = useState(() => getBaseProfiles());
+
+  const [step, setStep] = useState<'select-profile' | 'form'>(
+    baseProfiles.length > 0 ? 'select-profile' : 'form',
+  );
+  const [baseProfileId, setBaseProfileId] = useState<string | undefined>(undefined);
 
   const [company, setCompany] = useState('');
   const [role, setRole] = useState('');
@@ -65,9 +138,32 @@ export function NewApplicationPage() {
   const [subjectRole, setSubjectRole] = useState('');
   const [paragraphs, setParagraphs] = useState<string[]>(['']);
   const [copied, setCopied] = useState(false);
+  // Populated once a base profile is chosen (or skipped) below — except when
+  // there are no base profiles to choose from at all, in which case the form
+  // step renders immediately and this needs its usual default up front.
+  const [featuredIds, setFeaturedIds] = useState<string[]>(() => (
+    baseProfiles.length === 0 ? getProfile('en').projects.map((p) => p.id) : []
+  ));
 
-  const profile = getProfile(language);
-  const [featuredIds, setFeaturedIds] = useState<string[]>(() => getProfile('en').projects.map((p) => p.id));
+  const selectedBaseProfile = baseProfileId ? baseProfiles.find((p) => p.id === baseProfileId) : undefined;
+  const profile = selectedBaseProfile?.profile ?? getProfile(language);
+
+  const handleChooseProfile = (bp: BaseProfile) => {
+    setBaseProfileId(bp.id);
+    setLanguage(bp.language);
+    setFeaturedIds(bp.profile.projects.map((p) => p.id));
+    setStep('form');
+  };
+
+  const handleSkip = () => {
+    setBaseProfileId(undefined);
+    setFeaturedIds(getProfile(language).projects.map((p) => p.id));
+    setStep('form');
+  };
+
+  if (step === 'select-profile') {
+    return <ChooseBaseProfileScreen baseProfiles={baseProfiles} onChoose={handleChooseProfile} onSkip={handleSkip} />;
+  }
 
   const toggleProject = (id: string) => {
     setFeaturedIds((prev) =>
@@ -82,7 +178,7 @@ export function NewApplicationPage() {
   const addParagraph = () => setParagraphs((prev) => [...prev, '']);
   const removeParagraph = (i: number) => setParagraphs((prev) => prev.filter((_, idx) => idx !== i));
 
-  const config = buildConfig(company, role, url, language, font, featuredIds, hasCoverLetter, formatDateLong(dateISO, language), subjectRole, paragraphs.filter(Boolean));
+  const config = buildConfig(company, role, url, language, font, baseProfileId, featuredIds, hasCoverLetter, formatDateLong(dateISO, language), subjectRole, paragraphs.filter(Boolean));
   const code = JSON.stringify(config, null, 2);
   const filename = `${config.id || 'company'}.json`;
 
@@ -110,6 +206,28 @@ export function NewApplicationPage() {
       <div className={newAppBody}>
         {/* ── Form ── */}
         <div className={newAppForm}>
+          <div className={nafSection}>
+            <span className={nafLabel}>Base profile</span>
+            <div className="flex items-center gap-2.5">
+              <span className="[font-family:var(--font-sans)] text-[13px] text-[color:var(--ink-invert)] flex items-center gap-1.5">
+                {selectedBaseProfile ? (
+                  <>
+                    <span className="text-[13px] leading-none">{LANG_FLAGS[selectedBaseProfile.language]}</span>
+                    {selectedBaseProfile.name}
+                  </>
+                ) : (
+                  <span className={nafOptional}>language default ({language})</span>
+                )}
+              </span>
+              <button
+                className="[font-family:var(--font-mono)] text-[10.5px] bg-transparent text-[color:var(--ink-3)] border border-[color:var(--rule)] rounded px-2 py-[3px] cursor-pointer hover:text-[color:var(--accent)] hover:border-[color:var(--accent)]"
+                onClick={() => setStep('select-profile')}
+              >
+                change
+              </button>
+            </div>
+          </div>
+
           <div className={nafSection}>
             <span className={nafLabel}>Company</span>
             <input
