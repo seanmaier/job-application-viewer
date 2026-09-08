@@ -103,7 +103,7 @@ export function BackupModal({ onClose }: Props) {
               ref={fileInputRef}
               type="file"
               accept="application/json"
-              className="[font-family:var(--font-mono)] text-[11px] text-[color:var(--ink-2)]"
+              className="self-start [font-family:var(--font-mono)] text-[11px] text-[color:var(--ink-2)] cursor-pointer file:cursor-pointer file:[font-family:var(--font-mono)] file:text-[11px] file:bg-[color:var(--accent)] file:text-white file:border-none file:rounded file:px-4 file:py-1.5 file:mr-3 file:transition-colors file:duration-150 hover:file:bg-[#1d4ed8]"
               onChange={handleFileChange}
             />
             {fileName && pendingBackup && !error && (
