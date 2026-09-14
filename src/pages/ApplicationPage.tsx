@@ -14,7 +14,9 @@ import { FONT_LABELS, ALL_FONTS } from '../utils/fonts';
 import { generateTextExport } from '../utils/textExport';
 import { buildPdfFilename } from '../utils/pdfFilename';
 import { autoAppliedDateFor, autoInterviewDateFor, autoFinalDecisionDateFor } from '../utils/autoStatusDates';
-import { sanitizeFolderName, renderPageCanvases, buildPdfBlob, writeApplicationPdfs } from '../utils/pdfExport';
+import {
+  sanitizeFolderName, renderPageCanvases, buildPdfBlob, writeApplicationPdfs, downloadPdfBlob,
+} from '../utils/pdfExport';
 import {
   isFileSystemAccessSupported, getSavedExportFolder, chooseExportFolder, ensureExportFolderPermission,
 } from '../utils/exportFolder';
@@ -52,6 +54,7 @@ function ApplicationContent({ staticApp }: { staticApp: ApplicationConfig }) {
 
   const profile = resolveApplicationProfile(app);
   const langFlag = LANG_FLAGS[app.language ?? 'en'];
+  const fsaSupported = isFileSystemAccessSupported();
 
   useEffect(() => {
     getSavedExportFolder().then((handle) => setExportFolderName(handle?.name ?? null));
@@ -79,19 +82,11 @@ function ApplicationContent({ staticApp }: { staticApp: ApplicationConfig }) {
   };
 
   const handleChooseFolder = async () => {
-    if (!isFileSystemAccessSupported()) {
-      alert('Your browser doesn\'t support choosing a save folder. Try Chrome or Edge.');
-      return;
-    }
     const handle = await chooseExportFolder();
     if (handle) setExportFolderName(handle.name);
   };
 
   const handleDownload = async () => {
-    if (!isFileSystemAccessSupported()) {
-      alert('Your browser doesn\'t support saving directly to a folder. Try Chrome or Edge.');
-      return;
-    }
     if (!profile.name.trim()) {
       const goToProfile = confirm(
         'Your profile has no name set yet, so the exported files can\'t be named properly. Set one now?',
@@ -100,17 +95,22 @@ function ApplicationContent({ staticApp }: { staticApp: ApplicationConfig }) {
       return;
     }
 
-    let handle = await getSavedExportFolder();
-    if (!handle) {
-      handle = await chooseExportFolder();
-      if (!handle) return;
-      setExportFolderName(handle.name);
-    }
+    // Firefox doesn't support the File System Access API, so it falls back to
+    // plain browser downloads below instead of saving into a chosen folder.
+    let handle: FileSystemDirectoryHandle | undefined;
+    if (fsaSupported) {
+      handle = await getSavedExportFolder();
+      if (!handle) {
+        handle = await chooseExportFolder();
+        if (!handle) return;
+        setExportFolderName(handle.name);
+      }
 
-    const hasPermission = await ensureExportFolderPermission(handle);
-    if (!hasPermission) {
-      alert('Permission to write to the export folder was denied.');
-      return;
+      const hasPermission = await ensureExportFolderPermission(handle);
+      if (!hasPermission) {
+        alert('Permission to write to the export folder was denied.');
+        return;
+      }
     }
 
     setDownloading(true);
@@ -134,7 +134,12 @@ function ApplicationContent({ staticApp }: { staticApp: ApplicationConfig }) {
         files.push({ filename: `${buildPdfFilename('both', lang, profile.name)}.pdf`, blob: buildPdfBlob([...cvCanvases, ...clCanvases]) });
       }
 
-      await writeApplicationPdfs(handle, sanitizeFolderName(app.company), files);
+      if (fsaSupported && handle) {
+        await writeApplicationPdfs(handle, sanitizeFolderName(app.company), files);
+      } else {
+        const companyPrefix = sanitizeFolderName(app.company);
+        files.forEach(({ filename, blob }) => downloadPdfBlob(`${companyPrefix} - ${filename}`, blob));
+      }
     } catch (e) {
       console.error(e);
       alert('Something went wrong while exporting. Please try again.');
@@ -202,7 +207,7 @@ function ApplicationContent({ staticApp }: { staticApp: ApplicationConfig }) {
           >
             LLM Export
           </button>
-          {exportFolderName && (
+          {fsaSupported && exportFolderName && (
             <span
               className="[font-family:var(--font-mono)] text-[10px] text-[color:var(--ink-3)] whitespace-nowrap"
               title="Export folder"
@@ -210,12 +215,14 @@ function ApplicationContent({ staticApp }: { staticApp: ApplicationConfig }) {
               📁 {exportFolderName}
             </span>
           )}
-          <button
-            className="[font-family:var(--font-mono)] text-[11px] bg-transparent text-[color:var(--ink-3)] border border-white/12 rounded px-3 py-[5px] cursor-pointer hover:text-[color:var(--ink-invert)] hover:border-white/25"
-            onClick={handleChooseFolder}
-          >
-            {exportFolderName ? 'change folder' : 'choose folder'}
-          </button>
+          {fsaSupported && (
+            <button
+              className="[font-family:var(--font-mono)] text-[11px] bg-transparent text-[color:var(--ink-3)] border border-white/12 rounded px-3 py-[5px] cursor-pointer hover:text-[color:var(--ink-invert)] hover:border-white/25"
+              onClick={handleChooseFolder}
+            >
+              {exportFolderName ? 'change folder' : 'choose folder'}
+            </button>
+          )}
           <button
             className="[font-family:var(--font-mono)] text-[11px] bg-transparent text-[color:var(--accent)] border border-[color:var(--accent)] rounded px-3.5 py-[5px] cursor-pointer tracking-[0.04em] hover:bg-[color:var(--accent)] hover:text-[color:var(--ink)] disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={handleDownload}
