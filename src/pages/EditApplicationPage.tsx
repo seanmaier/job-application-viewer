@@ -16,10 +16,11 @@ import { SkillGroupsEditor } from '../components/SkillGroupsEditor';
 import { ExportSkillGroupsButton } from '../components/ExportSkillGroupsButton';
 import { ImportSkillGroupsModal } from '../components/ImportSkillGroupsModal';
 import { UnsavedChangesDialog } from '../components/UnsavedChangesDialog';
+import { FeaturedProjectsPicker } from '../components/FeaturedProjectsPicker';
 import { formatDateLong, formatDateNumeric, parseToIsoDate } from '../utils/date';
 import {
   nafSection, nafRow, nafLabel, nafOptional, nafInput, nafTextarea,
-  nafCheckboxes, nafCheckboxLabel, nafCheckboxInput, nafParagraphRow, nafRemoveBtn, nafAddBtn,
+  nafCheckboxLabel, nafCheckboxInput, nafParagraphRow, nafRemoveBtn, nafAddBtn,
   newAppPage, newAppBack, newAppTitle, newAppBody, newAppForm,
   newAppPreview, napHeader, napFilename, napHint, napLiveLabel,
   editAppHeader, editAppCompany, editAppHeaderActions, editResetBtn, editSaveBtn,
@@ -72,11 +73,6 @@ function EditContent({ staticApp }: { staticApp: ApplicationConfig }) {
   const [recipientName, setRecipientName] = useState(app.coverLetter?.recipientName ?? '');
   const [subjectRole, setSubjectRole] = useState(app.coverLetter?.subjectRole ?? '');
   const [paragraphs, setParagraphs] = useState<string[]>([...(app.coverLetter?.paragraphs ?? [''])]);
-
-  const toggleProject = (id: string) =>
-    setFeaturedIds((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
-    );
 
   const updateParagraph = (i: number, value: string) =>
     setParagraphs((prev) => prev.map((p, idx) => (idx === i ? value : p)));
@@ -300,19 +296,7 @@ function EditContent({ staticApp }: { staticApp: ApplicationConfig }) {
 
           <div className={nafSection}>
             <span className={nafLabel}>Featured projects</span>
-            <div className={nafCheckboxes}>
-              {profile.projects.map((p) => (
-                <label className={nafCheckboxLabel} key={p.id}>
-                  <input
-                    className={nafCheckboxInput}
-                    type="checkbox"
-                    checked={featuredIds.includes(p.id)}
-                    onChange={() => toggleProject(p.id)}
-                  />
-                  {p.name}
-                </label>
-              ))}
-            </div>
+            <FeaturedProjectsPicker projects={profile.projects} featuredIds={featuredIds} onChange={setFeaturedIds} />
           </div>
 
           <div className={nafSection}>

@@ -1,6 +1,7 @@
 import type React from 'react';
 import type { ApplicationConfig, Profile } from '../../types';
 import { FONT_STACKS } from '../../utils/fonts';
+import { featuredProjects } from '../../utils/featuredProjects';
 import { joinLines } from '../../utils/lines';
 import '../../styles/document.css';
 
@@ -34,9 +35,7 @@ export function CVDocument({ profile, application }: Props) {
   const t = LABELS[application.language ?? 'en'];
   const summary = application.summaryOverride ?? profile.summary;
 
-  const projects = application.featuredProjectIds
-    ? profile.projects.filter((p) => application.featuredProjectIds!.includes(p.id))
-    : profile.projects;
+  const projects = featuredProjects(profile, application);
 
   const skillGroups = application.skillGroupsOverride ?? profile.skillGroups;
 
