@@ -52,6 +52,18 @@
   box-shadow: none;
 }
 
+/* html2canvas finds each font's text baseline by laying out a 1×1 probe
+   image (this exact data: GIF) next to sample text and reading its
+   offsetTop. Tailwind's preflight makes every img display: block, which
+   drops the probe onto its own line, so the baseline comes out a whole
+   line too low and every text run in the PDF is painted several px
+   lower than on screen. Barely visible in running text, but it pushes
+   skill tag labels onto the bottom edge of their tags. Keep the probe
+   inline so the measurement matches what the browser actually renders. */
+img[src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"] {
+  display: inline;
+}
+
 /* ── Page-break indicator shown in the live preview only ── */
 .doc-page-badge {
   position: absolute;
