@@ -9,6 +9,8 @@ import { AutoTextarea } from '../components/AutoTextarea';
 import { ImportParagraphsControl } from '../components/ImportParagraphsControl';
 import { ExportParagraphsButton } from '../components/ExportParagraphsButton';
 import { FeaturedProjectsPicker } from '../components/FeaturedProjectsPicker';
+import { MoveButtons } from '../components/MoveButtons';
+import { move } from '../utils/move';
 import { formatDateLong } from '../utils/date';
 import {
   nafSection, nafRow, nafLabel, nafOptional, nafInput, nafTextarea,
@@ -332,7 +334,10 @@ export function NewApplicationPage() {
                       onChange={(e) => updateParagraph(i, e.target.value)}
                     />
                     {paragraphs.length > 1 && (
-                      <button className={nafRemoveBtn} onClick={() => removeParagraph(i)}>✕</button>
+                      <>
+                        <MoveButtons index={i} length={paragraphs.length} onMove={(to) => setParagraphs(move(paragraphs, i, to))} />
+                        <button className={nafRemoveBtn} onClick={() => removeParagraph(i)}>✕</button>
+                      </>
                     )}
                   </div>
                 ))}

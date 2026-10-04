@@ -17,6 +17,8 @@ import { ExportSkillGroupsButton } from '../components/ExportSkillGroupsButton';
 import { ImportSkillGroupsModal } from '../components/ImportSkillGroupsModal';
 import { UnsavedChangesDialog } from '../components/UnsavedChangesDialog';
 import { FeaturedProjectsPicker } from '../components/FeaturedProjectsPicker';
+import { MoveButtons } from '../components/MoveButtons';
+import { move } from '../utils/move';
 import { formatDateLong, formatDateNumeric, parseToIsoDate } from '../utils/date';
 import {
   nafSection, nafRow, nafLabel, nafOptional, nafInput, nafTextarea,
@@ -394,9 +396,12 @@ function EditContent({ staticApp }: { staticApp: ApplicationConfig }) {
                       onChange={(e) => updateParagraph(i, e.target.value)}
                     />
                     {paragraphs.length > 1 && (
-                      <button className={nafRemoveBtn} onClick={() => removeParagraph(i)}>
-                        ✕
-                      </button>
+                      <>
+                        <MoveButtons index={i} length={paragraphs.length} onMove={(to) => setParagraphs(move(paragraphs, i, to))} />
+                        <button className={nafRemoveBtn} onClick={() => removeParagraph(i)}>
+                          ✕
+                        </button>
+                      </>
                     )}
                   </div>
                 ))}
