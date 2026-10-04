@@ -1,4 +1,6 @@
 import type { SkillGroup } from '../types';
+import { MoveButtons } from './MoveButtons';
+import { move } from '../utils/move';
 import {
   nafSection, nafRow, nafLabel, nafInput, nafParagraphRow,
   nafRemoveBtn, nafAddBtn, nafCheckboxLabel, nafCheckboxInput,
@@ -54,7 +56,10 @@ export function SkillGroupsEditor({ skillGroups, onChange }: Props) {
             ))}
             <button className={nafAddBtn} onClick={() => setGroup(gi, { skills: [...group.skills, ''] })}>+ Add skill</button>
           </div>
-          <button className={nafRemoveBtn + ' self-start'} onClick={() => onChange(without(skillGroups, gi))}>Remove</button>
+          <div className="flex justify-between">
+            <button className={nafRemoveBtn} onClick={() => onChange(without(skillGroups, gi))}>Remove</button>
+            <MoveButtons index={gi} length={skillGroups.length} onMove={(to) => onChange(move(skillGroups, gi, to))} />
+          </div>
         </div>
       ))}
       <button className={nafAddBtn} onClick={() => onChange([...skillGroups, { label: '', skills: [''] }])}>
