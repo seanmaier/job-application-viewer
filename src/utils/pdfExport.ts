@@ -39,6 +39,18 @@ export function buildPdfBlob(canvases: HTMLCanvasElement[]): Blob {
   return canvasesToPdfBlob(canvases);
 }
 
+/** Triggers a regular browser download for browsers without File System Access API support (e.g. Firefox). */
+export function downloadPdfBlob(filename: string, blob: Blob): void {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
 async function writeFile(dir: FileSystemDirectoryHandle, filename: string, blob: Blob): Promise<void> {
   const fileHandle = await dir.getFileHandle(filename, { create: true });
   const writable = await fileHandle.createWritable();
