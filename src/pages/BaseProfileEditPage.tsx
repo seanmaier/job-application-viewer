@@ -12,6 +12,8 @@ import { CVDocument } from '../components/cv/CVDocument';
 import { AutoTextarea } from '../components/AutoTextarea';
 import { UnsavedChangesDialog } from '../components/UnsavedChangesDialog';
 import { SkillGroupsEditor } from '../components/SkillGroupsEditor';
+import { MoveButtons } from '../components/MoveButtons';
+import { move } from '../utils/move';
 import {
   nafSection, nafRow, nafLabel, nafOptional, nafInput, nafTextarea,
   nafParagraphRow, nafRemoveBtn, nafAddBtn,
@@ -37,15 +39,20 @@ function SectionHeader({ title }: { title: string }) {
   );
 }
 
-function EntryCard({ children, onRemove, removeLabel = 'Remove' }: {
+function EntryCard<T>({ children, items, index, onChange, removeLabel = 'Remove' }: {
   children: React.ReactNode;
-  onRemove: () => void;
+  items: T[];
+  index: number;
+  onChange: (next: T[]) => void;
   removeLabel?: string;
 }) {
   return (
     <div className="border border-[color:var(--rule)] rounded p-3.5 flex flex-col gap-3">
       {children}
-      <button className={nafRemoveBtn + ' self-start'} onClick={onRemove}>{removeLabel}</button>
+      <div className="flex justify-between">
+        <button className={nafRemoveBtn} onClick={() => onChange(without(items, index))}>{removeLabel}</button>
+        <MoveButtons index={index} length={items.length} onMove={(to) => onChange(move(items, index, to))} />
+      </div>
     </div>
   );
 }
@@ -313,7 +320,7 @@ function BaseProfileEditContent({ stored }: { stored: BaseProfile }) {
           <SectionHeader title="experience" />
           <div className="flex flex-col gap-3">
             {profile.experience.map((exp, ei) => (
-              <EntryCard key={ei} onRemove={() => set({ experience: without(profile.experience, ei) })}>
+              <EntryCard key={ei} items={profile.experience} index={ei} onChange={(experience) => set({ experience })}>
                 <div className={nafRow}>
                   <div className={nafSection}>
                     <span className={nafLabel}>Title</span>
@@ -357,7 +364,7 @@ function BaseProfileEditContent({ stored }: { stored: BaseProfile }) {
           <SectionHeader title="projects" />
           <div className="flex flex-col gap-3">
             {profile.projects.map((proj, pi) => (
-              <EntryCard key={pi} onRemove={() => set({ projects: without(profile.projects, pi) })}>
+              <EntryCard key={pi} items={profile.projects} index={pi} onChange={(projects) => set({ projects })}>
                 <div className={nafRow}>
                   <div className={nafSection}>
                     <span className={nafLabel}>Name</span>

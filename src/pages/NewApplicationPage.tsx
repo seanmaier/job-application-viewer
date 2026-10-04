@@ -8,10 +8,13 @@ import { saveLocalApplication } from '../utils/localApplications';
 import { AutoTextarea } from '../components/AutoTextarea';
 import { ImportParagraphsControl } from '../components/ImportParagraphsControl';
 import { ExportParagraphsButton } from '../components/ExportParagraphsButton';
+import { FeaturedProjectsPicker } from '../components/FeaturedProjectsPicker';
+import { MoveButtons } from '../components/MoveButtons';
+import { move } from '../utils/move';
 import { formatDateLong } from '../utils/date';
 import {
   nafSection, nafRow, nafLabel, nafOptional, nafInput, nafTextarea,
-  nafCheckboxes, nafCheckboxLabel, nafCheckboxInput, nafParagraphRow, nafRemoveBtn, nafAddBtn,
+  nafCheckboxLabel, nafCheckboxInput, nafParagraphRow, nafRemoveBtn, nafAddBtn,
   newAppPage, newAppHeader, newAppBack, newAppTitle, newAppBody, newAppForm,
   newAppPreview, napHeader, napFilename, napCopyBtn, napCopyBtnCopied, napCode, napHint, napHintCode,
   editSaveBtn,
@@ -165,12 +168,6 @@ export function NewApplicationPage() {
     return <ChooseBaseProfileScreen baseProfiles={baseProfiles} onChoose={handleChooseProfile} onSkip={handleSkip} />;
   }
 
-  const toggleProject = (id: string) => {
-    setFeaturedIds((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
-    );
-  };
-
   const updateParagraph = (i: number, value: string) => {
     setParagraphs((prev) => prev.map((p, idx) => (idx === i ? value : p)));
   };
@@ -286,19 +283,7 @@ export function NewApplicationPage() {
 
           <div className={nafSection}>
             <span className={nafLabel}>Featured projects</span>
-            <div className={nafCheckboxes}>
-              {profile.projects.map((p) => (
-                <label className={nafCheckboxLabel} key={p.id}>
-                  <input
-                    className={nafCheckboxInput}
-                    type="checkbox"
-                    checked={featuredIds.includes(p.id)}
-                    onChange={() => toggleProject(p.id)}
-                  />
-                  {p.name}
-                </label>
-              ))}
-            </div>
+            <FeaturedProjectsPicker projects={profile.projects} featuredIds={featuredIds} onChange={setFeaturedIds} />
           </div>
 
           <div className={nafSection}>
@@ -349,7 +334,10 @@ export function NewApplicationPage() {
                       onChange={(e) => updateParagraph(i, e.target.value)}
                     />
                     {paragraphs.length > 1 && (
-                      <button className={nafRemoveBtn} onClick={() => removeParagraph(i)}>✕</button>
+                      <>
+                        <MoveButtons index={i} length={paragraphs.length} onMove={(to) => setParagraphs(move(paragraphs, i, to))} />
+                        <button className={nafRemoveBtn} onClick={() => removeParagraph(i)}>✕</button>
+                      </>
                     )}
                   </div>
                 ))}

@@ -1,4 +1,5 @@
 import type { ApplicationConfig, Profile } from '../types';
+import { featuredProjects } from './featuredProjects';
 
 const divider = '─'.repeat(44);
 
@@ -49,9 +50,7 @@ export function generateTextExport(profile: Profile, application: ApplicationCon
   });
 
   // Projects
-  const projects = application.featuredProjectIds
-    ? profile.projects.filter((p) => application.featuredProjectIds!.includes(p.id))
-    : profile.projects;
+  const projects = featuredProjects(profile, application);
 
   lines.push(section('PROJECTS'));
   projects.forEach((project) => {
