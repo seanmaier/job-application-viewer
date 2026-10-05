@@ -1,10 +1,12 @@
 import { useState } from 'react';
-import type { AppLanguage, BaseProfile } from '../types';
+import type { AppLanguage, BaseProfile, Profile } from '../types';
 import { getStaticProfile } from '../data/profiles';
 import { blankProfile, saveBaseProfile, uniqueBaseProfileId } from '../utils/baseProfiles';
-import { nafSection, nafLabel, nafInput } from '../styles/formStyles';
+import { parseProfile } from '../utils/parseProfile';
+import { JsonFileButton } from './JsonFileButton';
+import { nafSection, nafLabel, nafInput, nafAddBtn } from '../styles/formStyles';
 
-type StartFrom = 'blank' | 'language-default' | `duplicate:${string}`;
+type StartFrom = 'blank' | 'language-default' | 'json' | `duplicate:${string}`;
 
 interface Props {
   existingProfiles: BaseProfile[];
@@ -16,17 +18,29 @@ export function CreateBaseProfileModal({ existingProfiles, onClose, onCreated }:
   const [name, setName] = useState('');
   const [language, setLanguage] = useState<AppLanguage>('en');
   const [startFrom, setStartFrom] = useState<StartFrom>('language-default');
+  const [jsonText, setJsonText] = useState('');
+  const [jsonErrors, setJsonErrors] = useState<string[]>([]);
 
-  const canCreate = name.trim() !== '';
+  const canCreate = name.trim() !== '' && (startFrom !== 'json' || jsonText.trim() !== '');
 
   const handleCreate = () => {
     if (!canCreate) return;
 
-    const profile = startFrom === 'blank'
-      ? blankProfile(language)
-      : startFrom === 'language-default'
-        ? { ...getStaticProfile(language) }
-        : { ...existingProfiles.find((p) => p.id === startFrom.slice('duplicate:'.length))!.profile };
+    let profile: Profile;
+    if (startFrom === 'json') {
+      const result = parseProfile(jsonText);
+      if (!result.ok) {
+        setJsonErrors(result.errors);
+        return;
+      }
+      profile = result.profile;
+    } else {
+      profile = startFrom === 'blank'
+        ? blankProfile(language)
+        : startFrom === 'language-default'
+          ? { ...getStaticProfile(language) }
+          : { ...existingProfiles.find((p) => p.id === startFrom.slice('duplicate:'.length))!.profile };
+    }
 
     const id = uniqueBaseProfileId(name);
     const baseProfile: BaseProfile = { id, name: name.trim(), language, profile };
@@ -37,7 +51,7 @@ export function CreateBaseProfileModal({ existingProfiles, onClose, onCreated }:
   return (
     <div className="fixed inset-0 bg-[rgba(20,28,46,0.65)] flex items-center justify-center z-[100] p-6" onClick={onClose}>
       <div
-        className="bg-[#1a2236] rounded-lg w-full max-w-[440px] p-6 flex flex-col gap-4 shadow-[0_20px_60px_rgba(20,28,46,0.40)]"
+        className={`bg-[#1a2236] rounded-lg w-full ${startFrom === 'json' ? 'max-w-[600px]' : 'max-w-[440px]'} p-6 flex flex-col gap-4 shadow-[0_20px_60px_rgba(20,28,46,0.40)]`}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="[font-family:var(--font-mono)] text-[12px] font-semibold tracking-[0.04em] uppercase text-[color:var(--ink-invert)]">
@@ -76,6 +90,7 @@ export function CreateBaseProfileModal({ existingProfiles, onClose, onCreated }:
           >
             <option value="language-default">Language default</option>
             <option value="blank">Blank profile</option>
+            <option value="json">Import JSON (paste or file)</option>
             {existingProfiles.length > 0 && (
               <optgroup label="Duplicate existing">
                 {existingProfiles.map((p) => (
@@ -85,6 +100,31 @@ export function CreateBaseProfileModal({ existingProfiles, onClose, onCreated }:
             )}
           </select>
         </div>
+
+        {startFrom === 'json' && (
+          <div className={nafSection}>
+            <div className="flex items-center justify-between gap-2">
+              <span className={nafLabel}>Profile JSON</span>
+              <JsonFileButton
+                className={nafAddBtn}
+                onLoad={(fileText) => { setJsonText(fileText); setJsonErrors([]); }}
+              />
+            </div>
+            <textarea
+              className={nafInput + ' [font-family:var(--font-mono)] text-[11.5px] leading-[1.55] h-[220px] resize-none whitespace-pre [overflow-wrap:normal] overflow-auto'}
+              placeholder={'{\n  "name": "...",\n  "role": "...",\n  ...\n}'}
+              spellCheck={false}
+              value={jsonText}
+              onChange={(e) => { setJsonText(e.target.value); setJsonErrors([]); }}
+            />
+            {jsonErrors.length > 0 && (
+              <div className="[font-family:var(--font-mono)] text-[11px] text-[color:var(--status-rejected)] flex flex-col gap-1 max-h-[120px] overflow-y-auto">
+                <span className="font-semibold">This doesn't look like a profile:</span>
+                {jsonErrors.map((err, i) => <div key={i}>{err}</div>)}
+              </div>
+            )}
+          </div>
+        )}
 
         <div className="flex justify-end gap-2 mt-1">
           <button

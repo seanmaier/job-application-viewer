@@ -5,6 +5,7 @@ import { applications } from '../data/applications';
 import { getLocalApplications, saveLocalApplication } from '../utils/localApplications';
 import { parseApplicationConfig } from '../utils/parseApplicationConfig';
 import { ApplicationConfigPreview } from './ApplicationConfigPreview';
+import { JsonFileButton } from './JsonFileButton';
 
 interface Props {
   onClose: () => void;
@@ -84,7 +85,7 @@ export function ImportApplicationModal({ onClose }: Props) {
       >
         <div className="flex justify-between items-center py-3 px-5 border-b border-white/7 shrink-0 gap-4">
           <span className="[font-family:var(--font-mono)] text-[11px] font-semibold text-[color:var(--ink-invert)] tracking-[0.08em] uppercase shrink-0">
-            {previewConfig ? 'Preview import' : 'Import application JSON'}
+            {previewConfig ? 'Preview import' : 'Import application JSON — paste or load a file'}
           </span>
           <div className="flex items-center gap-2.5 shrink-0">
             {previewConfig ? (
@@ -103,12 +104,18 @@ export function ImportApplicationModal({ onClose }: Props) {
                 </button>
               </>
             ) : (
-              <button
-                className="[font-family:var(--font-mono)] text-[11px] bg-[color:var(--accent)] text-white border-none rounded px-4 py-1.5 cursor-pointer transition-colors duration-150 hover:bg-[#1d4ed8]"
-                onClick={handlePreview}
-              >
-                Preview
-              </button>
+              <>
+                <JsonFileButton
+                  className="[font-family:var(--font-mono)] text-[11px] bg-transparent text-[#8896AB] border border-white/12 rounded px-3.5 py-1.5 cursor-pointer hover:text-[color:var(--ink-invert)]"
+                  onLoad={(fileText) => { setText(fileText); setErrors([]); }}
+                />
+                <button
+                  className="[font-family:var(--font-mono)] text-[11px] bg-[color:var(--accent)] text-white border-none rounded px-4 py-1.5 cursor-pointer transition-colors duration-150 hover:bg-[#1d4ed8]"
+                  onClick={handlePreview}
+                >
+                  Preview
+                </button>
+              </>
             )}
             <button
               className="text-[14px] bg-transparent border-none text-[#4A5568] cursor-pointer py-1 px-2 rounded leading-none hover:bg-white/7 hover:text-[color:var(--ink-invert)]"
