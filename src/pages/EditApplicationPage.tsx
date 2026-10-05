@@ -16,7 +16,7 @@ import { SkillGroupsEditor } from '../components/SkillGroupsEditor';
 import { ExportSkillGroupsButton } from '../components/ExportSkillGroupsButton';
 import { ImportSkillGroupsModal } from '../components/ImportSkillGroupsModal';
 import { UnsavedChangesDialog } from '../components/UnsavedChangesDialog';
-import { JsonEditModal } from '../components/JsonEditModal';
+import { JsonConfigPanel } from '../components/JsonConfigPanel';
 import { FeaturedProjectsPicker } from '../components/FeaturedProjectsPicker';
 import { MoveButtons } from '../components/MoveButtons';
 import { move } from '../utils/move';
@@ -25,7 +25,7 @@ import {
   nafSection, nafRow, nafLabel, nafOptional, nafInput, nafTextarea,
   nafCheckboxLabel, nafCheckboxInput, nafParagraphRow, nafRemoveBtn, nafAddBtn,
   newAppPage, newAppBack, newAppTitle, newAppBody, newAppForm,
-  newAppPreview, napHeader, napFilename, napHint, napLiveLabel,
+  newAppPreview, napHeader, napFilename, napHint,
   editAppHeader, editAppCompany, editAppHeaderActions, editResetBtn, editSaveBtn,
 } from '../styles/formStyles';
 
@@ -40,8 +40,12 @@ function toId(company: string) {
 function EditContent({ staticApp, onReload }: { staticApp: ApplicationConfig; onReload: () => void }) {
   const { app, save, reset, isDirty } = useApplication(staticApp);
   const navigate = useNavigate();
-  const [jsonOpen, setJsonOpen] = useState(false);
-  const jsonSavedRef = useRef(false);
+  // The right-hand panel toggles between the live preview and the raw JSON
+  // config. jsonBaseline is the JSON as generated when switching over, so
+  // switching back can tell whether there are unapplied edits.
+  const [rightView, setRightView] = useState<'preview' | 'json'>('preview');
+  const [jsonText, setJsonText] = useState('');
+  const [jsonBaseline, setJsonBaseline] = useState('');
 
   const [company, setCompany] = useState(app.company);
   const [role, setRole] = useState(app.role);
@@ -152,6 +156,25 @@ function EditContent({ staticApp, onReload }: { staticApp: ApplicationConfig; on
 
   const previewApp: ApplicationConfig = { ...buildConfig(), status: app.status };
 
+  const switchRightView = (view: 'preview' | 'json') => {
+    if (view === rightView) return;
+    if (view === 'json') {
+      const text = JSON.stringify(buildConfig(), null, 2);
+      setJsonText(text);
+      setJsonBaseline(text);
+    } else if (jsonText !== jsonBaseline && !confirm('Discard your unapplied JSON edits?')) {
+      return;
+    }
+    setRightView(view);
+  };
+
+  // Persists the JSON config, then remounts the form so it shows what was saved.
+  const handleApplyJson = (config: ApplicationConfig) => {
+    const { status: _status, ...rest } = config;
+    save({ ...rest, id: staticApp.id });
+    onReload();
+  };
+
   return (
     <div className={newAppPage}>
       <div className={editAppHeader}>
@@ -167,9 +190,6 @@ function EditContent({ staticApp, onReload }: { staticApp: ApplicationConfig; on
               Reset to default
             </button>
           )}
-          <button className={editResetBtn} onClick={() => setJsonOpen(true)}>
-            JSON
-          </button>
           <button className={editSaveBtn} onClick={handleSave}>
             Save changes
           </button>
@@ -426,24 +446,44 @@ function EditContent({ staticApp, onReload }: { staticApp: ApplicationConfig; on
             <span className={napFilename}>
               private/applications/{toId(company)}.json
             </span>
-            <span className={napLiveLabel}>live preview</span>
-          </div>
-          <div className="flex-1 overflow-y-auto">
-            <div className="py-8 px-5">
-              <CVDocument profile={profile} application={previewApp} />
-              {previewApp.coverLetter && (
-                <CoverLetterDocument
-                  profile={profile}
-                  application={{ ...previewApp, coverLetter: previewApp.coverLetter as CoverLetter }}
-                  paginate
-                />
-              )}
+            <div className="flex items-center gap-1 bg-white/5 rounded p-0.5" role="tablist" aria-label="Right panel view">
+              {(['preview', 'json'] as const).map((view) => (
+                <button
+                  key={view}
+                  role="tab"
+                  aria-selected={rightView === view}
+                  className={`[font-family:var(--font-mono)] text-[10.5px] tracking-[0.06em] rounded px-3 py-1 border-none cursor-pointer transition-colors ${
+                    rightView === view
+                      ? 'bg-[color:var(--accent)] text-[color:var(--ink)]'
+                      : 'bg-transparent text-[#8896AB] hover:text-[color:var(--ink-invert)]'
+                  }`}
+                  onClick={() => switchRightView(view)}
+                >
+                  {view === 'preview' ? 'live preview' : 'JSON'}
+                </button>
+              ))}
             </div>
           </div>
+          {rightView === 'json' ? (
+            <JsonConfigPanel text={jsonText} onTextChange={setJsonText} onApply={handleApplyJson} />
+          ) : (
+            <div className="flex-1 overflow-y-auto">
+              <div className="py-8 px-5">
+                <CVDocument profile={profile} application={previewApp} />
+                {previewApp.coverLetter && (
+                  <CoverLetterDocument
+                    profile={profile}
+                    application={{ ...previewApp, coverLetter: previewApp.coverLetter as CoverLetter }}
+                    paginate
+                  />
+                )}
+              </div>
+            </div>
+          )}
           <p className={napHint}>
-            Changes are saved to your browser as you edit. Use the{' '}
-            <code>JSON</code> button on the application page to copy the config to{' '}
-            <code>private/applications/{toId(company)}.json</code> permanently.
+            {rightView === 'json'
+              ? <>Starts from the form, unsaved edits included. <code>Apply JSON</code> saves it and reloads the form.</>
+              : <>Changes are saved to your browser as you edit. Switch to <code>JSON</code> to edit or copy the config for <code>private/applications/{toId(company)}.json</code>.</>}
           </p>
         </div>
       </div>
@@ -455,19 +495,6 @@ function EditContent({ staticApp, onReload }: { staticApp: ApplicationConfig; on
           onSave={() => {
             save(buildConfig());
             blocker.proceed();
-          }}
-        />
-      )}
-
-      {/* Starts from the form's current state, unsaved edits included. Saving
-          persists it; the form then remounts to show the saved config. */}
-      {jsonOpen && (
-        <JsonEditModal
-          app={previewApp}
-          onSave={(updated) => { save(updated); jsonSavedRef.current = true; }}
-          onClose={() => {
-            setJsonOpen(false);
-            if (jsonSavedRef.current) onReload();
           }}
         />
       )}
