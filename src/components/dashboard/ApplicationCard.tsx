@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { STATUS_LABELS, STATUS_COLORS } from '../../utils/status';
 import { EditableCell } from './EditableCell';
+import { NotesDialog } from '../NotesDialog';
 import type { ApplicationConfig, ApplicationStatus } from '../../types';
 
 const LANG_FLAGS: Record<string, string> = { en: '🇬🇧', de: '🇩🇪' };
@@ -29,6 +30,7 @@ export function ApplicationCard({
 }: Props) {
   const navigate = useNavigate();
   const [editingStatus, setEditingStatus] = useState(false);
+  const [notesOpen, setNotesOpen] = useState(false);
   const langFlag = LANG_FLAGS[application.language ?? 'en'];
 
   const handleStatusClick = (e: React.MouseEvent) => {
@@ -137,15 +139,22 @@ export function ApplicationCard({
         title="Click to edit final decision date"
       />
 
-      {/* Notes */}
-      <EditableCell
-        value={notes ?? ''}
-        onCommit={(v) => onFieldChange('notes', v)}
-        className="[font-family:var(--font-mono)] text-[11px] text-[color:var(--ink-3)] w-[170px] shrink-0 pl-3 truncate"
-        editClassName="[font-family:var(--font-mono)] text-[11px] bg-[color:var(--surface)] border border-[color:var(--rule)] rounded px-1.5 py-1 w-[170px] shrink-0 ml-3 resize-none"
-        multiline
-        title="Click to edit notes"
-      />
+      {/* Notes — the cell only previews; editing happens in a dialog */}
+      <span
+        className={`[font-family:var(--font-mono)] text-[11px] text-[color:var(--ink-2)] w-[170px] shrink-0 pl-3 truncate cursor-pointer hover:opacity-70 transition-opacity ${notes ? '' : 'opacity-40'}`}
+        onClick={(e) => { e.stopPropagation(); setNotesOpen(true); }}
+        title={notes ? `${notes}\n\nClick to edit notes` : 'Click to add notes'}
+      >
+        {notes || '—'}
+      </span>
+      {notesOpen && (
+        <NotesDialog
+          company={application.company}
+          value={notes ?? ''}
+          onSave={(v) => onFieldChange('notes', v)}
+          onClose={() => setNotesOpen(false)}
+        />
+      )}
 
       {/* Delete (local apps only) */}
       {onDelete ? (

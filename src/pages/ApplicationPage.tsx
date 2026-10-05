@@ -7,6 +7,8 @@ import { CVDocument } from '../components/cv/CVDocument';
 import { CoverLetterDocument } from '../components/cover-letter/CoverLetterDocument';
 import { ExportModal } from '../components/ExportModal';
 import { JsonEditModal } from '../components/JsonEditModal';
+import { NotesDialog } from '../components/NotesDialog';
+import { NotesView } from '../components/NotesView';
 import { useApplication } from '../hooks/useApplication';
 import { useApplicationStatus } from '../hooks/useApplicationStatus';
 import { STATUS_LABELS, STATUS_COLORS } from '../utils/status';
@@ -45,6 +47,7 @@ function ApplicationContent({ staticApp }: { staticApp: ApplicationConfig }) {
   const [status, setStatus] = useApplicationStatus(staticApp.id, staticApp.status);
   const [exportOpen, setExportOpen] = useState(false);
   const [jsonOpen, setJsonOpen] = useState(false);
+  const [notesOpen, setNotesOpen] = useState(false);
   const [exportFolderName, setExportFolderName] = useState<string | null>(null);
   const [downloading, setDownloading] = useState(false);
   const navigate = useNavigate();
@@ -59,6 +62,11 @@ function ApplicationContent({ staticApp }: { staticApp: ApplicationConfig }) {
   useEffect(() => {
     getSavedExportFolder().then((handle) => setExportFolderName(handle?.name ?? null));
   }, []);
+
+  const handleNotesSave = (notes: string) => {
+    const { status: _s, ...rest } = app;
+    save({ ...rest, notes: notes.trim() || undefined });
+  };
 
   const handleFontChange = (font: AppFont) => {
     const { status: _s, ...rest } = app;
@@ -233,16 +241,43 @@ function ApplicationContent({ staticApp }: { staticApp: ApplicationConfig }) {
         </div>
       </div>
 
-      <div className="pt-10 px-5 pb-20 print:p-0">
-        <CVDocument profile={profile} application={{ ...app, status }} />
-        {app.coverLetter && (
-          <CoverLetterDocument
-            profile={profile}
-            application={{ ...app, status, coverLetter: app.coverLetter as CoverLetter }}
-            paginate
-          />
-        )}
+      {/* Documents with the notes panel beside them on wide windows; on
+          narrower ones the panel moves above the documents. */}
+      <div className="pt-10 px-5 pb-20 flex flex-col items-center gap-6 min-[1200px]:flex-row min-[1200px]:items-start min-[1200px]:justify-center print:block print:p-0">
+        <aside aria-label="Notes" className="w-[794px] max-w-full min-[1200px]:w-[300px] min-[1200px]:order-last min-[1200px]:sticky min-[1200px]:top-[76px] shrink-0 bg-[color:var(--surface)] border border-[color:var(--rule)] rounded-md p-4 flex flex-col gap-3 print:hidden">
+          <div className="flex items-center justify-between gap-2">
+            <span className="[font-family:var(--font-mono)] text-[9.5px] tracking-[0.14em] uppercase text-[color:var(--accent)]">Notes</span>
+            <button
+              className="[font-family:var(--font-mono)] text-[11px] bg-transparent text-[color:var(--ink-2)] border border-[color:var(--rule)] rounded px-2.5 py-1 cursor-pointer hover:text-[color:var(--ink-invert)] hover:border-[color:var(--ink-2)]"
+              onClick={() => setNotesOpen(true)}
+            >
+              {app.notes ? 'Edit' : '+ Add'}
+            </button>
+          </div>
+          <NotesView notes={app.notes ?? ''} className="max-h-[calc(100vh-180px)] overflow-y-auto" />
+        </aside>
+
+        <div className="shrink-0 max-w-full">
+          <CVDocument profile={profile} application={{ ...app, status }} />
+          {app.coverLetter && (
+            <CoverLetterDocument
+              profile={profile}
+              application={{ ...app, status, coverLetter: app.coverLetter as CoverLetter }}
+              paginate
+            />
+          )}
+        </div>
       </div>
+
+      {notesOpen && (
+        <NotesDialog
+          company={app.company}
+          value={app.notes ?? ''}
+          startEditing
+          onSave={handleNotesSave}
+          onClose={() => setNotesOpen(false)}
+        />
+      )}
 
       {/* Off-screen, A4-accurate copies rasterized for the PDF download — kept
           separate from the on-screen view above so its layout never affects it. */}
