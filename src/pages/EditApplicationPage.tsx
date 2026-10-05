@@ -20,6 +20,7 @@ import { FeaturedProjectsPicker } from '../components/FeaturedProjectsPicker';
 import { MoveButtons } from '../components/MoveButtons';
 import { move } from '../utils/move';
 import { formatDateLong, formatDateNumeric, parseToIsoDate } from '../utils/date';
+import { DEFAULT_CLOSINGS } from '../utils/coverLetterClosing';
 import {
   nafSection, nafRow, nafLabel, nafOptional, nafInput, nafTextarea,
   nafCheckboxLabel, nafCheckboxInput, nafParagraphRow, nafRemoveBtn, nafAddBtn,
@@ -75,6 +76,7 @@ function EditContent({ staticApp }: { staticApp: ApplicationConfig }) {
   const [recipientName, setRecipientName] = useState(app.coverLetter?.recipientName ?? '');
   const [subjectRole, setSubjectRole] = useState(app.coverLetter?.subjectRole ?? '');
   const [paragraphs, setParagraphs] = useState<string[]>([...(app.coverLetter?.paragraphs ?? [''])]);
+  const [closing, setClosing] = useState(app.coverLetter?.closing ?? '');
 
   const updateParagraph = (i: number, value: string) =>
     setParagraphs((prev) => prev.map((p, idx) => (idx === i ? value : p)));
@@ -105,6 +107,7 @@ function EditContent({ staticApp }: { staticApp: ApplicationConfig }) {
         date: formatDateLong(dateISO, language),
         subjectRole: subjectRole || role,
         paragraphs: paragraphs.filter(Boolean),
+        ...(closing.trim() && { closing: closing.trim() }),
       },
     }),
   });
@@ -408,6 +411,18 @@ function EditContent({ staticApp }: { staticApp: ApplicationConfig }) {
                 <button className={nafAddBtn} onClick={addParagraph}>
                   + Add paragraph
                 </button>
+              </div>
+
+              <div className={nafSection}>
+                <span className={nafLabel}>
+                  Closing <span className={nafOptional}>(optional, shown above your signature)</span>
+                </span>
+                <input
+                  className={nafInput}
+                  placeholder={`defaults to ${DEFAULT_CLOSINGS[language]}`}
+                  value={closing}
+                  onChange={(e) => setClosing(e.target.value)}
+                />
               </div>
             </>
           )}

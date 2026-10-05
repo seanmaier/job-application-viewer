@@ -29,6 +29,7 @@ function validateCoverLetter(value: unknown, errors: string[]): CoverLetter | un
   if (!isString(value.subjectRole)) clErrors.push('"coverLetter.subjectRole" must be a string.');
   if (!Array.isArray(value.paragraphs) || !value.paragraphs.every(isString)) clErrors.push('"coverLetter.paragraphs" must be an array of strings.');
   if (value.recipientName !== undefined && !isString(value.recipientName)) clErrors.push('"coverLetter.recipientName" must be a string.');
+  if (value.closing !== undefined && !isString(value.closing)) clErrors.push('"coverLetter.closing" must be a string.');
 
   errors.push(...clErrors);
   if (clErrors.length > 0) return undefined;
@@ -39,6 +40,7 @@ function validateCoverLetter(value: unknown, errors: string[]): CoverLetter | un
     subjectRole: value.subjectRole as string,
     paragraphs: value.paragraphs as string[],
     ...(isString(value.recipientName) && value.recipientName && { recipientName: value.recipientName }),
+    ...(isString(value.closing) && value.closing && { closing: value.closing }),
   };
 }
 

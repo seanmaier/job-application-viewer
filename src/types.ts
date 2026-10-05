@@ -66,6 +66,8 @@ export interface CoverLetter {
   date: string;
   subjectRole: string;
   paragraphs: string[];
+  /** Closing line above the signature; falls back to the language default (see DEFAULT_CLOSINGS). */
+  closing?: string;
 }
 
 export type AppLanguage = 'en' | 'de';
