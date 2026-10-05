@@ -38,7 +38,7 @@ export function JsonConfigPanel({ text, onTextChange, onApply }: Props) {
         </div>
       )}
       <textarea
-        className="flex-1 [font-family:var(--font-mono)] text-[12.5px] leading-[1.65] text-[#c9d1e0] bg-transparent border-none p-5 resize-none outline-none whitespace-pre [overflow-wrap:normal] overflow-auto"
+        className="flex-1 [font-family:var(--font-mono)] text-[12.5px] leading-[1.65] text-[#c9d1e0] bg-transparent border-none p-5 resize-none outline-none whitespace-pre-wrap [overflow-wrap:anywhere] overflow-y-auto overflow-x-hidden"
         value={text}
         onChange={(e) => { onTextChange(e.target.value); setErrors([]); }}
         spellCheck={false}
