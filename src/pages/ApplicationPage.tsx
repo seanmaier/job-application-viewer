@@ -7,13 +7,13 @@ import { CVDocument } from '../components/cv/CVDocument';
 import { CoverLetterDocument } from '../components/cover-letter/CoverLetterDocument';
 import { ExportModal } from '../components/ExportModal';
 import { JsonEditModal } from '../components/JsonEditModal';
-import { NotesDialog } from '../components/NotesDialog';
-import { NotesView } from '../components/NotesView';
 import { useApplication } from '../hooks/useApplication';
 import { useApplicationStatus } from '../hooks/useApplicationStatus';
 import { STATUS_LABELS, STATUS_COLORS } from '../utils/status';
 import { FONT_LABELS, ALL_FONTS } from '../utils/fonts';
 import { generateTextExport } from '../utils/textExport';
+import { NotesDialog } from '../components/NotesDialog';
+import { NotesView } from '../components/NotesView';
 import { buildPdfFilename } from '../utils/pdfFilename';
 import { autoAppliedDateFor, autoInterviewDateFor, autoFinalDecisionDateFor } from '../utils/autoStatusDates';
 import {
@@ -47,9 +47,9 @@ function ApplicationContent({ staticApp }: { staticApp: ApplicationConfig }) {
   const [status, setStatus] = useApplicationStatus(staticApp.id, staticApp.status);
   const [exportOpen, setExportOpen] = useState(false);
   const [jsonOpen, setJsonOpen] = useState(false);
-  const [notesOpen, setNotesOpen] = useState(false);
   const [exportFolderName, setExportFolderName] = useState<string | null>(null);
   const [downloading, setDownloading] = useState(false);
+  const [notesOpen, setNotesOpen] = useState(false);
   const navigate = useNavigate();
 
   const cvExportRef = useRef<HTMLDivElement>(null);
