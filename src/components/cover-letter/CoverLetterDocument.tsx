@@ -5,6 +5,7 @@ import { FONT_STACKS } from '../../utils/fonts';
 import { usePagedBlocks } from './usePagedBlocks';
 import type { Block } from './usePagedBlocks';
 import { joinLines } from '../../utils/lines';
+import { DEFAULT_CLOSINGS } from '../../utils/coverLetterClosing';
 import '../../styles/document.css';
 
 interface Props {
@@ -19,13 +20,11 @@ const LABELS = {
     contact: 'Contact',
     recipientFallback: 'Hiring Team',
     subjectPrefix: 'Re:',
-    sign: 'Sincerely,',
   },
   de: {
     contact: 'Kontakt',
     recipientFallback: 'Personalabteilung',
     subjectPrefix: 'Betreff:',
-    sign: 'Mit freundlichen Grüßen',
   },
 } as const;
 
@@ -80,7 +79,7 @@ export function CoverLetterDocument({ profile, application, paginate = false }: 
       key: 'sign',
       node: (
         <div className="cl-sign">
-          {t.sign}
+          {cl.closing || DEFAULT_CLOSINGS[application.language ?? 'en']}
           <br />
           <span className="cl-sign-name">{profile.name}</span>
         </div>

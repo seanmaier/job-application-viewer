@@ -1,5 +1,6 @@
 import type { ApplicationConfig, Profile } from '../types';
 import { featuredProjects } from './featuredProjects';
+import { DEFAULT_CLOSINGS } from './coverLetterClosing';
 
 const divider = '─'.repeat(44);
 
@@ -92,7 +93,7 @@ export function generateTextExport(profile: Profile, application: ApplicationCon
       lines.push(p);
       lines.push('');
     });
-    lines.push(`Sincerely,\n${profile.name}`);
+    lines.push(`${cl.closing || DEFAULT_CLOSINGS.en}\n${profile.name}`);
   }
 
   return lines.join('\n');
