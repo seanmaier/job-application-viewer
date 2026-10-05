@@ -87,7 +87,7 @@ function ChooseBaseProfileScreen({
 }: {
   baseProfiles: BaseProfile[];
   onChoose: (bp: BaseProfile) => void;
-  onSkip: () => void;
+  onSkip: (language: AppLanguage) => void;
 }) {
   return (
     <div className={newAppPage}>
@@ -122,12 +122,15 @@ function ChooseBaseProfileScreen({
           </div>
 
           <div className="flex items-center gap-3 mt-1">
-            <button
-              className="[font-family:var(--font-mono)] text-[11px] bg-transparent text-[color:var(--ink-3)] border border-white/12 rounded px-3.5 py-[6px] cursor-pointer hover:text-[color:var(--ink-invert)]"
-              onClick={onSkip}
-            >
-              Skip — use language default
-            </button>
+            {(['en', 'de'] as AppLanguage[]).map((lang) => (
+              <button
+                key={lang}
+                className="[font-family:var(--font-mono)] text-[11px] bg-transparent text-[color:var(--ink-3)] border border-white/12 rounded px-3.5 py-[6px] cursor-pointer hover:text-[color:var(--ink-invert)]"
+                onClick={() => onSkip(lang)}
+              >
+                Skip — {LANG_FLAGS[lang]} {lang === 'en' ? 'English' : 'Deutsch'} default
+              </button>
+            ))}
             <Link
               className="[font-family:var(--font-mono)] text-[11px] text-[color:var(--ink-3)] no-underline hover:text-[color:var(--accent)]"
               to="/profiles"
@@ -179,9 +182,12 @@ export function NewApplicationPage() {
     setStep('form');
   };
 
-  const handleSkip = () => {
+  // Without a base profile the application uses the chosen language's
+  // default profile, so the language is picked here rather than in the form.
+  const handleSkip = (lang: AppLanguage) => {
     setBaseProfileId(undefined);
-    setFeaturedIds(getProfile(language).projects.map((p) => p.id));
+    setLanguage(lang);
+    setFeaturedIds(getProfile(lang).projects.map((p) => p.id));
     setStep('form');
   };
 
@@ -235,7 +241,7 @@ export function NewApplicationPage() {
                     {selectedBaseProfile.name}
                   </>
                 ) : (
-                  <span className={nafOptional}>language default ({language})</span>
+                  <span className={nafOptional}>{LANG_FLAGS[language]} {language === 'en' ? 'English' : 'Deutsch'} default</span>
                 )}
               </span>
               <button
@@ -278,17 +284,6 @@ export function NewApplicationPage() {
           </div>
 
           <div className={nafRow}>
-            <div className={nafSection}>
-              <span className={nafLabel}>Language</span>
-              <select
-                className={nafInput}
-                value={language}
-                onChange={(e) => setLanguage(e.target.value as AppLanguage)}
-              >
-                <option value="en">English 🇬🇧</option>
-                <option value="de">Deutsch 🇩🇪</option>
-              </select>
-            </div>
             <div className={nafSection}>
               <span className={nafLabel}>Font</span>
               <select
