@@ -29,6 +29,7 @@ import {
 } from '../styles/formStyles';
 
 const LANG_FLAGS: Record<AppLanguage, string> = { en: '🇬🇧', de: '🇩🇪' };
+const LANGUAGE_DEFAULT_PREFIX = 'language-default:';
 
 function toId(company: string) {
   return company.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'new-app';
@@ -53,9 +54,16 @@ function EditContent({ staticApp }: { staticApp: ApplicationConfig }) {
   const selectedBaseProfile = baseProfileId ? baseProfiles.find((p) => p.id === baseProfileId) : undefined;
   const profile = selectedBaseProfile?.profile ?? getProfile(language);
 
-  const handleBaseProfileChange = (id: string) => {
-    setBaseProfileId(id);
-    const bp = baseProfiles.find((p) => p.id === id);
+  // The language always comes from the profile: a base profile carries its
+  // own, and the fallback options pick one of the per-language defaults.
+  const handleBaseProfileChange = (value: string) => {
+    if (value.startsWith(LANGUAGE_DEFAULT_PREFIX)) {
+      setBaseProfileId('');
+      setLanguage(value.slice(LANGUAGE_DEFAULT_PREFIX.length) as AppLanguage);
+      return;
+    }
+    setBaseProfileId(value);
+    const bp = baseProfiles.find((p) => p.id === value);
     if (bp) setLanguage(bp.language);
   };
 
@@ -176,14 +184,22 @@ function EditContent({ staticApp }: { staticApp: ApplicationConfig }) {
             <span className={nafLabel}>Base profile</span>
             <select
               className={nafInput}
-              value={baseProfileId}
+              value={baseProfileId || `${LANGUAGE_DEFAULT_PREFIX}${language}`}
               onChange={(e) => handleBaseProfileChange(e.target.value)}
             >
-              <option value="">language default ({language})</option>
-              {baseProfiles.map((bp) => (
-                <option key={bp.id} value={bp.id}>{LANG_FLAGS[bp.language]} {bp.name}</option>
-              ))}
+              {baseProfiles.length > 0 && (
+                <optgroup label="Base profiles">
+                  {baseProfiles.map((bp) => (
+                    <option key={bp.id} value={bp.id}>{LANG_FLAGS[bp.language]} {bp.name}</option>
+                  ))}
+                </optgroup>
+              )}
+              <optgroup label="Language defaults">
+                <option value={`${LANGUAGE_DEFAULT_PREFIX}en`}>{LANG_FLAGS.en} English default</option>
+                <option value={`${LANGUAGE_DEFAULT_PREFIX}de`}>{LANG_FLAGS.de} Deutsch default</option>
+              </optgroup>
             </select>
+            <span className={nafOptional}>The application's language follows the selected profile.</span>
           </div>
 
           <div className={nafSection}>
@@ -209,17 +225,6 @@ function EditContent({ staticApp }: { staticApp: ApplicationConfig }) {
           </div>
 
           <div className={nafRow}>
-            <div className={nafSection}>
-              <span className={nafLabel}>Language</span>
-              <select
-                className={nafInput}
-                value={language}
-                onChange={(e) => setLanguage(e.target.value as AppLanguage)}
-              >
-                <option value="en">English 🇬🇧</option>
-                <option value="de">Deutsch 🇩🇪</option>
-              </select>
-            </div>
             <div className={nafSection}>
               <span className={nafLabel}>Font</span>
               <select
