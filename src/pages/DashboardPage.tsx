@@ -213,6 +213,10 @@ export function DashboardPage() {
         )}
       </div>
 
+      {/* Scrolls sideways instead of crushing columns on narrow windows */}
+      <div className="overflow-x-auto">
+      <div className="min-w-[960px]">
+
       {/* Column headers */}
       <div className="flex items-center border-b border-[color:var(--rule)] pb-1.5">
         <button
@@ -222,7 +226,7 @@ export function DashboardPage() {
           company{sortIndicator('company')}
         </button>
         <button
-          className="[font-family:var(--font-mono)] text-[9.5px] uppercase tracking-[0.1em] text-[color:var(--ink-3)] hover:text-[color:var(--ink-2)] bg-transparent border-none cursor-pointer text-left p-0 flex-1"
+          className="[font-family:var(--font-mono)] text-[9.5px] uppercase tracking-[0.1em] text-[color:var(--ink-3)] hover:text-[color:var(--ink-2)] bg-transparent border-none cursor-pointer text-left p-0 flex-1 min-w-[120px]"
           onClick={() => toggleSort('role')}
         >
           role{sortIndicator('role')}
@@ -235,19 +239,19 @@ export function DashboardPage() {
           status{sortIndicator('status')}
         </button>
         <button
-          className="[font-family:var(--font-mono)] text-[9.5px] uppercase tracking-[0.1em] text-[color:var(--ink-3)] hover:text-[color:var(--ink-2)] bg-transparent border-none cursor-pointer text-right p-0 w-[100px] shrink-0 ml-2"
+          className="[font-family:var(--font-mono)] text-[9.5px] uppercase tracking-[0.1em] text-[color:var(--ink-3)] hover:text-[color:var(--ink-2)] bg-transparent border-none cursor-pointer text-right p-0 w-[88px] shrink-0 ml-2"
           onClick={() => toggleSort('appliedDate')}
         >
           applied{sortIndicator('appliedDate')}
         </button>
         <button
-          className="[font-family:var(--font-mono)] text-[9.5px] uppercase tracking-[0.1em] text-[color:var(--ink-3)] hover:text-[color:var(--ink-2)] bg-transparent border-none cursor-pointer text-right p-0 w-[100px] shrink-0 ml-2"
+          className="[font-family:var(--font-mono)] text-[9.5px] uppercase tracking-[0.1em] text-[color:var(--ink-3)] hover:text-[color:var(--ink-2)] bg-transparent border-none cursor-pointer text-right p-0 w-[88px] shrink-0 ml-2"
           onClick={() => toggleSort('interviewDate')}
         >
           interview{sortIndicator('interviewDate')}
         </button>
         <button
-          className="[font-family:var(--font-mono)] text-[9.5px] uppercase tracking-[0.1em] text-[color:var(--ink-3)] hover:text-[color:var(--ink-2)] bg-transparent border-none cursor-pointer text-right p-0 w-[100px] shrink-0 ml-2"
+          className="[font-family:var(--font-mono)] text-[9.5px] uppercase tracking-[0.1em] text-[color:var(--ink-3)] hover:text-[color:var(--ink-2)] bg-transparent border-none cursor-pointer text-right p-0 w-[88px] shrink-0 ml-2"
           onClick={() => toggleSort('finalDecisionDate')}
         >
           decision{sortIndicator('finalDecisionDate')}
@@ -255,7 +259,7 @@ export function DashboardPage() {
         <span className="[font-family:var(--font-mono)] text-[9.5px] uppercase tracking-[0.1em] text-[color:var(--ink-3)] w-[170px] shrink-0 pl-3">
           notes
         </span>
-        <span className="w-[28px] shrink-0" />
+        <span className="w-[36px] shrink-0" />
       </div>
 
       {allApps.length === 0 ? (
@@ -287,6 +291,8 @@ export function DashboardPage() {
           })}
         </div>
       )}
+      </div>
+      </div>
 
       {importOpen && <ImportApplicationModal onClose={() => setImportOpen(false)} />}
       {backupOpen && <BackupModal onClose={() => setBackupOpen(false)} />}

@@ -84,18 +84,18 @@ export function BaseProfilesPage() {
               </span>
               <div className="w-[130px] shrink-0 flex items-center justify-end gap-2">
                 <Link
-                  className="[font-family:var(--font-mono)] text-[11px] text-[color:var(--ink-3)] no-underline border border-[color:var(--rule)] rounded px-2.5 py-1 opacity-0 group-hover:opacity-100 transition-opacity hover:text-[color:var(--ink-invert)] hover:border-[color:var(--ink-2)]"
+                  className="[font-family:var(--font-mono)] text-[11px] text-[color:var(--ink-2)] no-underline border border-[color:var(--rule)] rounded px-2.5 py-1 transition-colors hover:text-[color:var(--ink-invert)] hover:border-[color:var(--ink-2)]"
                   to={`/profiles/${p.id}`}
                   onClick={(e) => e.stopPropagation()}
                 >
                   edit
                 </Link>
                 <button
-                  className="[font-family:var(--font-mono)] text-[11px] text-[color:var(--ink-3)] bg-transparent border-none cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity hover:text-[color:var(--status-rejected)]"
+                  className="[font-family:var(--font-mono)] text-[11px] text-[color:var(--ink-2)] bg-transparent border border-[color:var(--rule)] rounded px-2.5 py-1 cursor-pointer transition-colors hover:text-[color:var(--status-rejected)] hover:border-[color:var(--status-rejected)]"
                   onClick={(e) => { e.stopPropagation(); handleDelete(p.id, p.name); }}
                   title="Delete"
                 >
-                  ✕
+                  delete
                 </button>
               </div>
             </div>
