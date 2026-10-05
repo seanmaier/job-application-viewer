@@ -6,7 +6,6 @@ import { resolveApplicationProfile } from '../utils/baseProfiles';
 import { CVDocument } from '../components/cv/CVDocument';
 import { CoverLetterDocument } from '../components/cover-letter/CoverLetterDocument';
 import { ExportModal } from '../components/ExportModal';
-import { JsonEditModal } from '../components/JsonEditModal';
 import { useApplication } from '../hooks/useApplication';
 import { useApplicationStatus } from '../hooks/useApplicationStatus';
 import { STATUS_LABELS, STATUS_COLORS } from '../utils/status';
@@ -44,7 +43,6 @@ function ApplicationContent({ staticApp }: { staticApp: ApplicationConfig }) {
   const { app, save, isDirty } = useApplication(staticApp);
   const [status, setStatus] = useApplicationStatus(staticApp.id, staticApp.status);
   const [exportOpen, setExportOpen] = useState(false);
-  const [jsonOpen, setJsonOpen] = useState(false);
   const [exportFolderName, setExportFolderName] = useState<string | null>(null);
   const [downloading, setDownloading] = useState(false);
   const navigate = useNavigate();
@@ -196,12 +194,6 @@ function ApplicationContent({ staticApp }: { staticApp: ApplicationConfig }) {
             Edit
           </Link>
           <button
-            className="[font-family:var(--font-mono)] text-[11px] bg-white/7 text-[color:var(--ink-invert)] border border-white/18 rounded px-3.5 py-[5px] cursor-pointer tracking-[0.04em] hover:bg-white/14"
-            onClick={() => setJsonOpen(true)}
-          >
-            JSON
-          </button>
-          <button
             className="[font-family:var(--font-mono)] text-[11px] bg-transparent text-[color:var(--accent)] border border-[color:var(--accent)] rounded px-3.5 py-[5px] cursor-pointer tracking-[0.04em] hover:bg-[color:var(--accent)] hover:text-[color:var(--ink)]"
             onClick={() => setExportOpen(true)}
           >
@@ -270,13 +262,6 @@ function ApplicationContent({ staticApp }: { staticApp: ApplicationConfig }) {
         />
       )}
 
-      {jsonOpen && (
-        <JsonEditModal
-          app={{ ...app, status }}
-          onSave={(updated) => { save(updated); }}
-          onClose={() => setJsonOpen(false)}
-        />
-      )}
     </div>
   );
 }

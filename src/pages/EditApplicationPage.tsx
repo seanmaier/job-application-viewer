@@ -16,6 +16,7 @@ import { SkillGroupsEditor } from '../components/SkillGroupsEditor';
 import { ExportSkillGroupsButton } from '../components/ExportSkillGroupsButton';
 import { ImportSkillGroupsModal } from '../components/ImportSkillGroupsModal';
 import { UnsavedChangesDialog } from '../components/UnsavedChangesDialog';
+import { JsonEditModal } from '../components/JsonEditModal';
 import { FeaturedProjectsPicker } from '../components/FeaturedProjectsPicker';
 import { MoveButtons } from '../components/MoveButtons';
 import { move } from '../utils/move';
@@ -34,10 +35,13 @@ function toId(company: string) {
   return company.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'new-app';
 }
 
-// Inner component — staticApp is guaranteed to exist
-function EditContent({ staticApp }: { staticApp: ApplicationConfig }) {
+// Inner component — staticApp is guaranteed to exist. onReload remounts it
+// so the form picks up a config saved outside the form (the JSON editor).
+function EditContent({ staticApp, onReload }: { staticApp: ApplicationConfig; onReload: () => void }) {
   const { app, save, reset, isDirty } = useApplication(staticApp);
   const navigate = useNavigate();
+  const [jsonOpen, setJsonOpen] = useState(false);
+  const jsonSavedRef = useRef(false);
 
   const [company, setCompany] = useState(app.company);
   const [role, setRole] = useState(app.role);
@@ -163,6 +167,9 @@ function EditContent({ staticApp }: { staticApp: ApplicationConfig }) {
               Reset to default
             </button>
           )}
+          <button className={editResetBtn} onClick={() => setJsonOpen(true)}>
+            JSON
+          </button>
           <button className={editSaveBtn} onClick={handleSave}>
             Save changes
           </button>
@@ -452,6 +459,19 @@ function EditContent({ staticApp }: { staticApp: ApplicationConfig }) {
         />
       )}
 
+      {/* Starts from the form's current state, unsaved edits included. Saving
+          persists it; the form then remounts to show the saved config. */}
+      {jsonOpen && (
+        <JsonEditModal
+          app={previewApp}
+          onSave={(updated) => { save(updated); jsonSavedRef.current = true; }}
+          onClose={() => {
+            setJsonOpen(false);
+            if (jsonSavedRef.current) onReload();
+          }}
+        />
+      )}
+
       {importSkillGroupsOpen && (
         <ImportSkillGroupsModal
           application={previewApp}
@@ -467,6 +487,7 @@ function EditContent({ staticApp }: { staticApp: ApplicationConfig }) {
 export function EditApplicationPage() {
   const { id } = useParams<{ id: string }>();
   const staticApp = id ? [...applications, ...getLocalApplications()].find((a) => a.id === id) : undefined;
+  const [formVersion, setFormVersion] = useState(0);
 
   if (!staticApp) {
     return (
@@ -477,5 +498,5 @@ export function EditApplicationPage() {
     );
   }
 
-  return <EditContent staticApp={staticApp} />;
+  return <EditContent key={formVersion} staticApp={staticApp} onReload={() => setFormVersion((v) => v + 1)} />;
 }
