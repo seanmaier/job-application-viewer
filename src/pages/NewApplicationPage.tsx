@@ -9,6 +9,7 @@ import { AutoTextarea } from '../components/AutoTextarea';
 import { ImportParagraphsControl } from '../components/ImportParagraphsControl';
 import { ExportParagraphsButton } from '../components/ExportParagraphsButton';
 import { FeaturedProjectsPicker } from '../components/FeaturedProjectsPicker';
+import { ImportApplicationModal } from '../components/ImportApplicationModal';
 import { MoveButtons } from '../components/MoveButtons';
 import { move } from '../utils/move';
 import { formatDateLong } from '../utils/date';
@@ -60,6 +61,25 @@ function buildConfig(
   };
 }
 
+// ── import from JSON ────────────────────────────────────────────────────────
+
+// Header shortcut to create the whole application from pasted or uploaded
+// JSON instead of filling in the form.
+function ImportJsonButton() {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <button
+        className="ml-auto [font-family:var(--font-mono)] text-[11px] bg-white/7 text-[color:var(--ink-invert)] border border-white/18 rounded px-3.5 py-[5px] cursor-pointer hover:bg-white/14"
+        onClick={() => setOpen(true)}
+      >
+        Import JSON
+      </button>
+      {open && <ImportApplicationModal onClose={() => setOpen(false)} />}
+    </>
+  );
+}
+
 // ── base profile selection screen ────────────────────────────────────────────
 
 function ChooseBaseProfileScreen({
@@ -74,6 +94,7 @@ function ChooseBaseProfileScreen({
       <div className={newAppHeader}>
         <Link className={newAppBack} to="/">← Dashboard</Link>
         <span className={newAppTitle}>New Application</span>
+        <ImportJsonButton />
       </div>
 
       <div className="flex-1 overflow-y-auto flex justify-center">
@@ -198,6 +219,7 @@ export function NewApplicationPage() {
       <div className={newAppHeader}>
         <Link className={newAppBack} to="/">← Dashboard</Link>
         <span className={newAppTitle}>New Application</span>
+        <ImportJsonButton />
       </div>
 
       <div className={newAppBody}>
