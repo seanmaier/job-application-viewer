@@ -8,8 +8,8 @@ const LANG_FLAGS: Record<string, string> = { en: '🇬🇧', de: '🇩🇪' };
 
 export type DateFieldName = 'appliedDate' | 'interviewDate' | 'finalDecisionDate';
 
-const dateCellClass = '[font-family:var(--font-mono)] text-[11px] text-[color:var(--ink-3)] w-[100px] shrink-0 text-right truncate ml-2';
-const dateInputClass = '[font-family:var(--font-mono)] text-[11px] bg-[color:var(--surface)] border border-[color:var(--rule)] rounded px-1 py-0.5 w-[100px] shrink-0 text-right ml-2 text-[color:var(--ink-invert)] [color-scheme:dark]';
+const dateCellClass = '[font-family:var(--font-mono)] text-[11px] text-[color:var(--ink-3)] w-[88px] shrink-0 text-right truncate ml-2';
+const dateInputClass = '[font-family:var(--font-mono)] text-[11px] bg-[color:var(--surface)] border border-[color:var(--rule)] rounded px-1 py-0.5 w-[88px] shrink-0 text-right ml-2 text-[color:var(--ink-invert)] [color-scheme:dark]';
 
 interface Props {
   application: ApplicationConfig;
@@ -56,7 +56,7 @@ export function ApplicationCard({
       </div>
 
       {/* Role */}
-      <div className="flex-1 [font-family:var(--font-mono)] text-[12px] text-[color:var(--ink-2)] truncate min-w-0">
+      <div className="flex-1 [font-family:var(--font-mono)] text-[12px] text-[color:var(--ink-2)] truncate min-w-[120px]">
         {application.role}
       </div>
 
@@ -147,18 +147,19 @@ export function ApplicationCard({
         title="Click to edit notes"
       />
 
-      {/* Delete (local apps only) */}
-      {onDelete ? (
-        <button
-          className="[font-family:var(--font-mono)] text-[11px] text-[color:var(--ink-3)] bg-transparent border-none cursor-pointer w-[28px] shrink-0 text-center opacity-0 group-hover:opacity-100 transition-opacity hover:text-[color:var(--status-rejected)]"
-          onClick={(e) => { e.stopPropagation(); onDelete(); }}
-          title="Delete"
-        >
-          ✕
-        </button>
-      ) : (
-        <div className="w-[28px] shrink-0" />
-      )}
+      {/* Delete (local apps only) — pinned to the right edge so it stays in
+          view even when the row is wider than the window and scrolls. */}
+      <div className="sticky right-0 w-[36px] shrink-0 self-stretch flex items-center justify-center bg-[color:var(--bg)] group-hover:bg-[color:var(--surface)] transition-colors duration-100">
+        {onDelete && (
+          <button
+            className="[font-family:var(--font-mono)] text-[11px] text-[color:var(--ink-2)] bg-transparent border border-[color:var(--rule)] rounded w-[24px] h-[22px] cursor-pointer leading-none hover:text-[color:var(--status-rejected)] hover:border-[color:var(--status-rejected)] transition-colors"
+            onClick={(e) => { e.stopPropagation(); onDelete(); }}
+            title="Delete"
+          >
+            ✕
+          </button>
+        )}
+      </div>
     </div>
   );
 }
