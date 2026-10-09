@@ -35,8 +35,50 @@ function seedFromLegacyProfiles(): BaseProfile[] {
   return seeded;
 }
 
+function slugify(name: string): string {
+  return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+}
+
+function uniqueSlug(name: string, existingIds: Set<string>, fallback: string): string {
+  const base = slugify(name) || fallback;
+  if (!existingIds.has(base)) return base;
+  let i = 2;
+  while (existingIds.has(`${base}-${i}`)) i++;
+  return `${base}-${i}`;
+}
+
+// A project's `id` is a free-text field (it doubles as a URL slug), so
+// nothing stops two projects from ending up with the same id — most often
+// both blank, left over from "+ Add project" defaulting to `id: ''`. Several
+// features (FeaturedProjectsPicker, CV rendering) key off `id` assuming it's
+// unique, so a collision makes one project swallow the other. Repairing on
+// every read/write means already-broken profiles self-heal without the user
+// having to notice or edit the ID field by hand.
+function ensureUniqueProjectIds(profile: Profile): Profile {
+  const seen = new Set<string>();
+  let changed = false;
+  const projects = profile.projects.map((proj) => {
+    let { id } = proj;
+    if (!id || seen.has(id)) {
+      id = uniqueSlug(proj.name, seen, 'project');
+      changed = true;
+    }
+    seen.add(id);
+    return id === proj.id ? proj : { ...proj, id };
+  });
+  return changed ? { ...profile, projects } : profile;
+}
+
+function repairBaseProfile(bp: BaseProfile): BaseProfile {
+  const profile = ensureUniqueProjectIds(bp.profile);
+  return profile === bp.profile ? bp : { ...bp, profile };
+}
+
 export function getBaseProfiles(): BaseProfile[] {
-  return readList() ?? seedFromLegacyProfiles();
+  const list = readList() ?? seedFromLegacyProfiles();
+  const repaired = list.map(repairBaseProfile);
+  if (repaired.some((bp, i) => bp !== list[i])) writeList(repaired);
+  return repaired;
 }
 
 export function getBaseProfile(id: string): BaseProfile | undefined {
@@ -45,24 +87,21 @@ export function getBaseProfile(id: string): BaseProfile | undefined {
 
 export function saveBaseProfile(baseProfile: BaseProfile): void {
   const rest = getBaseProfiles().filter((p) => p.id !== baseProfile.id);
-  writeList([...rest, baseProfile]);
+  writeList([...rest, repairBaseProfile(baseProfile)]);
 }
 
 export function deleteBaseProfile(id: string): void {
   writeList(getBaseProfiles().filter((p) => p.id !== id));
 }
 
-function slugify(name: string): string {
-  return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+export function uniqueBaseProfileId(name: string): string {
+  return uniqueSlug(name, new Set(getBaseProfiles().map((p) => p.id)), 'profile');
 }
 
-export function uniqueBaseProfileId(name: string): string {
-  const base = slugify(name) || 'profile';
-  const existingIds = new Set(getBaseProfiles().map((p) => p.id));
-  if (!existingIds.has(base)) return base;
-  let i = 2;
-  while (existingIds.has(`${base}-${i}`)) i++;
-  return `${base}-${i}`;
+// Used when adding a new project in the profile editor, so it never starts
+// with a blank id that could collide with another blank-id project.
+export function uniqueProjectId(name: string, existingIds: string[]): string {
+  return uniqueSlug(name, new Set(existingIds), 'project');
 }
 
 export function blankProfile(language: AppLanguage): Profile {
