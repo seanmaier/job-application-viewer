@@ -1,17 +1,22 @@
-import type { ApplicationConfig, ApplicationStatus, AppLanguage, Profile } from '../types';
+import type { ApplicationConfig, ApplicationStatus, AppLanguage, BaseProfile, Profile } from '../types';
+import { getBaseProfiles } from './baseProfiles';
 
 const LOCAL_APPS_KEY = 'local-apps';
 const STATUS_PREFIX = 'status-';
 const CONFIG_PREFIX = 'app-config-';
 const PROFILE_PREFIX = 'profile-override-';
+const BASE_PROFILES_KEY = 'base-profiles';
 
 export interface DataBackup {
-  version: 1;
+  version: 2;
   exportedAt: string;
   localApps: ApplicationConfig[];
   statuses: Record<string, ApplicationStatus>;
   configOverrides: Record<string, Omit<ApplicationConfig, 'status'>>;
   profileOverrides: Partial<Record<AppLanguage, Profile>>;
+  // Absent in version-1 backups, which predate named base profiles — restoring
+  // one of those leaves this browser's base profiles untouched.
+  baseProfiles?: BaseProfile[];
 }
 
 function allKeys(): string[] {
@@ -23,7 +28,7 @@ function allKeys(): string[] {
   return keys;
 }
 
-/** Gathers every application, status, date/notes override, and profile customization stored in this browser. */
+/** Gathers every application, status, date/notes override, base profile, and profile customization stored in this browser. */
 export function exportAllData(): DataBackup {
   let localApps: ApplicationConfig[] = [];
   const statuses: Record<string, ApplicationStatus> = {};
@@ -45,7 +50,11 @@ export function exportAllData(): DataBackup {
     }
   }
 
-  return { version: 1, exportedAt: new Date().toISOString(), localApps, statuses, configOverrides, profileOverrides };
+  // Goes through getBaseProfiles so a browser that never opened the profiles
+  // page still exports the profiles it would show (seeded from the legacy ones).
+  const baseProfiles = getBaseProfiles();
+
+  return { version: 2, exportedAt: new Date().toISOString(), localApps, statuses, configOverrides, profileOverrides, baseProfiles };
 }
 
 /** Triggers a browser download of the backup as a .json file — works the same in Chrome and Firefox. */
@@ -82,16 +91,18 @@ export function parseBackup(raw: string): ParseBackupResult {
   if (typeof p.statuses !== 'object' || p.statuses === null) return { ok: false, error: 'Not a valid backup file — missing "statuses" object.' };
   if (typeof p.configOverrides !== 'object' || p.configOverrides === null) return { ok: false, error: 'Not a valid backup file — missing "configOverrides" object.' };
   if (typeof p.profileOverrides !== 'object' || p.profileOverrides === null) return { ok: false, error: 'Not a valid backup file — missing "profileOverrides" object.' };
+  if (p.baseProfiles !== undefined && !Array.isArray(p.baseProfiles)) return { ok: false, error: 'Not a valid backup file — "baseProfiles" must be an array.' };
 
   return {
     ok: true,
     backup: {
-      version: 1,
+      version: 2,
       exportedAt: typeof p.exportedAt === 'string' ? p.exportedAt : new Date().toISOString(),
       localApps: p.localApps as ApplicationConfig[],
       statuses: p.statuses as Record<string, ApplicationStatus>,
       configOverrides: p.configOverrides as Record<string, Omit<ApplicationConfig, 'status'>>,
       profileOverrides: p.profileOverrides as Partial<Record<AppLanguage, Profile>>,
+      baseProfiles: p.baseProfiles as BaseProfile[] | undefined,
     },
   };
 }
@@ -113,4 +124,7 @@ export function applyBackup(backup: DataBackup): void {
   Object.entries(backup.profileOverrides).forEach(([lang, profile]) => {
     localStorage.setItem(`${PROFILE_PREFIX}${lang}`, JSON.stringify(profile));
   });
+  if (backup.baseProfiles) {
+    localStorage.setItem(BASE_PROFILES_KEY, JSON.stringify(backup.baseProfiles));
+  }
 }
