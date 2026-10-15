@@ -46,9 +46,13 @@ export function BackupModal({ onClose }: Props) {
     if (!pendingBackup) return;
     const appCount = pendingBackup.localApps.length;
     const overrideCount = Object.keys(pendingBackup.configOverrides).length;
+    const profileCount = pendingBackup.baseProfiles?.length;
+    const profileSummary = profileCount === undefined
+      ? 'base profiles in this browser are kept, since this backup predates them'
+      : `${profileCount} base profile${profileCount === 1 ? '' : 's'}`;
     const confirmed = confirm(
-      `This replaces ALL applications, statuses, dates, notes, and profile customizations currently stored in this browser ` +
-      `with the backup (${appCount} local application${appCount === 1 ? '' : 's'}, ${overrideCount} saved edit${overrideCount === 1 ? '' : 's'}). ` +
+      `This replaces ALL applications, statuses, dates, notes, base profiles, and profile customizations currently stored in this browser ` +
+      `with the backup (${appCount} local application${appCount === 1 ? '' : 's'}, ${overrideCount} saved edit${overrideCount === 1 ? '' : 's'}, ${profileSummary}). ` +
       `This cannot be undone. Continue?`,
     );
     if (!confirmed) return;
@@ -80,7 +84,7 @@ export function BackupModal({ onClose }: Props) {
               Export
             </span>
             <p className="text-[12.5px] text-[color:var(--ink-2)] leading-[1.5] m-0">
-              Downloads every application, its status/dates/notes, and any profile customizations stored in this browser as one JSON file — for moving to another browser or as a backup.
+              Downloads every application, its status/dates/notes, your base profiles, and any profile customizations stored in this browser as one JSON file — for moving to another browser or as a backup.
             </p>
             <button
               className="self-start [font-family:var(--font-mono)] text-[11px] bg-[color:var(--accent)] text-white border-none rounded px-4 py-1.5 cursor-pointer transition-colors duration-150 hover:bg-[#1d4ed8]"
