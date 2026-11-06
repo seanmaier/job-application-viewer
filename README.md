@@ -64,6 +64,32 @@ backup there and restore it after logging in.
 - `npm run dev:server` — run the API with auto-reload
 - `npm run users -- <add|passwd|remove|list> [username] [password]` — manage users
 
+## Deployment
+
+Pushing to `main` builds an image and publishes it to
+`ghcr.io/seanmaier/job-application-viewer` (`.github/workflows/docker.yml`).
+Files under `private/` are never part of the image.
+
+1. Create the data volume once on the host:
+   `docker volume create job-applications-data` (or set `DATA_VOLUME` to use
+   another name). It is external, so removing the stack or running
+   `docker compose down -v` never deletes the database.
+2. In Portainer, create a stack from `deploy/docker-compose.yml` (Repository
+   mode keeps it in sync with Git). If the GHCR package is private, add a
+   registry for `ghcr.io` with a token that has `read:packages`.
+3. Set the stack environment variable `PROXY_NETWORK` to the existing Docker
+   network your reverse proxy or tunnel container is in. The app publishes no
+   port; point the proxy at `http://job-applications:3000`. The proxy must
+   serve the app over HTTPS, since the session cookie is `Secure`.
+4. Open the container console and create a user:
+   `node server/cli.ts add <username>`
+5. Optional auto-redeploy: enable the stack's webhook in Portainer and store
+   its URL as the repository secret `PORTAINER_WEBHOOK_URL`. The image
+   workflow calls it after each push, so Portainer pulls the new image.
+
+Data lives in that volume (`/data/app.db` in the container). Back it up by copying
+that file.
+
 ## License
 
 MIT — see [LICENSE](LICENSE).
