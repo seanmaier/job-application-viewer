@@ -51,7 +51,7 @@ export function ImportSkillGroupsModal({ application, profile, onApply, onClose 
   };
 
   return (
-    <div className="fixed inset-0 bg-[rgba(20,28,46,0.65)] flex items-center justify-center z-[100] p-6" onClick={onClose}>
+    <div className="fixed inset-0 bg-[rgba(20,28,46,0.65)] flex items-center justify-center z-[100] p-3 sm:p-6" onClick={onClose}>
       <div
         className="bg-[#1a2236] rounded-lg w-full max-w-[760px] h-[80vh] flex flex-col shadow-[0_20px_60px_rgba(20,28,46,0.40)] overflow-hidden"
         onClick={(e) => e.stopPropagation()}

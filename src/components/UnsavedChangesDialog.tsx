@@ -7,7 +7,7 @@ interface Props {
 export function UnsavedChangesDialog({ onSave, onDiscard, onCancel }: Props) {
   return (
     <div
-      className="fixed inset-0 bg-[rgba(20,28,46,0.65)] flex items-center justify-center z-[100] p-6"
+      className="fixed inset-0 bg-[rgba(20,28,46,0.65)] flex items-center justify-center z-[100] p-3 sm:p-6"
       onClick={onCancel}
     >
       <div

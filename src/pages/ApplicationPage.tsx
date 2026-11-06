@@ -4,6 +4,7 @@ import { applications } from '../data/applications';
 import { getLocalApplications } from '../utils/localApplications';
 import { resolveApplicationProfile } from '../utils/baseProfiles';
 import { CVDocument } from '../components/cv/CVDocument';
+import { FitToWidth } from '../components/FitToWidth';
 import { CoverLetterDocument } from '../components/cover-letter/CoverLetterDocument';
 import { ExportModal } from '../components/ExportModal';
 import { useApplication } from '../hooks/useApplication';
@@ -156,14 +157,16 @@ function ApplicationContent({ staticApp }: { staticApp: ApplicationConfig }) {
 
   return (
     <div className="min-h-screen bg-[color:var(--bg)] print:min-h-0 print:bg-white">
-      <div className="sticky top-0 z-10 bg-[color:var(--ink)] flex items-center justify-between px-6 h-[52px] gap-4 print:hidden">
+      {/* Sticky only from lg: below that the controls wrap onto several rows,
+          which would cover too much of a phone screen while scrolling. */}
+      <div className="lg:sticky top-0 z-10 bg-[color:var(--ink)] flex flex-wrap items-center justify-between px-4 sm:px-6 py-2 min-h-[52px] gap-x-4 gap-y-2 print:hidden">
         <Link
           className="[font-family:var(--font-mono)] text-[11px] text-[color:var(--ink-3)] no-underline shrink-0 hover:text-[color:var(--ink-invert)]"
           to="/"
         >
           ← Dashboard
         </Link>
-        <div className="flex items-center gap-2.5 overflow-hidden">
+        <div className="flex items-center gap-2.5 overflow-hidden min-w-0">
           <span className="text-[13px] font-semibold text-[color:var(--ink-invert)] whitespace-nowrap">{app.company}</span>
           <span className="text-[12px] text-[color:var(--ink-3)] whitespace-nowrap overflow-hidden text-ellipsis">{app.role}</span>
           <span className="text-[13px] leading-none" title={`Language: ${app.language ?? 'en'}`}>{langFlag}</span>
@@ -173,7 +176,7 @@ function ApplicationContent({ staticApp }: { staticApp: ApplicationConfig }) {
             </span>
           )}
         </div>
-        <div className="flex items-center gap-2.5 shrink-0">
+        <div className="flex flex-wrap items-center gap-2.5">
           <select
             className="[font-family:var(--font-mono)] text-[11px] bg-white/7 border border-white/12 rounded px-2.5 py-[5px] cursor-pointer text-[color:var(--ink-2)]"
             value={app.font ?? 'sans'}
@@ -235,7 +238,7 @@ function ApplicationContent({ staticApp }: { staticApp: ApplicationConfig }) {
 
       {/* Documents with the notes panel beside them on wide windows; on
           narrower ones the panel moves above the documents. */}
-      <div className="pt-10 px-5 pb-20 flex flex-col items-center gap-6 min-[1200px]:flex-row min-[1200px]:items-start min-[1200px]:justify-center print:block print:p-0">
+      <div className="pt-6 px-3 sm:pt-10 sm:px-5 pb-20 flex flex-col items-center gap-6 min-[1200px]:flex-row min-[1200px]:items-start min-[1200px]:justify-center print:block print:p-0">
         <aside aria-label="Notes" className="w-[794px] max-w-full min-[1200px]:w-[300px] min-[1200px]:order-last min-[1200px]:sticky min-[1200px]:top-[76px] shrink-0 bg-[color:var(--surface)] border border-[color:var(--rule)] rounded-md p-4 flex flex-col gap-3 print:hidden">
           <div className="flex items-center justify-between gap-2">
             <span className="[font-family:var(--font-mono)] text-[9.5px] tracking-[0.14em] uppercase text-[color:var(--accent)]">Notes</span>
@@ -249,15 +252,17 @@ function ApplicationContent({ staticApp }: { staticApp: ApplicationConfig }) {
           <NotesView notes={app.notes ?? ''} className="max-h-[calc(100vh-180px)] overflow-y-auto" />
         </aside>
 
-        <div className="shrink-0 max-w-full">
-          <CVDocument profile={profile} application={{ ...app, status }} />
-          {app.coverLetter && (
-            <CoverLetterDocument
-              profile={profile}
-              application={{ ...app, status, coverLetter: app.coverLetter as CoverLetter }}
-              paginate
-            />
-          )}
+        <div className="w-full max-w-[794px] shrink-0 print:max-w-none">
+          <FitToWidth>
+            <CVDocument profile={profile} application={{ ...app, status }} />
+            {app.coverLetter && (
+              <CoverLetterDocument
+                profile={profile}
+                application={{ ...app, status, coverLetter: app.coverLetter as CoverLetter }}
+                paginate
+              />
+            )}
+          </FitToWidth>
         </div>
       </div>
 

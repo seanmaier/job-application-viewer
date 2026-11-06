@@ -55,7 +55,7 @@ export function NotesDialog({ company, value, onSave, onClose, startEditing = fa
     // May be rendered inside a clickable dashboard row: stop clicks here from
     // bubbling up to it and navigating to the application.
     <div
-      className="fixed inset-0 bg-[rgba(20,28,46,0.65)] flex items-center justify-center z-[100] p-6 cursor-default"
+      className="fixed inset-0 bg-[rgba(20,28,46,0.65)] flex items-center justify-center z-[100] p-3 sm:p-6 cursor-default"
       onClick={(e) => { e.stopPropagation(); onClose(); }}
     >
       <div
