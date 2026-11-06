@@ -13,6 +13,7 @@ data, and use it to manage your own applications.
 - Print-optimized CV and cover letter documents (clean 2-page PDF export)
 - Plain-text export for pasting into LLMs or application forms
 - Form-based and raw-JSON editing for each application
+- Per-user login; all edits are stored on the server, not in the browser
 - Your personal data (profile, cover letters) is kept out of git entirely
 
 ## Tech stack
@@ -74,8 +75,8 @@ Files under `private/` are never part of the image.
    `docker volume create job-applications-data` (or set `DATA_VOLUME` to use
    another name). It is external, so removing the stack or running
    `docker compose down -v` never deletes the database.
-2. In Portainer, create a stack from `deploy/docker-compose.yml` (Repository
-   mode keeps it in sync with Git). If the GHCR package is private, add a
+2. In Portainer, create a stack in Repository mode with compose path
+   `deploy/docker-compose.yml`. If the GHCR package is private, add a
    registry for `ghcr.io` with a token that has `read:packages`.
 3. Set the stack environment variable `PROXY_NETWORK` to the existing Docker
    network your reverse proxy or tunnel container is in. The app publishes no
@@ -83,12 +84,22 @@ Files under `private/` are never part of the image.
    serve the app over HTTPS, since the session cookie is `Secure`.
 4. Open the container console and create a user:
    `node server/cli.ts add <username>`
-5. Optional auto-redeploy: enable the stack's webhook in Portainer and store
-   its URL as the repository secret `PORTAINER_WEBHOOK_URL`. The image
-   workflow calls it after each push, so Portainer pulls the new image.
+5. Optional auto-redeploy: enable the stack's GitOps updates with the Webhook
+   mechanism, turn on "Re-pull image" and "Force redeployment" (the image
+   tag stays `latest`, so the Git commit alone shows no change), and store the
+   webhook URL as the repository secret `PORTAINER_WEBHOOK_URL`. The image
+   workflow calls it after each push. If GitHub can't reach Portainer, use
+   the Polling mechanism instead and leave the secret unset.
 
-Data lives in that volume (`/data/app.db` in the container). Back it up by copying
-that file.
+Data lives in that volume (`/data/app.db` in the container). SQLite also keeps
+recent writes in `app.db-wal`, so back up the whole volume with the container
+stopped:
+
+```bash
+docker stop job-applications-app-1
+docker run --rm -v job-applications-data:/data -v "$PWD":/backup alpine \n  tar czf /backup/job-applications-$(date +%F).tar.gz -C /data .
+docker start job-applications-app-1
+```
 
 ## License
 
