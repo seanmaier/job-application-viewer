@@ -5,6 +5,7 @@ import { bodyLimit } from 'hono/body-limit';
 import { deleteCookie, getCookie, setCookie } from 'hono/cookie';
 import { csrf } from 'hono/csrf';
 import { createMiddleware } from 'hono/factory';
+import type { Context } from 'hono';
 import {
   checkCredentials,
   clearFailures,
@@ -13,7 +14,10 @@ import {
   deleteSession,
   getSessionUser,
   isLockedOut,
+  MAX_PASSWORD_LENGTH,
+  MIN_PASSWORD_LENGTH,
   recordFailure,
+  setPassword,
   SESSION_TTL_MS,
   type User,
 } from './auth.ts';
@@ -30,6 +34,16 @@ const app = new Hono<{ Variables: { user: User } }>();
 app.use('/api/*', csrf());
 app.use('/api/*', bodyLimit({ maxSize: 10 * 1024 * 1024 }));
 
+function startSession(c: Context, userId: number) {
+  setCookie(c, COOKIE, createSession(userId), {
+    httpOnly: true,
+    secure: SECURE_COOKIE,
+    sameSite: 'Lax',
+    path: '/',
+    maxAge: SESSION_TTL_MS / 1000,
+  });
+}
+
 app.post('/api/login', async (c) => {
   const body: { username?: unknown; password?: unknown } = await c.req.json().catch(() => ({}));
   const username = typeof body.username === 'string' ? body.username.trim() : '';
@@ -44,13 +58,7 @@ app.post('/api/login', async (c) => {
   }
 
   clearFailures(username);
-  setCookie(c, COOKIE, createSession(user.id), {
-    httpOnly: true,
-    secure: SECURE_COOKIE,
-    sameSite: 'Lax',
-    path: '/',
-    maxAge: SESSION_TTL_MS / 1000,
-  });
+  startSession(c, user.id);
   return c.json(user);
 });
 
@@ -72,6 +80,37 @@ const requireUser = createMiddleware<{ Variables: { user: User } }>(async (c, ne
 app.get('/api/health', (c) => c.json({ ok: true }));
 
 app.get('/api/me', requireUser, (c) => c.json(c.get('user')));
+
+// A logged-in user changes their own password. The current one is required
+// so a session left open on another device can't be used to take over the
+// account, and wrong guesses count toward the same lockout as logins.
+app.post('/api/password', requireUser, async (c) => {
+  const body: { currentPassword?: unknown; newPassword?: unknown } = await c.req.json().catch(() => ({}));
+  const currentPassword = typeof body.currentPassword === 'string' ? body.currentPassword : '';
+  const newPassword = typeof body.newPassword === 'string' ? body.newPassword : '';
+  if (!currentPassword || !newPassword) return c.json({ error: 'Current and new password are required.' }, 400);
+  if (newPassword.length < MIN_PASSWORD_LENGTH) {
+    return c.json({ error: `The new password must be at least ${MIN_PASSWORD_LENGTH} characters.` }, 400);
+  }
+  if (newPassword.length > MAX_PASSWORD_LENGTH) {
+    return c.json({ error: `The new password must be at most ${MAX_PASSWORD_LENGTH} characters.` }, 400);
+  }
+
+  const { id, username } = c.get('user');
+  if (isLockedOut(username)) return c.json({ error: 'Too many failed attempts. Try again in 15 minutes.' }, 429);
+  if (!(await checkCredentials(username, currentPassword))) {
+    recordFailure(username);
+    // 403, not 401: the session itself is fine, only the password was wrong.
+    return c.json({ error: 'The current password is incorrect.' }, 403);
+  }
+
+  clearFailures(username);
+  // Ends every session, this one included, then logs this device back in so
+  // only the other devices are signed out.
+  await setPassword(id, newPassword);
+  startSession(c, id);
+  return c.body(null, 204);
+});
 
 app.get('/api/data', requireUser, (c) => {
   const rows = db.prepare('SELECT key, value FROM kv WHERE user_id = ?').all(c.get('user').id) as {

@@ -6,6 +6,9 @@ const scryptAsync = promisify(scrypt) as (password: string, salt: Buffer, keylen
 
 const KEY_LENGTH = 64;
 export const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000;
+export const MIN_PASSWORD_LENGTH = 10;
+// scrypt hashes any length, but there's no reason to accept megabytes.
+export const MAX_PASSWORD_LENGTH = 1024;
 
 export interface User {
   id: number;
@@ -31,6 +34,12 @@ async function verifyPassword(password: string, stored: string): Promise<boolean
 // Hashed against when the username doesn't exist, so a failed login takes
 // the same time either way and doesn't reveal which usernames are taken.
 const dummyHash = await hashPassword(randomBytes(16).toString('hex'));
+
+/** Replaces a user's password and ends every session they have, on every device. */
+export async function setPassword(userId: number, password: string): Promise<void> {
+  db.prepare('UPDATE users SET password_hash = ? WHERE id = ?').run(await hashPassword(password), userId);
+  db.prepare('DELETE FROM sessions WHERE user_id = ?').run(userId);
+}
 
 export async function checkCredentials(username: string, password: string): Promise<User | null> {
   const row = db.prepare('SELECT id, username, password_hash FROM users WHERE username = ?').get(username) as
