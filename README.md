@@ -19,6 +19,8 @@ data, and use it to manage your own applications.
 
 React 19 · TypeScript · Vite · Tailwind CSS · React Router
 
+Backend: Hono on Node 24 · SQLite (`node:sqlite`) · session cookie login
+
 ## Getting started
 
 ```bash
@@ -41,11 +43,17 @@ picked up automatically — no need to register them anywhere. The app also
 runs fine with none of this in place (e.g. straight after cloning); it just
 falls back to the example profile and shows an empty dashboard.
 
-Then start the dev server:
+Then create a user and start the API and the dev server (Node 22.18+):
 
 ```bash
-npm run dev
+npm run users -- add <username>      # prints a generated password
+npm run dev:server                   # API on :3000, SQLite in ./data/app.db
+npm run dev                          # Vite on :5173, proxies /api
 ```
+
+All edits (applications, statuses, notes, base profiles) are stored per user
+on the server. To move data over from the old browser-only version, export a
+backup there and restore it after logging in.
 
 ## Scripts
 
@@ -53,6 +61,8 @@ npm run dev
 - `npm run build` — type-check and build for production
 - `npm run lint` — run Oxlint
 - `npm run preview` — preview the production build locally
+- `npm run dev:server` — run the API with auto-reload
+- `npm run users -- <add|passwd|remove|list> [username] [password]` — manage users
 
 ## License
 
