@@ -48,8 +48,32 @@ jobs:
 
       # Optional: the webhook URL is a secret, so nothing about the target
       # host is in the repo. Skipped when the secret isn't set.
+      # On failure it reports who refused the call: Cloudflare (challenge or
+      # block page) or Portainer (JSON error). Headers and body don't contain
+      # the URL, which Actions masks anyway.
       - name: Trigger Portainer redeploy
         env:
           PORTAINER_WEBHOOK_URL: ${{ secrets.PORTAINER_WEBHOOK_URL }}
         if: env.PORTAINER_WEBHOOK_URL != ''
-        run: curl -fsS -X POST "$PORTAINER_WEBHOOK_URL"
+        run: |
+          status=$(curl -sS -X POST -o body.txt -D headers.txt -w '%{http_code}' "$PORTAINER_WEBHOOK_URL")
+          if [ "$status" -lt 300 ]; then
+            echo "Portainer redeploy triggered (HTTP $status)."
+            exit 0
+          fi
+
+          echo "::error::Portainer webhook returned HTTP $status"
+          grep -iE '^(server|cf-ray|cf-mitigated|content-type):' headers.txt || true
+          # Behind Cloudflare every response says "server: cloudflare", so the
+          # content type is what tells Portainer's JSON errors apart.
+          if grep -qi '^cf-mitigated:' headers.txt; then
+            echo "::error::Cloudflare challenged the request (Bot Fight Mode or Security Level). Check Security → Events for this path."
+          elif grep -qi '^content-type: *application/json' headers.txt; then
+            echo "::error::Portainer refused the request. Check that the stack's webhook is enabled and the secret holds its current URL."
+          else
+            echo "::error::Not a Portainer response: likely a Cloudflare block page or Cloudflare Access. Check Security → Events and Zero Trust → Access."
+          fi
+          echo "--- response body (first 500 bytes) ---"
+          head -c 500 body.txt
+          echo
+          exit 1
