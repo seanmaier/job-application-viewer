@@ -4,7 +4,7 @@
 //   node server/cli.ts remove <username>
 //   node server/cli.ts list
 import { randomBytes } from 'node:crypto';
-import { hashPassword } from './auth.ts';
+import { hashPassword, MIN_PASSWORD_LENGTH, setPassword } from './auth.ts';
 import { db } from './db.ts';
 
 const [command, username, givenPassword] = process.argv.slice(2);
@@ -16,7 +16,7 @@ function fail(message: string): never {
 
 function passwordOrGenerated(): { password: string; generated: boolean } {
   if (givenPassword) {
-    if (givenPassword.length < 10) fail('Password must be at least 10 characters.');
+    if (givenPassword.length < MIN_PASSWORD_LENGTH) fail(`Password must be at least ${MIN_PASSWORD_LENGTH} characters.`);
     return { password: givenPassword, generated: false };
   }
   return { password: randomBytes(15).toString('base64url'), generated: true };
@@ -39,9 +39,7 @@ switch (command) {
     const { password, generated } = passwordOrGenerated();
     const user = db.prepare('SELECT id FROM users WHERE username = ?').get(username) as { id: number } | undefined;
     if (!user) fail(`No user "${username}".`);
-    db.prepare('UPDATE users SET password_hash = ? WHERE id = ?').run(await hashPassword(password), user.id);
-    // A password change should end every existing login for that account.
-    db.prepare('DELETE FROM sessions WHERE user_id = ?').run(user.id);
+    await setPassword(user.id, password);
     console.log(`Updated password for "${username}".${generated ? ` Password: ${password}` : ''}`);
     break;
   }

@@ -7,12 +7,14 @@ import { EditApplicationPage } from './pages/EditApplicationPage';
 import { BaseProfilesPage } from './pages/BaseProfilesPage';
 import { BaseProfileEditPage } from './pages/BaseProfileEditPage';
 import { LoginPage } from './pages/LoginPage';
+import { AccountPage } from './pages/AccountPage';
 import { fetchCurrentUser, fetchUserData } from './utils/api';
 import { hasPendingWrites, hydrate, onSyncStatus } from './utils/storage';
 
 const router = createBrowserRouter([
   { path: '/', element: <DashboardPage /> },
   { path: '/profiles', element: <BaseProfilesPage /> },
+  { path: '/account', element: <AccountPage /> },
   { path: '/profiles/:id', element: <BaseProfileEditPage /> },
   { path: '/application/new', element: <NewApplicationPage /> },
   { path: '/application/:id/edit', element: <EditApplicationPage /> },

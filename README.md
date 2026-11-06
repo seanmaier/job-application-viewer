@@ -14,6 +14,7 @@ data, and use it to manage your own applications.
 - Plain-text export for pasting into LLMs or application forms
 - Form-based and raw-JSON editing for each application
 - Per-user login; all edits are stored on the server, not in the browser
+- Users change their own password under **account** on the dashboard
 - Your personal data (profile, cover letters) is kept out of git entirely
 
 ## Tech stack
@@ -64,6 +65,7 @@ backup there and restore it after logging in.
 - `npm run preview` — preview the production build locally
 - `npm run dev:server` — run the API with auto-reload
 - `npm run users -- <add|passwd|remove|list> [username] [password]` — manage users
+  (`passwd` is for resetting a forgotten password; users change their own in the app)
 
 ## Deployment
 
