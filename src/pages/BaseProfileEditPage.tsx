@@ -5,7 +5,7 @@ import type {
   Experience, Project, HumanLanguage,
 } from '../types';
 import {
-  getBaseProfile, saveBaseProfile, deleteBaseProfile, applicationsUsingBaseProfile,
+  getBaseProfile, saveBaseProfile, deleteBaseProfile, applicationsUsingBaseProfile, uniqueProjectId,
 } from '../utils/baseProfiles';
 import { CVDocument } from '../components/cv/CVDocument';
 import { AutoTextarea } from '../components/AutoTextarea';
@@ -369,7 +369,13 @@ function BaseProfileEditContent({ stored }: { stored: BaseProfile }) {
                 </div>
               </EntryCard>
             ))}
-            <button className={nafAddBtn} onClick={() => set({ projects: [...profile.projects, { id: '', name: '', stack: '', description: '' }] })}>
+            <button
+              className={nafAddBtn}
+              onClick={() => {
+                const id = uniqueProjectId('', profile.projects.map((p) => p.id));
+                set({ projects: [...profile.projects, { id, name: '', stack: '', description: '' }] });
+              }}
+            >
               + Add project
             </button>
           </div>
