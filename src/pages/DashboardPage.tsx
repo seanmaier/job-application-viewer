@@ -23,6 +23,15 @@ function writeStatus(id: string, status: ApplicationStatus) {
 
 type SortField = 'company' | 'role' | 'status' | 'appliedDate' | 'interviewDate' | 'finalDecisionDate';
 
+const SORT_LABELS: Record<SortField, string> = {
+  company: 'company',
+  role: 'role',
+  status: 'status',
+  appliedDate: 'applied',
+  interviewDate: 'interview',
+  finalDecisionDate: 'decision',
+};
+
 export function DashboardPage() {
   const [localApps, setLocalApps] = useState(() => getLocalApplications());
   const allApps = [...staticApps, ...localApps];
@@ -152,14 +161,14 @@ export function DashboardPage() {
     });
 
   return (
-    <div className="min-h-screen bg-[color:var(--bg)] pt-12 px-8 pb-32 max-w-[1220px] mx-auto">
-      <header className="mb-8 flex items-baseline justify-between gap-6">
+    <div className="min-h-screen bg-[color:var(--bg)] pt-6 px-4 pb-32 max-w-[1220px] mx-auto sm:pt-12 sm:px-8">
+      <header className="mb-6 sm:mb-8 flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
         <div className="[font-family:var(--font-mono)] text-[15px]">
           <span className="text-[color:var(--ink-3)]">~/</span>
           <span className="text-[color:var(--accent)]">applications</span>
           <span className="text-[color:var(--ink-3)] animate-pulse"> _</span>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Link
             className="[font-family:var(--font-mono)] text-[11px] text-[color:var(--ink-3)] no-underline border border-[color:var(--rule)] px-3 py-1.5 hover:text-[color:var(--ink-2)] hover:border-[color:var(--ink-2)] transition-colors duration-150"
             to="/profiles"
@@ -194,9 +203,9 @@ export function DashboardPage() {
       </header>
 
       {/* Search + filters */}
-      <div className="flex items-center gap-2 mb-4">
+      <div className="flex flex-wrap items-center gap-2 mb-4">
         <input
-          className="[font-family:var(--font-mono)] text-[12px] bg-transparent border border-[color:var(--rule)] text-[color:var(--ink-invert)] px-3 py-1.5 flex-1 outline-none focus:border-[color:var(--accent)] placeholder:text-[color:var(--ink-3)]"
+          className="[font-family:var(--font-mono)] text-[12px] bg-transparent border border-[color:var(--rule)] text-[color:var(--ink-invert)] px-3 py-1.5 flex-1 basis-full sm:basis-0 min-w-0 outline-none focus:border-[color:var(--accent)] placeholder:text-[color:var(--ink-3)]"
           placeholder="search company or role..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -211,6 +220,27 @@ export function DashboardPage() {
             <option key={v} value={v}>{l}</option>
           ))}
         </select>
+        {/* Below lg the sortable column headers are hidden, so sorting moves here */}
+        <select
+          className="lg:hidden [font-family:var(--font-mono)] text-[11px] bg-transparent border border-[color:var(--rule)] text-[color:var(--ink-2)] px-2 py-1.5 cursor-pointer"
+          value={sortField ?? ''}
+          onChange={(e) => { setSortField((e.target.value || null) as SortField | null); setSortDir('asc'); }}
+          aria-label="Sort by"
+        >
+          <option value="">default order</option>
+          {(Object.entries(SORT_LABELS) as [SortField, string][]).map(([v, l]) => (
+            <option key={v} value={v}>sort: {l}</option>
+          ))}
+        </select>
+        {sortField && (
+          <button
+            className="lg:hidden [font-family:var(--font-mono)] text-[11px] text-[color:var(--ink-2)] bg-transparent border border-[color:var(--rule)] px-2.5 py-1.5 cursor-pointer"
+            onClick={() => setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'))}
+            aria-label={sortDir === 'asc' ? 'Sorted ascending' : 'Sorted descending'}
+          >
+            {sortDir === 'asc' ? '▲' : '▼'}
+          </button>
+        )}
         {hasActiveFilter && (
           <button
             className="[font-family:var(--font-mono)] text-[11px] text-[color:var(--ink-3)] bg-transparent border-none cursor-pointer hover:text-[color:var(--status-rejected)] transition-colors"
@@ -221,12 +251,13 @@ export function DashboardPage() {
         )}
       </div>
 
-      {/* Scrolls sideways instead of crushing columns on narrow windows */}
-      <div className="overflow-x-auto">
-      <div className="min-w-[960px]">
+      {/* A table from lg up (scrolling sideways rather than crushing columns
+          in narrow windows); below that each application is a card. */}
+      <div className="lg:overflow-x-auto">
+      <div className="lg:min-w-[960px]">
 
       {/* Column headers */}
-      <div className="flex items-center border-b border-[color:var(--rule)] pb-1.5">
+      <div className="hidden lg:flex items-center border-b border-[color:var(--rule)] pb-1.5">
         <button
           className="[font-family:var(--font-mono)] text-[9.5px] uppercase tracking-[0.1em] text-[color:var(--ink-3)] hover:text-[color:var(--ink-2)] bg-transparent border-none cursor-pointer text-left p-0 w-[190px] shrink-0"
           onClick={() => toggleSort('company')}
@@ -279,7 +310,7 @@ export function DashboardPage() {
           no applications match your search/filters.
         </p>
       ) : (
-        <div>
+        <div className="grid gap-3 md:grid-cols-2 lg:block">
           {visibleApps.map((app) => {
             const isLocal = !staticApps.some((s) => s.id === app.id);
             return (

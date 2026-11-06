@@ -8,6 +8,8 @@ import { getProfile } from '../data/profiles';
 import { getBaseProfiles } from '../utils/baseProfiles';
 import { useApplication } from '../hooks/useApplication';
 import { CVDocument } from '../components/cv/CVDocument';
+import { FitToWidth } from '../components/FitToWidth';
+import { MobilePanelSwitch } from '../components/MobilePanelSwitch';
 import { CoverLetterDocument } from '../components/cover-letter/CoverLetterDocument';
 import { AutoTextarea } from '../components/AutoTextarea';
 import { ImportParagraphsControl } from '../components/ImportParagraphsControl';
@@ -46,6 +48,7 @@ function EditContent({ staticApp, onReload }: { staticApp: ApplicationConfig; on
   // config. jsonBaseline is the JSON as generated when switching over, so
   // switching back can tell whether there are unapplied edits.
   const [rightView, setRightView] = useState<'preview' | 'json'>('preview');
+  const [mobilePanel, setMobilePanel] = useState<'form' | 'preview'>('form');
   const [jsonText, setJsonText] = useState('');
   const [jsonBaseline, setJsonBaseline] = useState('');
 
@@ -207,9 +210,15 @@ function EditContent({ staticApp, onReload }: { staticApp: ApplicationConfig; on
         </div>
       </div>
 
+      <MobilePanelSwitch
+        value={mobilePanel}
+        onChange={setMobilePanel}
+        options={[{ value: 'form', label: 'edit' }, { value: 'preview', label: 'preview / JSON' }]}
+      />
+
       <div className={newAppBody}>
         {/* ── Form ── */}
-        <div className={newAppForm}>
+        <div className={`${newAppForm} ${mobilePanel === 'form' ? '' : 'max-lg:hidden'}`}>
           <div className={nafSection}>
             <span className={nafLabel}>Base profile</span>
             <select
@@ -461,7 +470,7 @@ function EditContent({ staticApp, onReload }: { staticApp: ApplicationConfig; on
         </div>
 
         {/* ── Live preview ── */}
-        <div className={newAppPreview}>
+        <div className={`${newAppPreview} ${mobilePanel === 'preview' ? '' : 'max-lg:hidden'}`}>
           <div className={napHeader}>
             <span className={napFilename}>
               private/applications/{toId(company)}.json
@@ -488,15 +497,17 @@ function EditContent({ staticApp, onReload }: { staticApp: ApplicationConfig; on
             <JsonConfigPanel text={jsonText} onTextChange={setJsonText} onApply={handleApplyJson} />
           ) : (
             <div className="flex-1 overflow-y-auto">
-              <div className="py-8 px-5">
-                <CVDocument profile={profile} application={previewApp} />
-                {previewApp.coverLetter && (
-                  <CoverLetterDocument
-                    profile={profile}
-                    application={{ ...previewApp, coverLetter: previewApp.coverLetter as CoverLetter }}
-                    paginate
-                  />
-                )}
+              <div className="py-6 px-3 sm:py-8 sm:px-5">
+                <FitToWidth>
+                  <CVDocument profile={profile} application={previewApp} />
+                  {previewApp.coverLetter && (
+                    <CoverLetterDocument
+                      profile={profile}
+                      application={{ ...previewApp, coverLetter: previewApp.coverLetter as CoverLetter }}
+                      paginate
+                    />
+                  )}
+                </FitToWidth>
               </div>
             </div>
           )}

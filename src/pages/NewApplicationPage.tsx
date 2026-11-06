@@ -10,6 +10,7 @@ import { ImportParagraphsControl } from '../components/ImportParagraphsControl';
 import { ExportParagraphsButton } from '../components/ExportParagraphsButton';
 import { FeaturedProjectsPicker } from '../components/FeaturedProjectsPicker';
 import { ImportApplicationModal } from '../components/ImportApplicationModal';
+import { MobilePanelSwitch } from '../components/MobilePanelSwitch';
 import { MoveButtons } from '../components/MoveButtons';
 import { move } from '../utils/move';
 import { formatDateLong } from '../utils/date';
@@ -165,6 +166,7 @@ export function NewApplicationPage() {
   const [subjectRole, setSubjectRole] = useState('');
   const [paragraphs, setParagraphs] = useState<string[]>(['']);
   const [copied, setCopied] = useState(false);
+  const [mobilePanel, setMobilePanel] = useState<'form' | 'json'>('form');
   // Populated once a base profile is chosen (or skipped) below — except when
   // there are no base profiles to choose from at all, in which case the form
   // step renders immediately and this needs its usual default up front.
@@ -228,9 +230,15 @@ export function NewApplicationPage() {
         <ImportJsonButton />
       </div>
 
+      <MobilePanelSwitch
+        value={mobilePanel}
+        onChange={setMobilePanel}
+        options={[{ value: 'form', label: 'form' }, { value: 'json', label: 'JSON' }]}
+      />
+
       <div className={newAppBody}>
         {/* ── Form ── */}
-        <div className={newAppForm}>
+        <div className={`${newAppForm} ${mobilePanel === 'form' ? '' : 'max-lg:hidden'}`}>
           <div className={nafSection}>
             <span className={nafLabel}>Base profile</span>
             <div className="flex items-center gap-2.5">
@@ -374,7 +382,7 @@ export function NewApplicationPage() {
         </div>
 
         {/* ── Code preview ── */}
-        <div className={newAppPreview}>
+        <div className={`${newAppPreview} ${mobilePanel === 'json' ? '' : 'max-lg:hidden'}`}>
           <div className={napHeader}>
             <span className={napFilename}>private/applications/{filename}</span>
             <button

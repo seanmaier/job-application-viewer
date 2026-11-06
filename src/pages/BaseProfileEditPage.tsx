@@ -8,6 +8,8 @@ import {
   getBaseProfile, saveBaseProfile, deleteBaseProfile, applicationsUsingBaseProfile,
 } from '../utils/baseProfiles';
 import { CVDocument } from '../components/cv/CVDocument';
+import { FitToWidth } from '../components/FitToWidth';
+import { MobilePanelSwitch } from '../components/MobilePanelSwitch';
 import { AutoTextarea } from '../components/AutoTextarea';
 import { UnsavedChangesDialog } from '../components/UnsavedChangesDialog';
 import { ImportProfileJsonModal } from '../components/ImportProfileJsonModal';
@@ -89,6 +91,7 @@ function BaseProfileEditContent({ stored }: { stored: BaseProfile }) {
   const [copied, setCopied] = useState(false);
   const [imported, setImported] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
+  const [mobilePanel, setMobilePanel] = useState<'form' | 'preview'>('form');
 
   // ── updaters ──────────────────────────────────────────────────────────────
 
@@ -177,10 +180,10 @@ function BaseProfileEditContent({ stored }: { stored: BaseProfile }) {
   // ── render ────────────────────────────────────────────────────────────────
 
   return (
-    <div className="h-screen bg-[color:var(--ink)] flex flex-col">
+    <div className="h-dvh bg-[color:var(--ink)] flex flex-col">
 
       {/* Header */}
-      <div className="bg-[color:var(--ink)] flex items-center justify-between px-6 h-[52px] shrink-0 gap-4">
+      <div className="bg-[color:var(--ink)] flex flex-wrap items-center justify-between px-4 sm:px-6 py-2 min-h-[52px] shrink-0 gap-x-4 gap-y-2">
         <div className="flex items-center gap-5 min-w-0">
           <Link className="[font-family:var(--font-mono)] text-[11px] text-[color:var(--ink-3)] no-underline hover:text-[color:var(--ink-invert)]" to="/profiles">
             ← Base profiles
@@ -197,7 +200,7 @@ function BaseProfileEditContent({ stored }: { stored: BaseProfile }) {
           </div>
         </div>
 
-        <div className="flex items-center gap-2.5 shrink-0">
+        <div className="flex flex-wrap items-center gap-2.5">
           <button
             className={`[font-family:var(--font-mono)] text-[11px] font-semibold border-none rounded px-4 py-[5px] cursor-pointer transition-colors duration-150 ${
               saved ? 'bg-[color:var(--status-offer)] text-[color:var(--ink)] pointer-events-none' : 'bg-[color:var(--accent)] text-[color:var(--ink)] hover:opacity-90'
@@ -226,11 +229,17 @@ function BaseProfileEditContent({ stored }: { stored: BaseProfile }) {
 
       {importOpen && <ImportProfileJsonModal onApply={handleImport} onClose={() => setImportOpen(false)} />}
 
+      <MobilePanelSwitch
+        value={mobilePanel}
+        onChange={setMobilePanel}
+        options={[{ value: 'form', label: 'edit' }, { value: 'preview', label: 'preview' }]}
+      />
+
       {/* Body */}
-      <div className="grid grid-cols-[520px_1fr] flex-1 overflow-hidden">
+      <div className="flex-1 min-h-0 overflow-hidden lg:grid lg:grid-cols-[520px_1fr]">
 
         {/* Form */}
-        <div className="py-7 px-7 overflow-y-auto bg-[color:var(--bg)] flex flex-col gap-6 border-r border-[color:var(--rule)]">
+        <div className={`h-full py-6 px-4 sm:py-7 sm:px-7 overflow-y-auto bg-[color:var(--bg)] flex flex-col gap-6 lg:border-r border-[color:var(--rule)] ${mobilePanel === 'form' ? '' : 'max-lg:hidden'}`}>
 
           {/* ── Base profile name ── */}
           <SectionHeader title="base profile" />
@@ -442,9 +451,11 @@ function BaseProfileEditContent({ stored }: { stored: BaseProfile }) {
         </div>
 
         {/* Preview */}
-        <div className="bg-[#1a2236] overflow-y-auto">
-          <div className="py-8 px-5">
-            <CVDocument profile={profile} application={{ ...PREVIEW_APP, language: stored.language }} />
+        <div className={`h-full bg-[#1a2236] overflow-y-auto ${mobilePanel === 'preview' ? '' : 'max-lg:hidden'}`}>
+          <div className="py-6 px-3 sm:py-8 sm:px-5">
+            <FitToWidth>
+              <CVDocument profile={profile} application={{ ...PREVIEW_APP, language: stored.language }} />
+            </FitToWidth>
           </div>
         </div>
       </div>

@@ -22,7 +22,7 @@ export function ExportModal({ text, onClose }: Props) {
   };
 
   return (
-    <div className="fixed inset-0 bg-[rgba(20,28,46,0.60)] flex items-center justify-center z-[100] p-6" onClick={onClose}>
+    <div className="fixed inset-0 bg-[rgba(20,28,46,0.60)] flex items-center justify-center z-[100] p-3 sm:p-6" onClick={onClose}>
       <div
         className="bg-[color:var(--surface)] rounded-lg w-full max-w-[740px] max-h-[84vh] flex flex-col shadow-[0_16px_48px_rgba(20,28,46,0.24)] overflow-hidden"
         onClick={(e) => e.stopPropagation()}

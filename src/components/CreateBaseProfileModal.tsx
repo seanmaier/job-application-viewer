@@ -49,7 +49,7 @@ export function CreateBaseProfileModal({ existingProfiles, onClose, onCreated }:
   };
 
   return (
-    <div className="fixed inset-0 bg-[rgba(20,28,46,0.65)] flex items-center justify-center z-[100] p-6" onClick={onClose}>
+    <div className="fixed inset-0 bg-[rgba(20,28,46,0.65)] flex items-center justify-center z-[100] p-3 sm:p-6" onClick={onClose}>
       <div
         className={`bg-[#1a2236] rounded-lg w-full ${startFrom === 'json' ? 'max-w-[600px]' : 'max-w-[440px]'} p-6 flex flex-col gap-4 shadow-[0_20px_60px_rgba(20,28,46,0.40)]`}
         onClick={(e) => e.stopPropagation()}

@@ -26,15 +26,15 @@ export function BaseProfilesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[color:var(--bg)] pt-12 px-8 pb-32 max-w-[900px] mx-auto">
-      <header className="mb-8 flex items-baseline justify-between gap-6">
-        <div className="[font-family:var(--font-mono)] text-[15px] flex items-center gap-5">
+    <div className="min-h-screen bg-[color:var(--bg)] pt-6 px-4 pb-32 max-w-[900px] mx-auto sm:pt-12 sm:px-8">
+      <header className="mb-6 sm:mb-8 flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
+        <div className="[font-family:var(--font-mono)] text-[15px] flex flex-wrap items-center gap-x-5 gap-y-1">
           <Link className="text-[11px] text-[color:var(--ink-3)] no-underline hover:text-[color:var(--ink-invert)]" to="/">
             ← Dashboard
           </Link>
           <span>
             <span className="text-[color:var(--ink-3)]">~/</span>
-            <span className="text-[color:var(--accent)]">base-profiles</span>
+            <span className="text-[color:var(--accent)] whitespace-nowrap">base-profiles</span>
             <span className="text-[color:var(--ink-3)] animate-pulse"> _</span>
           </span>
         </div>
@@ -47,7 +47,7 @@ export function BaseProfilesPage() {
       </header>
 
       {/* Column headers */}
-      <div className="flex items-center border-b border-[color:var(--rule)] pb-1.5">
+      <div className="hidden sm:flex items-center border-b border-[color:var(--rule)] pb-1.5">
         <span className="[font-family:var(--font-mono)] text-[9.5px] uppercase tracking-[0.1em] text-[color:var(--ink-3)] flex-1">
           name
         </span>
@@ -73,16 +73,20 @@ export function BaseProfilesPage() {
               className="group flex items-center border-b border-[color:var(--rule)] py-2.5 cursor-pointer transition-colors duration-100 hover:bg-[color:var(--surface)]"
               onClick={() => navigate(`/profiles/${p.id}`)}
             >
-              <div className="flex-1 flex items-center gap-1.5 min-w-0">
-                <span className="[font-family:var(--font-mono)] text-[12.5px] text-[color:var(--ink-invert)] truncate">{p.name}</span>
+              <div className="flex-1 min-w-0">
+                <span className="block [font-family:var(--font-mono)] text-[12.5px] text-[color:var(--ink-invert)] truncate">{p.name}</span>
+                {/* Language and usage move under the name on phones, where their columns don't fit */}
+                <span className="sm:hidden block [font-family:var(--font-mono)] text-[11px] text-[color:var(--ink-3)] mt-0.5">
+                  {LANG_FLAGS[p.language]} · {usedBy.length > 0 ? `${usedBy.length} application${usedBy.length === 1 ? '' : 's'}` : 'unused'}
+                </span>
               </div>
-              <span className="text-[12px] w-[70px] shrink-0 text-right" title={p.language}>
+              <span className="hidden sm:block text-[12px] w-[70px] shrink-0 text-right" title={p.language}>
                 {LANG_FLAGS[p.language]}
               </span>
-              <span className="[font-family:var(--font-mono)] text-[11px] text-[color:var(--ink-3)] w-[130px] shrink-0 text-right truncate">
+              <span className="hidden sm:block [font-family:var(--font-mono)] text-[11px] text-[color:var(--ink-3)] w-[130px] shrink-0 text-right truncate">
                 {usedBy.length > 0 ? `${usedBy.length} application${usedBy.length === 1 ? '' : 's'}` : '—'}
               </span>
-              <div className="w-[130px] shrink-0 flex items-center justify-end gap-2">
+              <div className="shrink-0 flex items-center justify-end gap-2 pl-3 sm:w-[130px]">
                 <Link
                   className="[font-family:var(--font-mono)] text-[11px] text-[color:var(--ink-2)] no-underline border border-[color:var(--rule)] rounded px-2.5 py-1 transition-colors hover:text-[color:var(--ink-invert)] hover:border-[color:var(--ink-2)]"
                   to={`/profiles/${p.id}`}
