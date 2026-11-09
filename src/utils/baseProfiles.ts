@@ -3,6 +3,7 @@ import { storage } from './storage';
 import { getProfile } from '../data/profiles';
 import { applications } from '../data/applications';
 import { getLocalApplications } from './localApplications';
+import { getConfigOverride } from './appStorage';
 import { slugify, uniqueId } from './slug';
 import { TRASH_RETENTION_DAYS } from './trash';
 
@@ -117,11 +118,12 @@ export function blankProfile(language: AppLanguage): Profile {
   };
 }
 
-// Applications (static + local) that currently point at this base profile —
-// used to warn before deleting one that's still in use.
+// Applications (static + local, not trashed) that currently point at this
+// base profile — used to warn before deleting one that's still in use. The
+// profile is usually picked in the editor, which saves it as an override.
 export function applicationsUsingBaseProfile(id: string): ApplicationConfig[] {
   const all = [...applications, ...getLocalApplications()];
-  return all.filter((a) => a.baseProfileId === id);
+  return all.filter((a) => (getConfigOverride(a.id)?.baseProfileId ?? a.baseProfileId) === id);
 }
 
 // Resolves the profile an application should render with: its selected base
