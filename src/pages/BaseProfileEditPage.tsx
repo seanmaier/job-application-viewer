@@ -4,6 +4,7 @@ import type {
   ApplicationConfig, BaseProfile, Profile,
   Experience, Project, HumanLanguage,
 } from '../types';
+import { LANG_FLAGS } from '../utils/language';
 import {
   getBaseProfile, saveBaseProfile, deleteBaseProfile, applicationsUsingBaseProfile,
 } from '../utils/baseProfiles';
@@ -61,7 +62,6 @@ function EntryCard<T>({ children, items, index, onChange, removeLabel = 'Remove'
 
 // ── constants ────────────────────────────────────────────────────────────────
 
-const LANG_FLAGS: Record<string, string> = { en: '🇬🇧', de: '🇩🇪' };
 const PREVIEW_APP: ApplicationConfig = { id: 'base-profile-preview', company: '', role: '', status: 'drafting' };
 
 // ── page ─────────────────────────────────────────────────────────────────────

@@ -11,7 +11,8 @@ import { ApplicationCard } from '../components/dashboard/ApplicationCard';
 import type { DateFieldName } from '../components/dashboard/ApplicationCard';
 import { ImportApplicationModal } from '../components/ImportApplicationModal';
 import { BackupModal } from '../components/BackupModal';
-import type { ApplicationConfig, ApplicationStatus } from '../types';
+import { LANGUAGE_LABELS, languageOf } from '../utils/language';
+import type { AppLanguage, ApplicationConfig, ApplicationStatus } from '../types';
 
 function readStatus(id: string, fallback: ApplicationStatus): ApplicationStatus {
   return (storage.getItem(`status-${id}`) as ApplicationStatus | null) ?? fallback;
@@ -21,11 +22,12 @@ function writeStatus(id: string, status: ApplicationStatus) {
   storage.setItem(`status-${id}`, status);
 }
 
-type SortField = 'company' | 'role' | 'status' | 'appliedDate' | 'interviewDate' | 'finalDecisionDate';
+type SortField = 'company' | 'role' | 'language' | 'status' | 'appliedDate' | 'interviewDate' | 'finalDecisionDate';
 
 const SORT_LABELS: Record<SortField, string> = {
   company: 'company',
   role: 'role',
+  language: 'language',
   status: 'status',
   appliedDate: 'applied',
   interviewDate: 'interview',
@@ -56,11 +58,19 @@ export function DashboardPage() {
     Object.fromEntries(allApps.map((a) => [a.id, getConfigOverride(a.id)?.notes ?? a.notes])),
   );
 
+  // Read once like the fields above: the language only changes in the edit
+  // form, which lives on another page.
+  const [languages] = useState<Record<string, AppLanguage>>(() =>
+    Object.fromEntries(allApps.map((a) => [a.id, languageOf({ language: getConfigOverride(a.id)?.language ?? a.language })])),
+  );
+  const languageFor = (app: ApplicationConfig) => languages[app.id] ?? languageOf(app);
+
   const [importOpen, setImportOpen] = useState(false);
   const [backupOpen, setBackupOpen] = useState(false);
 
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<ApplicationStatus | ''>('');
+  const [languageFilter, setLanguageFilter] = useState<AppLanguage | ''>('');
   const [sortField, setSortField] = useState<SortField | null>(null);
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
 
@@ -123,10 +133,11 @@ export function DashboardPage() {
     setLocalApps(getLocalApplications());
   };
 
-  const hasActiveFilter = !!(search || statusFilter);
+  const hasActiveFilter = !!(search || statusFilter || languageFilter);
   const clearFilters = () => {
     setSearch('');
     setStatusFilter('');
+    setLanguageFilter('');
   };
 
   const toggleSort = (field: SortField) => {
@@ -145,12 +156,14 @@ export function DashboardPage() {
       const q = search.trim().toLowerCase();
       if (q && !app.company.toLowerCase().includes(q) && !app.role.toLowerCase().includes(q)) return false;
       if (statusFilter && (statuses[app.id] ?? app.status) !== statusFilter) return false;
+      if (languageFilter && languageFor(app) !== languageFilter) return false;
       return true;
     })
     .sort((a, b) => {
       if (!sortField) return 0;
       const value = (app: typeof a) => {
         if (sortField === 'status') return statuses[app.id] ?? app.status;
+        if (sortField === 'language') return languageFor(app);
         if (sortField === 'appliedDate') return appliedDates[app.id] ?? app.appliedDate ?? '';
         if (sortField === 'interviewDate') return interviewDates[app.id] ?? app.interviewDate ?? '';
         if (sortField === 'finalDecisionDate') return finalDecisionDates[app.id] ?? app.finalDecisionDate ?? '';
@@ -226,6 +239,17 @@ export function DashboardPage() {
             <option key={v} value={v}>{l}</option>
           ))}
         </select>
+        <select
+          className="[font-family:var(--font-mono)] text-[11px] bg-transparent border border-[color:var(--rule)] text-[color:var(--ink-2)] px-2 py-1.5 cursor-pointer"
+          value={languageFilter}
+          onChange={(e) => setLanguageFilter(e.target.value as AppLanguage | '')}
+          aria-label="Filter by language"
+        >
+          <option value="">all languages</option>
+          {(Object.entries(LANGUAGE_LABELS) as [AppLanguage, string][]).map(([v, l]) => (
+            <option key={v} value={v}>{l}</option>
+          ))}
+        </select>
         {/* Below lg the sortable column headers are hidden, so sorting moves here */}
         <select
           className="lg:hidden [font-family:var(--font-mono)] text-[11px] bg-transparent border border-[color:var(--rule)] text-[color:var(--ink-2)] px-2 py-1.5 cursor-pointer"
@@ -260,7 +284,7 @@ export function DashboardPage() {
       {/* A table from lg up (scrolling sideways rather than crushing columns
           in narrow windows); below that each application is a card. */}
       <div className="lg:overflow-x-auto">
-      <div className="lg:min-w-[960px]">
+      <div className="lg:min-w-[1004px]">
 
       {/* Column headers */}
       <div className="hidden lg:flex items-center border-b border-[color:var(--rule)] pb-1.5">
@@ -277,6 +301,12 @@ export function DashboardPage() {
           role{sortIndicator('role')}
         </button>
         <span className="w-[28px] shrink-0" />
+        <button
+          className="[font-family:var(--font-mono)] text-[9.5px] uppercase tracking-[0.1em] text-[color:var(--ink-3)] hover:text-[color:var(--ink-2)] bg-transparent border-none cursor-pointer text-center p-0 w-[44px] shrink-0"
+          onClick={() => toggleSort('language')}
+        >
+          lang{sortIndicator('language')}
+        </button>
         <button
           className="[font-family:var(--font-mono)] text-[9.5px] uppercase tracking-[0.1em] text-[color:var(--ink-3)] hover:text-[color:var(--ink-2)] bg-transparent border-none cursor-pointer text-right p-0 w-[116px] shrink-0 pr-1"
           onClick={() => toggleSort('status')}
@@ -323,6 +353,7 @@ export function DashboardPage() {
               <ApplicationCard
                 key={app.id}
                 application={app}
+                language={languageFor(app)}
                 status={statuses[app.id] ?? app.status}
                 appliedDate={appliedDates[app.id] ?? app.appliedDate}
                 interviewDate={interviewDates[app.id] ?? app.interviewDate}

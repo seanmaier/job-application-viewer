@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import type { AppFont, AppLanguage, ApplicationConfig, BaseProfile } from '../types';
+import { LANG_FLAGS } from '../utils/language';
 import { ALL_FONTS, FONT_LABELS } from '../utils/fonts';
 import { getProfile } from '../data/profiles';
 import { getBaseProfiles } from '../utils/baseProfiles';
@@ -22,7 +23,6 @@ import {
   editSaveBtn,
 } from '../styles/formStyles';
 
-const LANG_FLAGS: Record<AppLanguage, string> = { en: '🇬🇧', de: '🇩🇪' };
 
 function toId(company: string): string {
   return company.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'new-app';
