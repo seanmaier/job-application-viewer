@@ -2,6 +2,7 @@
 //   node scripts/api.ts GET applications
 //   node scripts/api.ts POST applications path/to/body.json
 //   node scripts/api.ts PATCH applications/<id> path/to/body.json
+//   node scripts/api.ts DELETE base-profiles/<id>          (moves it to the trash)
 // Paths are relative to /api/v1. Write them without a leading slash: Git Bash
 // on Windows rewrites arguments like "/applications" into file system paths.
 // Reads JOB_APPS_URL and JOB_APPS_TOKEN from the environment or from
@@ -12,7 +13,7 @@ import { existsSync, readFileSync } from 'node:fs';
 const ENV_FILE = '.env.assistant';
 if (existsSync(ENV_FILE)) process.loadEnvFile(ENV_FILE);
 
-const METHODS = ['GET', 'POST', 'PUT', 'PATCH'];
+const METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'];
 
 function fail(message: string): never {
   console.error(message);
@@ -21,7 +22,7 @@ function fail(message: string): never {
 
 const [method = '', rawPath = '', bodyFile] = process.argv.slice(2);
 if (!METHODS.includes(method.toUpperCase()) || !rawPath || /^[a-z]:/i.test(rawPath)) {
-  fail('Usage: node scripts/api.ts <GET|POST|PUT|PATCH> <path under /api/v1, e.g. applications/acme> [body.json]');
+  fail('Usage: node scripts/api.ts <GET|POST|PUT|PATCH|DELETE> <path under /api/v1, e.g. applications/acme> [body.json]');
 }
 const path = rawPath.replace(/^\/*/, '/');
 

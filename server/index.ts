@@ -26,6 +26,7 @@ import {
   type User,
 } from './auth.ts';
 import { db, transaction } from './db.ts';
+import { purgeExpiredBaseProfiles } from './trash.ts';
 import { v1 } from './v1.ts';
 
 const PORT = Number(process.env.PORT ?? 3000);
@@ -200,8 +201,15 @@ app.all('/api/*', (c) => c.json({ error: 'Not found.' }, 404));
 app.use('/*', serveStatic({ root: STATIC_DIR }));
 app.get('/*', serveStatic({ root: STATIC_DIR, path: 'index.html' }));
 
-deleteExpiredSessions();
-setInterval(deleteExpiredSessions, 60 * 60 * 1000).unref();
+// Hourly housekeeping. A trashed base profile is purged within an hour of
+// its retention period running out (TRASH_RETENTION_DAYS in src/utils/trash.ts).
+function housekeeping() {
+  deleteExpiredSessions();
+  const purged = purgeExpiredBaseProfiles();
+  if (purged) console.log(`Purged ${purged} base profile(s) from the trash.`);
+}
+housekeeping();
+setInterval(housekeeping, 60 * 60 * 1000).unref();
 
 serve({ fetch: app.fetch, port: PORT }, (info) => {
   console.log(`Listening on http://localhost:${info.port}`);
