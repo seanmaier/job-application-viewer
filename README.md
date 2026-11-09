@@ -101,7 +101,7 @@ Tokens work only here, not on login, password, token or raw-data routes.
 | Method | Path | |
 |--------|------|-|
 | GET | `/api/v1/me` | the token's user |
-| GET | `/api/v1/applications`, `/api/v1/applications/:id` | applications as the app shows them (saved edits and status merged in); the list leaves out trashed ones, `?trash=true` lists only those |
+| GET | `/api/v1/applications`, `/api/v1/applications/:id` | applications as the app shows them (saved edits and status merged in); the list takes `?language=en|de`, leaves out trashed ones, and `?trash=true` lists only those |
 | POST | `/api/v1/applications` | create; always starts as `drafting` |
 | PATCH | `/api/v1/applications/:id` | update given fields, `null` removes one (not while trashed) |
 | GET | `/api/v1/base-profiles`, `/api/v1/base-profiles/:id` | base profiles; the list leaves out trashed ones, `?trash=true` lists only those (with `purgesAt`) |
@@ -137,11 +137,24 @@ Files under `private/` are never part of the image.
 4. Open the container console and create a user:
    `node server/cli.ts add <username>`
 5. Optional auto-redeploy: enable the stack's GitOps updates with the Webhook
-   mechanism, turn on "Re-pull image" and "Force redeployment" (the image
-   tag stays `latest`, so the Git commit alone shows no change), and store the
-   webhook URL as the repository secret `PORTAINER_WEBHOOK_URL`. The image
-   workflow calls it after each push. If GitHub can't reach Portainer, use
-   the Polling mechanism instead and leave the secret unset.
+   mechanism and turn on "Re-pull image" and "Force redeployment" (the image
+   tag stays `latest`, so the Git commit alone shows no change). The webhook
+   is called from a self-hosted runner on the VPS over the internal Docker
+   network, so it never passes Cloudflare's bot protection:
+   1. Create a second stack from `deploy/runner/docker-compose.yml` with the
+      stack variables `ACCESS_TOKEN` (fine-grained PAT for this repository,
+      "Administration: Read and write") and `PORTAINER_NETWORK` (the Docker
+      network the Portainer container is in). The runner registers with the
+      label `vps-deploy`, takes one job at a time and starts clean after each.
+   2. Store the webhook URL with Portainer's **internal** address as the
+      repository secret `PORTAINER_WEBHOOK_URL`, e.g.
+      `http://portainer:9000/api/stacks/webhooks/<id>`.
+   3. Under Settings → Actions → General, set "Fork pull request workflows" to
+      "Require approval for all external contributors", since the repository
+      is public.
+
+   Without the secret the deploy job is skipped. Alternatively use the
+   Polling mechanism and leave the secret unset.
 
 Data lives in that volume (`/data/app.db` in the container). SQLite also keeps
 recent writes in `app.db-wal`, so back up the whole volume with the container

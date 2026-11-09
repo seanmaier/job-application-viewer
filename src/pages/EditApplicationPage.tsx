@@ -4,6 +4,7 @@ import { applications } from '../data/applications';
 import { getAllLocalApplications } from '../utils/localApplications';
 import { TrashedNotice } from '../components/TrashedNotice';
 import type { ApplicationConfig, AppFont, AppLanguage, CoverLetter, SkillGroup } from '../types';
+import { LANG_FLAGS } from '../utils/language';
 import { ALL_FONTS, FONT_LABELS } from '../utils/fonts';
 import { getProfile } from '../data/profiles';
 import { getBaseProfiles } from '../utils/baseProfiles';
@@ -33,7 +34,6 @@ import {
   editAppHeader, editAppCompany, editAppHeaderActions, editResetBtn, editSaveBtn,
 } from '../styles/formStyles';
 
-const LANG_FLAGS: Record<AppLanguage, string> = { en: '🇬🇧', de: '🇩🇪' };
 const LANGUAGE_DEFAULT_PREFIX = 'language-default:';
 
 function toId(company: string) {
