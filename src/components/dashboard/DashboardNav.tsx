@@ -1,6 +1,7 @@
 import type { CSSProperties, ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { logoutAndReload } from '../../utils/api';
+import { isDemo } from '../../demo/demoMode';
 
 // Each group gets its own colour (from the existing tokens), so actions of the
 // same kind are recognisable at a glance: blue creates, purple manages what
@@ -17,11 +18,19 @@ const item =
   `[&:not(:first-child)]:border-l [&:not(:first-child)]:border-solid ${groupLine} ` +
   'text-[color:var(--group)] transition-colors duration-150 hover:bg-[color:color-mix(in_srgb,var(--group)_14%,transparent)]';
 
-function NavItem({ to, onClick, children }: { to?: string; onClick?: () => void; children: ReactNode }) {
+interface NavItemProps {
+  to?: string;
+  onClick?: () => void;
+  /** Lets the guided tour point at this item (`data-tour`). */
+  tour?: string;
+  children: ReactNode;
+}
+
+function NavItem({ to, onClick, tour, children }: NavItemProps) {
   return to ? (
-    <Link className={item} to={to}>{children}</Link>
+    <Link className={item} to={to} data-tour={tour}>{children}</Link>
   ) : (
-    <button className={item} type="button" onClick={onClick}>{children}</button>
+    <button className={item} type="button" onClick={onClick} data-tour={tour}>{children}</button>
   );
 }
 
@@ -61,15 +70,18 @@ export function DashboardNav({ trashCount, onImport, onBackup }: Props) {
           <span className="text-[color:var(--accent)]">applications</span>
           <span className="text-[color:var(--ink-3)] animate-pulse"> _</span>
         </div>
-        <nav className="flex items-center gap-2" aria-label="Account">
-          <Link className={accountItem} to="/account">account</Link>
-          <button className={accountItem} type="button" onClick={() => void logoutAndReload()}>log out</button>
-        </nav>
+        {/* The demo has no account to manage or log out of. */}
+        {!isDemo && (
+          <nav className="flex items-center gap-2" aria-label="Account">
+            <Link className={accountItem} to="/account">account</Link>
+            <button className={accountItem} type="button" onClick={() => void logoutAndReload()}>log out</button>
+          </nav>
+        )}
       </div>
 
       <nav className="flex flex-wrap items-end gap-x-4 gap-y-3" aria-label="Actions">
         <NavGroup name="create">
-          <NavItem to="/application/new">+ new</NavItem>
+          <NavItem to="/application/new" tour="new">+ new</NavItem>
           <NavItem onClick={onImport}>import</NavItem>
         </NavGroup>
         <NavGroup name="library">

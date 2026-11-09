@@ -11,6 +11,7 @@ data, and use it to manage your own applications.
 
 - Dashboard listing all applications with status tracking
 - Print-optimized CV and cover letter documents in English, German or Swedish (clean 2-page PDF export)
+- A login-free demo at `/demo` for showing the app to others
 - Plain-text export for pasting into LLMs or application forms
 - Form-based and raw-JSON editing for each application
 - Per-user login; all edits are stored on the server, not in the browser
@@ -18,6 +19,19 @@ data, and use it to manage your own applications.
 - Your personal data (profile, cover letters) is kept out of git entirely
 - Token-authenticated `/api/v1` and Claude Code skills for AI-assisted applications
 - Deleted applications and base profiles go to a trash for 7 days (restore or delete permanently), then the server purges them
+
+## Demo
+
+`/demo` (e.g. `http://localhost:5173/demo`, or `/demo` on the deployed app)
+runs the app without a login on a fictional sample profile with five
+applications, one per status. A guided tour opens on the first visit: each
+step spotlights the part of the UI it explains (dashboard, status, CV and
+cover letter, export), switching pages as needed. It can be restarted from
+the demo bar. The demo speaks the browser's language (English, German or
+Swedish, falling back to English); the bar switches it. Edits stay in the
+browser tab (`sessionStorage`) and never reach the server; **reset demo**
+starts over. The login screen links to it. Sample data and tour texts live
+in `src/demo/`.
 
 ## Tech stack
 

@@ -36,7 +36,15 @@ function scheduleFlush() {
   if (flushTimer === null) flushTimer = setTimeout(flushInBackground, 300);
 }
 
-async function send(set: Record<string, string>, remove: string[]): Promise<void> {
+type Backend = (set: Record<string, string>, remove: string[]) => Promise<void>;
+let send: Backend = sendToServer;
+
+/** Points writes somewhere other than the server, e.g. the demo's sessionStorage. */
+export function setStorageBackend(backend: Backend): void {
+  send = backend;
+}
+
+async function sendToServer(set: Record<string, string>, remove: string[]): Promise<void> {
   const res = await fetch('/api/data', {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },

@@ -1,0 +1,73 @@
+{
+  "name": "Alex Weber",
+  "role": "Full-Stack Developer · TypeScript & Cloud",
+  "email": "alex.weber@example.com",
+  "website": "alexweber.example",
+  "github": "github.com/alexweber-demo",
+  "linkedin": "linkedin.com/in/alexweber-demo",
+  "city": "Hamburg, Germany",
+  "summary": "Full-stack developer with four years of experience building web products end to end: React frontends, Node.js APIs and the cloud infrastructure underneath. I like small teams, short feedback loops and code that the next person can read.",
+  "experience": [
+    {
+      "title": "Full-Stack Developer",
+      "company": "Harbor Logistics",
+      "dates": "Mar 2023 – Present",
+      "bullets": [
+        "Rebuilt the shipment tracking portal in React and TypeScript, cutting page load time by 60 %",
+        "Designed a Node.js event API processing 2 million status updates per day",
+        "Introduced end-to-end tests and preview deployments for every pull request"
+      ]
+    },
+    {
+      "title": "Junior Web Developer",
+      "company": "Pixelwerk Agency",
+      "dates": "Aug 2021 – Feb 2023",
+      "bullets": [
+        "Delivered 15+ client websites and two e-commerce shops",
+        "Built a reusable component library used across all agency projects"
+      ]
+    }
+  ],
+  "projects": [
+    {
+      "id": "budget-buddy",
+      "name": "Budget Buddy",
+      "stack": "React · TypeScript · Supabase",
+      "description": "Shared household budget app with recurring expenses, receipts upload and monthly reports.",
+      "link": "https://example.com/budget-buddy",
+      "linkLabel": "demo ↗"
+    },
+    {
+      "id": "trail-map",
+      "name": "Trail Map",
+      "stack": "Next.js · PostGIS · Mapbox",
+      "description": "Hiking route planner that combines elevation data with live weather warnings.",
+      "link": "https://example.com/trail-map",
+      "linkLabel": "github ↗"
+    },
+    {
+      "id": "k8s-starter",
+      "name": "k8s Starter",
+      "stack": "Kubernetes · Terraform · GitHub Actions",
+      "description": "Opinionated template for deploying a Node.js service to Kubernetes with CI/CD in one afternoon.",
+      "hackathonLabel": "hackathon winner"
+    }
+  ],
+  "education": {
+    "degree": "B.Sc. Computer Science",
+    "school": "Hamburg University of Applied Sciences",
+    "dates": "2017 – 2021"
+  },
+  "skillGroups": [
+    { "label": "Programming", "skills": ["TypeScript", "JavaScript", "SQL", "Python"] },
+    { "label": "Frontend", "skills": ["React", "Next.js", "Tailwind CSS"] },
+    { "label": "Backend", "skills": ["Node.js", "PostgreSQL", "REST", "GraphQL"] },
+    { "label": "Cloud & DevOps", "skills": ["Docker", "AWS", "GitHub Actions"] },
+    { "label": "Currently learning", "skills": ["Rust", "Kubernetes"], "variant": "learning" }
+  ],
+  "languages": [
+    { "name": "German", "level": "Native" },
+    { "name": "English", "level": "Fluent (C1)" }
+  ],
+  "interests": ["Bouldering", "Open source", "Board games"]
+}

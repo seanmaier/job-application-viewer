@@ -204,12 +204,14 @@ function ApplicationContent({ staticApp }: { staticApp: ApplicationConfig }) {
           <Link
             className="[font-family:var(--font-mono)] text-[11px] bg-white/7 text-[color:var(--ink-invert)] border border-white/18 rounded px-3.5 py-[5px] cursor-pointer tracking-[0.04em] no-underline hover:bg-white/14"
             to={`/application/${staticApp.id}/edit`}
+            data-tour="edit"
           >
             Edit
           </Link>
           <button
             className="[font-family:var(--font-mono)] text-[11px] bg-transparent text-[color:var(--accent)] border border-[color:var(--accent)] rounded px-3.5 py-[5px] cursor-pointer tracking-[0.04em] hover:bg-[color:var(--accent)] hover:text-[color:var(--ink)]"
             onClick={() => setExportOpen(true)}
+            data-tour="export"
           >
             LLM Export
           </button>
@@ -233,6 +235,7 @@ function ApplicationContent({ staticApp }: { staticApp: ApplicationConfig }) {
             className="[font-family:var(--font-mono)] text-[11px] bg-transparent text-[color:var(--accent)] border border-[color:var(--accent)] rounded px-3.5 py-[5px] cursor-pointer tracking-[0.04em] hover:bg-[color:var(--accent)] hover:text-[color:var(--ink)] disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={handleDownload}
             disabled={downloading}
+            data-tour="export"
           >
             {downloading ? 'Downloading…' : 'Download'}
           </button>
@@ -255,7 +258,7 @@ function ApplicationContent({ staticApp }: { staticApp: ApplicationConfig }) {
           <NotesView notes={app.notes ?? ''} className="max-h-[calc(100vh-180px)] overflow-y-auto" />
         </aside>
 
-        <div className="w-full max-w-[794px] shrink-0 print:max-w-none">
+        <div data-tour="documents" className="w-full max-w-[794px] shrink-0 print:max-w-none">
           <FitToWidth>
             <CVDocument profile={profile} application={{ ...app, status }} />
             {app.coverLetter && (
