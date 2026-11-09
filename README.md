@@ -136,25 +136,9 @@ Files under `private/` are never part of the image.
    serve the app over HTTPS, since the session cookie is `Secure`.
 4. Open the container console and create a user:
    `node server/cli.ts add <username>`
-5. Optional auto-redeploy: enable the stack's GitOps updates with the Webhook
-   mechanism and turn on "Re-pull image" and "Force redeployment" (the image
-   tag stays `latest`, so the Git commit alone shows no change). The webhook
-   is called from a self-hosted runner on the VPS over the internal Docker
-   network, so it never passes Cloudflare's bot protection:
-   1. Create a second stack from `deploy/runner/docker-compose.yml` with the
-      stack variables `ACCESS_TOKEN` (fine-grained PAT for this repository,
-      "Administration: Read and write") and `PORTAINER_NETWORK` (the Docker
-      network the Portainer container is in). The runner registers with the
-      label `vps-deploy`, takes one job at a time and starts clean after each.
-   2. Store the webhook URL with Portainer's **internal** address as the
-      repository secret `PORTAINER_WEBHOOK_URL`, e.g.
-      `http://portainer:9000/api/stacks/webhooks/<id>`.
-   3. Under Settings → Actions → General, set "Fork pull request workflows" to
-      "Require approval for all external contributors", since the repository
-      is public.
-
-   Without the secret the deploy job is skipped. Alternatively use the
-   Polling mechanism and leave the secret unset.
+5. Optional auto-redeploy: enable the stack's GitOps updates with the
+   Polling mechanism and turn on "Re-pull image" and "Force redeployment"
+   (the image tag stays `latest`, so the Git commit alone shows no change).
 
 Data lives in that volume (`/data/app.db` in the container). SQLite also keeps
 recent writes in `app.db-wal`, so back up the whole volume with the container
