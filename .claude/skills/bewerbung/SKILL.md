@@ -1,17 +1,17 @@
 ---
 name: bewerbung
-description: Erstellt oder überarbeitet eine Bewerbung KI-gestützt über die /api/v1 der produktiven App - Stellenanzeige analysieren, passendes Basis-Profil wählen, Skills/Summary/Projekte anpassen, Anschreiben entwerfen und nach Bestätigung als Entwurf speichern. Erkennt wiederkehrende Muster und schlägt daraus neue Basis-Profile vor. Verwenden bei "/bewerbung", wenn der Nutzer eine Stellenanzeige (URL oder Text) für eine Bewerbung teilt, oder mit dem Argument "muster" für die reine Musteranalyse.
-argument-hint: "<URL oder Text der Stellenanzeige> | muster"
+description: Erstellt oder überarbeitet eine Bewerbung KI-gestützt über die /api/v1 der produktiven App - Stellenanzeige analysieren, passendes Basis-Profil wählen, Skills/Summary/Projekte anpassen, Anschreiben entwerfen und nach Bestätigung als Entwurf speichern. Erkennt wiederkehrende Muster und schlägt daraus neue Basis-Profile vor, und räumt überflüssige Basis-Profile in den Papierkorb. Verwenden bei "/bewerbung", wenn der Nutzer eine Stellenanzeige (URL oder Text) für eine Bewerbung teilt, mit dem Argument "muster" für die reine Musteranalyse oder "aufraeumen" zum Aufräumen der Basis-Profile.
+argument-hint: "<URL oder Text der Stellenanzeige> | muster | aufraeumen"
 ---
 
 # Bewerbung erstellen
 
 Du arbeitest gegen die **produktiven Daten** des Nutzers. Lesen ist jederzeit erlaubt.
-Jeder Schreibzugriff (`POST`, `PATCH`, `PUT`) braucht eine **ausdrückliche Bestätigung**
-des konkreten Vorschlags in diesem Gespräch.
+Jeder Schreibzugriff (`POST`, `PATCH`, `PUT`, `DELETE`) braucht eine **ausdrückliche
+Bestätigung** des konkreten Vorschlags in diesem Gespräch.
 
 `$ARGUMENTS` ist die Stellenanzeige (URL oder Text). Bei `muster` springe direkt zu
-**Musteranalyse**.
+**Musteranalyse**, bei `aufraeumen` zu **Aufräumen**.
 
 ## Werkzeug
 
@@ -26,6 +26,9 @@ node scripts/api.ts POST applications <datei.json>
 node scripts/api.ts PATCH applications/<id> <datei.json>
 node scripts/api.ts POST base-profiles <datei.json>
 node scripts/api.ts PUT base-profiles/<id> <datei.json>
+node scripts/api.ts DELETE base-profiles/<id>               # nur Papierkorb (Soft Delete)
+node scripts/api.ts POST base-profiles/<id>/restore         # aus dem Papierkorb holen
+node scripts/api.ts GET "base-profiles?trash=true"          # Inhalt des Papierkorbs
 ```
 
 - Pfade **ohne** führenden Slash (Git Bash würde `/applications` umschreiben).
@@ -119,6 +122,34 @@ Kurz die Musteranalyse durchführen und nur dann etwas sagen, wenn sie ein Muste
    wenn die Anpassung dann identisch zum Profil wäre). Bereits versendete Bewerbungen
    (`sent` und später) nur auf ausdrücklichen Wunsch anfassen, weil sich sonst der
    Lebenslauf ändert, den das Unternehmen schon hat.
+
+## Aufräumen
+
+Ziel: überflüssige Basis-Profile in den Papierkorb legen, damit die Liste übersichtlich
+bleibt. Der Server löscht Profile im Papierkorb nach 7 Tagen endgültig; bis dahin kann der
+Nutzer sie in der App unter **trash** (oder du per `restore`) zurückholen.
+
+1. `GET base-profiles`, `GET applications` und `GET "base-profiles?trash=true"`.
+2. Kandidaten bestimmen. Ein Profil ist überflüssig, wenn **keine** Bewerbung es nutzt
+   (`baseProfileId`) und mindestens eins zutrifft:
+   - inhaltlich (nahezu) identisch mit einem anderen Profil derselben Sprache,
+   - durch ein neueres Profil für dieselbe Rollenart ersetzt (z. B. nach einer Musteranalyse),
+   - leer oder offensichtlich ein Test (kein Name, keine Stationen, Platzhaltertexte).
+
+   Die Standardprofile `default-en`/`default-de` nur vorschlagen, wenn es für dieselbe
+   Sprache ein anderes vollständiges Profil gibt.
+3. Kandidaten als Liste zeigen: Name, ID, Sprache, Begründung. Bei Unsicherheit lieber
+   nicht vorschlagen.
+4. Nach Bestätigung je Profil `DELETE base-profiles/<id>`. Antwortet der Server mit
+   `409`, nutzen Bewerbungen das Profil noch (stehen in `applications`): dem Nutzer
+   anbieten, sie per `PATCH` auf ein anderes Profil umzustellen, und erst danach erneut
+   löschen. Versendete Bewerbungen (`sent` und später) nur auf ausdrücklichen Wunsch
+   umstellen.
+5. Zum Schluss nennen, was im Papierkorb liegt und wann es endgültig gelöscht wird
+   (`purgesAt`).
+
+Endgültig löschen kann nur der Nutzer selbst in der App. Bittet er dich darum, auf den
+Button **delete permanently** im Papierkorb verweisen.
 
 ## Grundregeln
 
