@@ -1,31 +1,20 @@
 import { useEffect, useRef, useState } from 'react';
-import { DEMO_TEXTS, TOUR_STEP_IDS } from './demoTexts';
-import type { TourStepId } from './demoTexts';
-import { demoLocale } from './demoMode';
+import { TOUR_TEXTS } from './tourTexts';
+import type { TourStep } from './tourSteps';
+import { demoLocale, isDemo } from '../demo/demoMode';
+import { browserLanguage } from '../utils/browserLanguage';
 import { dimPanels, measureTarget, placePopover, scrollDeltaFor, spotlightBox } from './tourLayout';
 import type { ArrowSide, Box } from './tourLayout';
 
 interface Props {
+  steps: TourStep[];
   onClose: () => void;
-  /** Shows a page of the demo (a path inside it, e.g. "/"), if it isn't shown already. */
+  /** Shows a page (a path inside the app, e.g. "/"), if it isn't shown already. */
   navigate: (path: string) => void;
 }
 
-const EXAMPLE_APP = '/application/demo-nordlicht';
-
-// Which page each step needs and which element it points at
-// (`data-tour="…"` in the pages; `firstOnly` when several match but one is
-// meant, like the first application's status). No target: a centered card.
-const STEP_TARGETS: Record<TourStepId, { path: string; target?: string; firstOnly?: boolean }> = {
-  welcome: { path: '/' },
-  list: { path: '/', target: 'app-list' },
-  status: { path: '/', target: 'status', firstOnly: true },
-  new: { path: '/', target: 'new' },
-  documents: { path: EXAMPLE_APP, target: 'documents' },
-  edit: { path: EXAMPLE_APP, target: 'edit' },
-  export: { path: EXAMPLE_APP, target: 'export' },
-  demoBar: { path: EXAMPLE_APP, target: 'demo-bar' },
-};
+// The demo has a language of its own; logged-in users get the browser's.
+const locale = isDemo ? demoLocale : browserLanguage();
 
 // A target that hasn't rendered by then (e.g. hidden on this screen size)
 // gets a centered card instead of a spotlight on nothing.
@@ -56,14 +45,13 @@ function sameBox(a: Box | null, b: Box | null): boolean {
 // A classic product tour: each step dims the page, cuts a spotlight around
 // the element it talks about and points at it from a popover, switching
 // between dashboard and application as needed. Arrow keys step, Esc closes.
-export function DemoTour({ onClose, navigate }: Props) {
-  const t = DEMO_TEXTS[demoLocale];
+export function Tour({ steps, onClose, navigate }: Props) {
+  const t = TOUR_TEXTS[locale];
   const [index, setIndex] = useState(0);
-  const id = TOUR_STEP_IDS[index];
-  const step = t.steps[id];
-  const { path, target, firstOnly = false } = STEP_TARGETS[id];
+  const { text, path, target, firstOnly = false } = steps[index];
+  const step = t.steps[text];
   const isFirst = index === 0;
-  const isLast = index === TOUR_STEP_IDS.length - 1;
+  const isLast = index === steps.length - 1;
 
   const [box, setBox] = useState<Box | null>(null);
   const [viewport, setViewport] = useState({ vw: window.innerWidth, vh: window.innerHeight });
@@ -122,12 +110,12 @@ export function DemoTour({ onClose, navigate }: Props) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
-      if (e.key === 'ArrowRight') setIndex((i) => Math.min(i + 1, TOUR_STEP_IDS.length - 1));
+      if (e.key === 'ArrowRight') setIndex((i) => Math.min(i + 1, steps.length - 1));
       if (e.key === 'ArrowLeft') setIndex((i) => Math.max(i - 1, 0));
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [onClose]);
+  }, [onClose, steps.length]);
 
   const { vw, vh } = viewport;
   const spot = box ? spotlightBox(box, vw, vh) : null;
@@ -179,16 +167,16 @@ export function DemoTour({ onClose, navigate }: Props) {
         </button>
 
         <div className="flex items-center gap-3 [font-family:var(--font-mono)] text-[10.5px] uppercase tracking-[0.08em]">
-          <span className="bg-[color:var(--accent)] text-[color:var(--ink)] font-semibold rounded px-2 py-0.5">{t.badge}</span>
-          <span className="text-[color:var(--ink-2)]">{t.stepOf(index + 1, TOUR_STEP_IDS.length)}</span>
+          <span className="bg-[color:var(--accent)] text-[color:var(--ink)] font-semibold rounded px-2 py-0.5">{isDemo ? t.badge.demo : t.badge.app}</span>
+          <span className="text-[color:var(--ink-2)]">{t.stepOf(index + 1, steps.length)}</span>
         </div>
 
         {/* Progress: one segment per step, clickable to jump. */}
         <div className="flex gap-1.5">
-          {TOUR_STEP_IDS.map((stepId, i) => (
+          {steps.map((s, i) => (
             <button
-              key={stepId}
-              aria-label={t.steps[stepId].title}
+              key={s.text}
+              aria-label={t.steps[s.text].title}
               aria-current={i === index ? 'step' : undefined}
               className={`h-1 flex-1 rounded-full border-none p-0 cursor-pointer transition-colors duration-200 ${
                 i <= index ? 'bg-[color:var(--accent)]' : 'bg-[color:var(--rule)]'

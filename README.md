@@ -12,6 +12,7 @@ data, and use it to manage your own applications.
 - Dashboard listing all applications with status tracking
 - Print-optimized CV and cover letter documents in English, German or Swedish (clean 2-page PDF export)
 - A login-free demo at `/demo` for showing the app to others
+- A guided tour that opens once for every user (and in the demo) and can be restarted via **tour** on the dashboard
 - Plain-text export for pasting into LLMs or application forms
 - Form-based and raw-JSON editing for each application
 - Per-user login; all edits are stored on the server, not in the browser

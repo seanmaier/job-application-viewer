@@ -13,6 +13,7 @@ import { fetchCurrentUser, fetchUserData, refreshUserData } from './utils/api';
 import { hasPendingWrites, hydrate, onSyncStatus, setStorageBackend } from './utils/storage';
 import { DEMO_BASENAME, demoLocale, isDemo, loadDemoData, saveDemoData } from './demo/demoMode';
 import { DemoBanner } from './demo/DemoBanner';
+import { TourHost } from './tour/TourHost';
 
 // The demo has no account (password, API tokens), so it has no account page.
 const router = createBrowserRouter([
@@ -34,9 +35,10 @@ if (isDemo) {
   document.documentElement.lang = demoLocale;
 }
 
-/** Shows a page inside the demo for its tour, unless it's already the current one. */
-function demoNavigate(path: string) {
-  const current = window.location.pathname.slice(DEMO_BASENAME.length).replace(/\/$/, '') || '/';
+/** Shows a page for the tour (a path inside the app or the demo), unless it's already the current one. */
+function tourNavigate(path: string) {
+  const base = isDemo ? DEMO_BASENAME : '';
+  const current = window.location.pathname.slice(base.length).replace(/\/$/, '') || '/';
   if (current !== path) void router.navigate(path);
 }
 
@@ -93,8 +95,9 @@ export function App() {
 
   return (
     <>
-      {isDemo && <DemoBanner navigate={demoNavigate} />}
+      {isDemo && <DemoBanner />}
       <RouterProvider router={router} />
+      <TourHost navigate={tourNavigate} />
       {syncError && (
         <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[200] [font-family:var(--font-mono)] text-[11px] bg-[color:var(--status-rejected)] text-[color:var(--ink)] font-semibold px-4 py-2 rounded shadow">
           {syncError} Retrying…

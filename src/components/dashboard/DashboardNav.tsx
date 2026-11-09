@@ -2,6 +2,7 @@ import type { CSSProperties, ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { logoutAndReload } from '../../utils/api';
 import { isDemo } from '../../demo/demoMode';
+import { startTour } from '../../tour/tourControl';
 
 // Each group gets its own colour (from the existing tokens), so actions of the
 // same kind are recognisable at a glance: blue creates, purple manages what
@@ -73,6 +74,7 @@ export function DashboardNav({ trashCount, onImport, onBackup }: Props) {
         {/* The demo has no account to manage or log out of. */}
         {!isDemo && (
           <nav className="flex items-center gap-2" aria-label="Account">
+            <button className={accountItem} type="button" onClick={startTour} data-tour="tour-button">tour</button>
             <Link className={accountItem} to="/account">account</Link>
             <button className={accountItem} type="button" onClick={() => void logoutAndReload()}>log out</button>
           </nav>
