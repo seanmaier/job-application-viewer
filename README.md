@@ -14,7 +14,7 @@ data, and use it to manage your own applications.
 - Plain-text export for pasting into LLMs or application forms
 - Form-based and raw-JSON editing for each application
 - Per-user login; all edits are stored on the server, not in the browser
-- Users change their own password under **account** on the dashboard
+- Users change their own password and manage their API tokens under **account** on the dashboard
 - Your personal data (profile, cover letters) is kept out of git entirely
 - Token-authenticated `/api/v1` and Claude Code skills for AI-assisted applications
 
@@ -68,7 +68,7 @@ backup there and restore it after logging in.
 - `npm run users -- <add|passwd|remove|list> [username] [password]` — manage users
   (`passwd` is for resetting a forgotten password; users change their own in the app)
 - `npm run users -- <token-add|token-revoke> <username> <name>` / `token-list <username>` —
-  manage API tokens
+  manage API tokens as admin (users do it themselves on the account page)
 - `npm run api -- <GET|POST|PUT|PATCH> <path> [body.json]` — call `/api/v1`
 
 ## AI-assisted applications
@@ -86,15 +86,15 @@ The repo ships two Claude Code skills that work against your deployed data:
 
 Setup:
 
-1. In the container console: `node server/cli.ts token-add <username> claude`
-   (the token is shown once; `token-revoke` withdraws it).
+1. In the app, open **account** → **API tokens** and create one, e.g. `claude`.
+   It is shown only once; revoke it there when it's no longer needed.
 2. `cp .env.assistant.example .env.assistant` and fill in the URL and token.
 3. Check it: `npm run api -- GET me`.
 
 ### `/api/v1`
 
 Authenticated with `Authorization: Bearer <token>` (or the session cookie).
-Tokens work only here, not on login, password or raw-data routes.
+Tokens work only here, not on login, password, token or raw-data routes.
 
 | Method | Path | |
 |--------|------|-|

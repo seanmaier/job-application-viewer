@@ -41,8 +41,9 @@ node scripts/api.ts PUT base-profiles/<id> <datei.json>
 ## Vorbereitung
 
 1. `node scripts/api.ts GET me`. Schlägt das fehl: Fehlt `.env.assistant`, den Nutzer bitten,
-   sie nach `.env.assistant.example` anzulegen und im Container
-   `node server/cli.ts token-add <username> claude` auszuführen. Nicht weitermachen.
+   sie nach `.env.assistant.example` anzulegen; den Token erstellt er in der App unter
+   **account → API tokens**. Bei `HTTP 401` ist der Token ungültig oder widerrufen.
+   Nicht weitermachen.
 2. `private/knowledge/about-me.md` lesen. Fehlt die Datei oder ist sie größtenteils leer,
    darauf hinweisen und `/basiswissen` anbieten. Ohne Basiswissen nur mit den Daten aus
    dem Basis-Profil arbeiten und das im Ergebnis offen sagen.
