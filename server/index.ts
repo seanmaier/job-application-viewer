@@ -26,6 +26,7 @@ import {
   type User,
 } from './auth.ts';
 import { db, transaction } from './db.ts';
+import { purgeTrash } from './trash.ts';
 import { v1 } from './v1.ts';
 
 const PORT = Number(process.env.PORT ?? 3000);
@@ -36,7 +37,15 @@ const COOKIE = 'session';
 
 const app = new Hono<{ Variables: { user: User } }>();
 
-app.use('/api/*', csrf());
+// CSRF only threatens cookie auth. A bearer-token request to /api/v1 can't be
+// forged cross-site: browsers never add an Authorization header on their own,
+// and a page setting one triggers a CORS preflight this server never allows.
+// Without this, body-less script calls (DELETE, POST …/restore) count as
+// text/plain form posts and are refused.
+const csrfCheck = csrf();
+app.use('/api/*', (c, next) =>
+  c.req.path.startsWith('/api/v1/') && c.req.header('authorization') !== undefined ? next() : csrfCheck(c, next),
+);
 app.use('/api/*', bodyLimit({ maxSize: 10 * 1024 * 1024 }));
 
 function startSession(c: Context, userId: number) {
@@ -192,8 +201,18 @@ app.all('/api/*', (c) => c.json({ error: 'Not found.' }, 404));
 app.use('/*', serveStatic({ root: STATIC_DIR }));
 app.get('/*', serveStatic({ root: STATIC_DIR, path: 'index.html' }));
 
-deleteExpiredSessions();
-setInterval(deleteExpiredSessions, 60 * 60 * 1000).unref();
+// Hourly housekeeping. Trashed applications and base profiles are purged
+// within an hour of their retention period running out (TRASH_RETENTION_DAYS
+// in src/utils/trash.ts).
+function housekeeping() {
+  deleteExpiredSessions();
+  const purged = purgeTrash();
+  if (purged.applications || purged.baseProfiles) {
+    console.log(`Purged ${purged.applications} application(s) and ${purged.baseProfiles} base profile(s) from the trash.`);
+  }
+}
+housekeeping();
+setInterval(housekeeping, 60 * 60 * 1000).unref();
 
 serve({ fetch: app.fetch, port: PORT }, (info) => {
   console.log(`Listening on http://localhost:${info.port}`);

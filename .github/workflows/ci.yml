@@ -23,3 +23,26 @@ jobs:
 
       - name: Build application
         run: npm run build
+
+  # Builds the production image and starts it: catches an image that builds
+  # but can't start, e.g. a server import missing from the runtime stage.
+  image-smoke-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          load: true
+          tags: job-applications:ci
+          cache-from: type=gha
+
+      - name: Start the image and check it serves
+        run: sh scripts/smoke-test-image.sh job-applications:ci

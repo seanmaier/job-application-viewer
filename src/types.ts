@@ -81,6 +81,12 @@ export interface BaseProfile {
   name: string;
   language: AppLanguage;
   profile: Profile;
+  /**
+   * Set (ISO timestamp) when the profile is moved to the trash. It's hidden
+   * from pickers and lists but still renders for applications that use it,
+   * until the server purges it after TRASH_RETENTION_DAYS.
+   */
+  deletedAt?: string;
 }
 
 export interface ApplicationConfig {
@@ -100,4 +106,9 @@ export interface ApplicationConfig {
   featuredProjectIds?: string[];
   skillGroupsOverride?: SkillGroup[];
   coverLetter?: CoverLetter;
+  /**
+   * Set (ISO timestamp) on the stored entry when the application is moved to
+   * the trash; the server purges it after TRASH_RETENTION_DAYS.
+   */
+  deletedAt?: string;
 }

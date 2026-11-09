@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { applications } from '../data/applications';
-import { getLocalApplications } from '../utils/localApplications';
+import { getAllLocalApplications } from '../utils/localApplications';
+import { TrashedNotice } from '../components/TrashedNotice';
 import { resolveApplicationProfile } from '../utils/baseProfiles';
 import { CVDocument } from '../components/cv/CVDocument';
 import { FitToWidth } from '../components/FitToWidth';
@@ -28,7 +29,7 @@ import type { ApplicationConfig, ApplicationStatus, AppFont, CoverLetter } from 
 
 export function ApplicationPage() {
   const { id } = useParams<{ id: string }>();
-  const staticApp = id ? [...applications, ...getLocalApplications()].find((a) => a.id === id) : undefined;
+  const staticApp = id ? [...applications, ...getAllLocalApplications()].find((a) => a.id === id) : undefined;
 
   if (!staticApp) {
     return (
@@ -38,6 +39,8 @@ export function ApplicationPage() {
       </div>
     );
   }
+
+  if (staticApp.deletedAt) return <TrashedNotice name={`${staticApp.company} – ${staticApp.role}`} />;
 
   return <ApplicationContent staticApp={staticApp} />;
 }

@@ -17,6 +17,7 @@ data, and use it to manage your own applications.
 - Users change their own password and manage their API tokens under **account** on the dashboard
 - Your personal data (profile, cover letters) is kept out of git entirely
 - Token-authenticated `/api/v1` and Claude Code skills for AI-assisted applications
+- Deleted applications and base profiles go to a trash for 7 days (restore or delete permanently), then the server purges them
 
 ## Tech stack
 
@@ -69,7 +70,7 @@ backup there and restore it after logging in.
   (`passwd` is for resetting a forgotten password; users change their own in the app)
 - `npm run users -- <token-add|token-revoke> <username> <name>` / `token-list <username>` —
   manage API tokens as admin (users do it themselves on the account page)
-- `npm run api -- <GET|POST|PUT|PATCH> <path> [body.json]` — call `/api/v1`
+- `npm run api -- <GET|POST|PUT|PATCH|DELETE> <path> [body.json]` — call `/api/v1`
 
 ## AI-assisted applications
 
@@ -82,7 +83,8 @@ The repo ships two Claude Code skills that work against your deployed data:
   summary and featured projects, drafts the cover letter and, after you
   confirm, saves it as a `drafting` application. When three or more
   applications share the same tailoring, it proposes a new base profile.
-  `/bewerbung muster` runs only that analysis.
+  `/bewerbung muster` runs only that analysis, `/bewerbung aufraeumen`
+  moves unused, superseded base profiles to the trash.
 
 Setup:
 
@@ -99,15 +101,18 @@ Tokens work only here, not on login, password, token or raw-data routes.
 | Method | Path | |
 |--------|------|-|
 | GET | `/api/v1/me` | the token's user |
-| GET | `/api/v1/applications`, `/api/v1/applications/:id` | applications as the app shows them (saved edits and status merged in); the list takes `?language=en\|de` |
+| GET | `/api/v1/applications`, `/api/v1/applications/:id` | applications as the app shows them (saved edits and status merged in); the list takes `?language=en|de`, leaves out trashed ones, and `?trash=true` lists only those |
 | POST | `/api/v1/applications` | create; always starts as `drafting` |
-| PATCH | `/api/v1/applications/:id` | update given fields, `null` removes one |
-| GET | `/api/v1/base-profiles`, `/api/v1/base-profiles/:id` | base profiles |
+| PATCH | `/api/v1/applications/:id` | update given fields, `null` removes one (not while trashed) |
+| GET | `/api/v1/base-profiles`, `/api/v1/base-profiles/:id` | base profiles; the list leaves out trashed ones, `?trash=true` lists only those (with `purgesAt`) |
 | POST | `/api/v1/base-profiles` | create (`name`, `language`, `profile`, optional `id`) |
-| PUT | `/api/v1/base-profiles/:id` | replace name, language and profile |
+| PUT | `/api/v1/base-profiles/:id` | replace name, language and profile (not while trashed) |
+| DELETE | `/api/v1/base-profiles/:id` | move to the trash; refused (409) while applications use it |
+| POST | `/api/v1/base-profiles/:id/restore` | take it out of the trash |
 
 Bodies are validated with the same parsers the app uses; unknown fields are
-rejected. There is no DELETE: deleting stays a deliberate action in the app.
+rejected. Nothing is deleted for good through the API: base profiles only go
+to the trash; applications are only trashed by you in the app.
 Only applications stored on the server are visible, not the JSON files in
 `private/applications/`. Open tabs reload their data when you switch back
 to them, so they don't overwrite what the API changed.

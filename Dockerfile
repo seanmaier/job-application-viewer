@@ -24,9 +24,12 @@ COPY package*.json ./
 RUN npm ci --omit=dev && npm cache clean --force
 
 COPY server ./server
-# The /api/v1 routes validate with the same parsers the frontend uses.
+# The server shares types and plain helpers with the frontend (parsers,
+# language, trash). All of src/utils is copied rather than a list of files,
+# so a newly shared helper can't be forgotten and crash the server on start.
+# Only what the server imports is ever loaded.
 COPY src/types.ts ./src/types.ts
-COPY src/utils/slug.ts src/utils/parseApplicationConfig.ts src/utils/parseProfile.ts src/utils/parseSkillGroups.ts ./src/utils/
+COPY src/utils ./src/utils
 COPY --from=builder /app/dist ./dist
 
 RUN mkdir /data && chown node:node /data

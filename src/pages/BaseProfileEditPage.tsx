@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { TrashedNotice } from '../components/TrashedNotice';
 import { useParams, Link, useNavigate, useBlocker } from 'react-router-dom';
 import type {
   ApplicationConfig, BaseProfile, Profile,
@@ -6,7 +7,7 @@ import type {
 } from '../types';
 import { LANG_FLAGS } from '../utils/language';
 import {
-  getBaseProfile, saveBaseProfile, deleteBaseProfile, applicationsUsingBaseProfile,
+  getBaseProfile, saveBaseProfile, trashBaseProfile, trashConfirmMessage,
 } from '../utils/baseProfiles';
 import { CVDocument } from '../components/cv/CVDocument';
 import { FitToWidth } from '../components/FitToWidth';
@@ -79,6 +80,8 @@ export function BaseProfileEditPage() {
     );
   }
 
+  if (stored.deletedAt) return <TrashedNotice name={stored.name} />;
+
   return <BaseProfileEditContent stored={stored} />;
 }
 
@@ -130,14 +133,8 @@ function BaseProfileEditContent({ stored }: { stored: BaseProfile }) {
   };
 
   const handleDelete = () => {
-    const usedBy = applicationsUsingBaseProfile(stored.id);
-    const message = usedBy.length > 0
-      ? `"${stored.name}" is used by ${usedBy.length} application${usedBy.length === 1 ? '' : 's'} ` +
-        `(${usedBy.map((a) => a.company).join(', ')}). Deleting it will fall them back to the ` +
-        `language default profile. Delete anyway?`
-      : `Delete base profile "${stored.name}"? This cannot be undone.`;
-    if (!confirm(message)) return;
-    deleteBaseProfile(stored.id);
+    if (!confirm(trashConfirmMessage(stored))) return;
+    trashBaseProfile(stored.id);
     navigate('/profiles');
   };
 

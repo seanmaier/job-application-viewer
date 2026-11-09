@@ -8,6 +8,7 @@ import { BaseProfilesPage } from './pages/BaseProfilesPage';
 import { BaseProfileEditPage } from './pages/BaseProfileEditPage';
 import { LoginPage } from './pages/LoginPage';
 import { AccountPage } from './pages/AccountPage';
+import { TrashPage } from './pages/TrashPage';
 import { fetchCurrentUser, fetchUserData, refreshUserData } from './utils/api';
 import { hasPendingWrites, hydrate, onSyncStatus } from './utils/storage';
 
@@ -16,6 +17,7 @@ const router = createBrowserRouter([
   { path: '/profiles', element: <BaseProfilesPage /> },
   { path: '/account', element: <AccountPage /> },
   { path: '/profiles/:id', element: <BaseProfileEditPage /> },
+  { path: '/trash', element: <TrashPage /> },
   { path: '/application/new', element: <NewApplicationPage /> },
   { path: '/application/:id/edit', element: <EditApplicationPage /> },
   { path: '/application/:id', element: <ApplicationPage /> },

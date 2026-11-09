@@ -2,26 +2,24 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { LANG_FLAGS } from '../utils/language';
 import {
-  getBaseProfiles, deleteBaseProfile, applicationsUsingBaseProfile,
+  getBaseProfiles, trashBaseProfile, trashConfirmMessage, applicationsUsingBaseProfile,
 } from '../utils/baseProfiles';
+import { countTrashed } from '../utils/trashCount';
+import type { BaseProfile } from '../types';
 import { CreateBaseProfileModal } from '../components/CreateBaseProfileModal';
 
 
 export function BaseProfilesPage() {
   const navigate = useNavigate();
   const [profiles, setProfiles] = useState(() => getBaseProfiles());
+  const [trashCount, setTrashCount] = useState(countTrashed);
   const [createOpen, setCreateOpen] = useState(false);
 
-  const handleDelete = (id: string, name: string) => {
-    const usedBy = applicationsUsingBaseProfile(id);
-    const message = usedBy.length > 0
-      ? `"${name}" is used by ${usedBy.length} application${usedBy.length === 1 ? '' : 's'} ` +
-        `(${usedBy.map((a) => a.company).join(', ')}). Deleting it will fall them back to the ` +
-        `language default profile. Delete anyway?`
-      : `Delete base profile "${name}"? This cannot be undone.`;
-    if (!confirm(message)) return;
-    deleteBaseProfile(id);
+  const handleTrash = (profile: BaseProfile) => {
+    if (!confirm(trashConfirmMessage(profile))) return;
+    trashBaseProfile(profile.id);
     setProfiles(getBaseProfiles());
+    setTrashCount(countTrashed());
   };
 
   return (
@@ -37,12 +35,20 @@ export function BaseProfilesPage() {
             <span className="text-[color:var(--ink-3)] animate-pulse"> _</span>
           </span>
         </div>
-        <button
-          className="[font-family:var(--font-mono)] text-[11px] text-[color:var(--ink-3)] bg-transparent border border-[color:var(--rule)] px-3 py-1.5 cursor-pointer hover:text-[color:var(--accent)] hover:border-[color:var(--accent)] transition-colors duration-150"
-          onClick={() => setCreateOpen(true)}
-        >
-          + new base profile
-        </button>
+        <div className="flex items-center gap-2">
+          <Link
+            className="[font-family:var(--font-mono)] text-[11px] text-[color:var(--ink-3)] no-underline border border-[color:var(--rule)] px-3 py-1.5 hover:text-[color:var(--ink-invert)] hover:border-[color:var(--ink-2)] transition-colors duration-150"
+            to="/trash"
+          >
+            trash{trashCount > 0 ? ` (${trashCount})` : ''}
+          </Link>
+          <button
+            className="[font-family:var(--font-mono)] text-[11px] text-[color:var(--ink-3)] bg-transparent border border-[color:var(--rule)] px-3 py-1.5 cursor-pointer hover:text-[color:var(--accent)] hover:border-[color:var(--accent)] transition-colors duration-150"
+            onClick={() => setCreateOpen(true)}
+          >
+            + new base profile
+          </button>
+        </div>
       </header>
 
       {/* Column headers */}
@@ -95,8 +101,8 @@ export function BaseProfilesPage() {
                 </Link>
                 <button
                   className="[font-family:var(--font-mono)] text-[11px] text-[color:var(--ink-2)] bg-transparent border border-[color:var(--rule)] rounded px-2.5 py-1 cursor-pointer transition-colors hover:text-[color:var(--status-rejected)] hover:border-[color:var(--status-rejected)]"
-                  onClick={(e) => { e.stopPropagation(); handleDelete(p.id, p.name); }}
-                  title="Delete"
+                  onClick={(e) => { e.stopPropagation(); handleTrash(p); }}
+                  title="Move to trash"
                 >
                   delete
                 </button>
