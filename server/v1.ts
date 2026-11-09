@@ -11,7 +11,7 @@ import { slugify, uniqueId } from '../src/utils/slug.ts';
 import { purgeDate } from '../src/utils/trash.ts';
 import type { User } from './auth.ts';
 import { transaction } from './db.ts';
-import { getJson, getValue, KEYS, removeValue, setJson, setValue } from './store.ts';
+import { getJson, getValue, idsWithStoredKey, KEYS, setJson, setValue } from './store.ts';
 
 type StoredConfig = Omit<ApplicationConfig, 'status'>;
 
@@ -147,18 +147,24 @@ v1.post('/applications', async (c) => {
 
   const outcome = transaction(() => {
     const apps = localApps(userId);
-    const taken = new Set(apps.map((a) => a.id));
+    // An id is also taken while edits or a status are stored under it: they
+    // may belong to an application from private/applications/, which the
+    // server can't see. The API never removes them, so it can't destroy that
+    // data by accident; it picks another id instead.
+    const taken = new Set([
+      ...apps.map((a) => a.id),
+      ...idsWithStoredKey(userId, KEYS.appConfig('')),
+      ...idsWithStoredKey(userId, KEYS.status('')),
+    ]);
     if (explicitId && taken.has(result.value.id)) return null;
     const config = { ...result.value, id: explicitId ? result.value.id : uniqueId(result.value.id, taken) };
-    // A previously deleted application with the same id may have left its
-    // edits and status behind; they must not resurface on the new one.
-    removeValue(userId, KEYS.appConfig(config.id));
-    removeValue(userId, KEYS.status(config.id));
     setJson(userId, KEYS.localApps, [...apps, config]);
     return config;
   });
 
-  if (!outcome) return c.json({ error: `An application with id "${result.value.id}" already exists.` }, 409);
+  if (!outcome) {
+    return c.json({ error: `The id "${result.value.id}" is already in use. Pick another one or leave "id" out.` }, 409);
+  }
   return c.json(effectiveApplication(userId, outcome), 201);
 });
 

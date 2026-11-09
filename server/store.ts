@@ -28,6 +28,14 @@ export function getJson<T>(userId: number, key: string): T | null {
   }
 }
 
+/** The ids stored under a key prefix, e.g. every id with an `app-config-<id>` row. */
+export function idsWithStoredKey(userId: number, prefix: string): string[] {
+  const rows = db.prepare('SELECT key FROM kv WHERE user_id = ? AND substr(key, 1, ?) = ?').all(userId, prefix.length, prefix) as {
+    key: string;
+  }[];
+  return rows.map((r) => r.key.slice(prefix.length));
+}
+
 export function setValue(userId: number, key: string, value: string): void {
   db.prepare(
     'INSERT INTO kv (user_id, key, value) VALUES (?, ?, ?) ON CONFLICT (user_id, key) DO UPDATE SET value = excluded.value',
