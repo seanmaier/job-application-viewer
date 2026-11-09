@@ -12,6 +12,7 @@ import {
   createSession,
   deleteExpiredSessions,
   deleteSession,
+  getApiTokenUser,
   getSessionUser,
   isLockedOut,
   MAX_PASSWORD_LENGTH,
@@ -22,6 +23,7 @@ import {
   type User,
 } from './auth.ts';
 import { db, transaction } from './db.ts';
+import { v1 } from './v1.ts';
 
 const PORT = Number(process.env.PORT ?? 3000);
 const STATIC_DIR = process.env.STATIC_DIR ?? './dist';
@@ -75,6 +77,21 @@ const requireUser = createMiddleware<{ Variables: { user: User } }>(async (c, ne
   if (!user) return c.json({ error: 'Not logged in.' }, 401);
   c.set('user', user);
   await next();
+});
+
+// /api/v1 also accepts `Authorization: Bearer <api token>`, so scripts can
+// call it without a password. Tokens are deliberately not accepted on the
+// routes above: they can't change the password or overwrite raw storage.
+const requireUserOrToken = createMiddleware<{ Variables: { user: User } }>(async (c, next) => {
+  const auth = c.req.header('authorization');
+  if (auth !== undefined) {
+    const match = /^Bearer\s+(\S+)$/i.exec(auth);
+    const user = match ? getApiTokenUser(match[1]) : null;
+    if (!user) return c.json({ error: 'Invalid API token.' }, 401);
+    c.set('user', user);
+    return next();
+  }
+  return requireUser(c, next);
 });
 
 app.get('/api/health', (c) => c.json({ ok: true }));
@@ -145,6 +162,9 @@ app.put('/api/data', requireUser, async (c) => {
   });
   return c.body(null, 204);
 });
+
+app.use('/api/v1/*', requireUserOrToken);
+app.route('/api/v1', v1);
 
 app.all('/api/*', (c) => c.json({ error: 'Not found.' }, 404));
 

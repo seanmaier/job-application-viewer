@@ -1,5 +1,5 @@
-import type { ApplicationConfig, ApplicationStatus, AppLanguage, AppFont, CoverLetter } from '../types';
-import { slugify } from './slug';
+import type { ApplicationConfig, ApplicationStatus, AppLanguage, AppFont, CoverLetter } from '../types.ts';
+import { slugify } from './slug.ts';
 
 const STATUSES: ApplicationStatus[] = ['drafting', 'ready', 'sent', 'interview', 'offer', 'rejected', 'withdrawn'];
 const LANGUAGES: AppLanguage[] = ['en', 'de'];
