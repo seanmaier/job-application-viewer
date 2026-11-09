@@ -1,12 +1,11 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import type { AppLanguage } from '../types';
+import { LANG_FLAGS } from '../utils/language';
 import {
   getBaseProfiles, deleteBaseProfile, applicationsUsingBaseProfile,
 } from '../utils/baseProfiles';
 import { CreateBaseProfileModal } from '../components/CreateBaseProfileModal';
 
-const LANG_FLAGS: Record<AppLanguage, string> = { en: '🇬🇧', de: '🇩🇪' };
 
 export function BaseProfilesPage() {
   const navigate = useNavigate();

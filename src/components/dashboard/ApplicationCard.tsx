@@ -3,14 +3,15 @@ import { useNavigate } from 'react-router-dom';
 import { STATUS_LABELS, STATUS_COLORS } from '../../utils/status';
 import { EditableCell } from './EditableCell';
 import { NotesDialog } from '../NotesDialog';
-import type { ApplicationConfig, ApplicationStatus } from '../../types';
-
-const LANG_FLAGS: Record<string, string> = { en: '🇬🇧', de: '🇩🇪' };
+import { LANGUAGE_LABELS } from '../../utils/language';
+import type { AppLanguage, ApplicationConfig, ApplicationStatus } from '../../types';
 
 export type DateFieldName = 'appliedDate' | 'interviewDate' | 'finalDecisionDate';
 
 const dateCellClass = '[font-family:var(--font-mono)] text-[11px] text-[color:var(--ink-3)] w-[88px] shrink-0 text-right truncate ml-2';
 const dateInputClass = '[font-family:var(--font-mono)] text-[11px] bg-[color:var(--surface)] border border-[color:var(--rule)] rounded px-1 py-0.5 w-[88px] shrink-0 text-right ml-2 text-[color:var(--ink-invert)] [color-scheme:dark]';
+
+const langBadgeClass = '[font-family:var(--font-mono)] uppercase tracking-[0.06em] leading-none shrink-0 text-[color:var(--ink-2)] border border-[color:var(--rule)] rounded px-1 py-[3px]';
 
 // Card layout (below lg): dates sit in a labelled 3-column grid instead of
 // fixed-width table cells.
@@ -20,6 +21,8 @@ const cardDateInputClass = '[font-family:var(--font-mono)] text-[12px] bg-[color
 
 interface Props {
   application: ApplicationConfig;
+  /** The effective language, including edits saved on top of the application. */
+  language: AppLanguage;
   status: ApplicationStatus;
   appliedDate?: string;
   interviewDate?: string;
@@ -31,13 +34,12 @@ interface Props {
 }
 
 export function ApplicationCard({
-  application, status, appliedDate, interviewDate, finalDecisionDate, notes, onStatusChange, onFieldChange,
+  application, language, status, appliedDate, interviewDate, finalDecisionDate, notes, onStatusChange, onFieldChange,
   onDelete,
 }: Props) {
   const navigate = useNavigate();
   const [editingStatus, setEditingStatus] = useState(false);
   const [notesOpen, setNotesOpen] = useState(false);
-  const langFlag = LANG_FLAGS[application.language ?? 'en'];
 
   const handleStatusClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -70,7 +72,7 @@ export function ApplicationCard({
         <div className="min-w-0">
           <div className="flex items-center gap-1.5">
             <span className="[font-family:var(--font-mono)] text-[13.5px] text-[color:var(--ink-invert)] truncate">{application.company}</span>
-            <span className="text-[11px] leading-none shrink-0 opacity-60" title={application.language ?? 'en'}>{langFlag}</span>
+            <span className={`${langBadgeClass} text-[10px]`} title={LANGUAGE_LABELS[language]}>{language}</span>
           </div>
           <div className="[font-family:var(--font-mono)] text-[12px] text-[color:var(--ink-2)] mt-1 line-clamp-2">{application.role}</div>
         </div>
@@ -125,7 +127,7 @@ export function ApplicationCard({
               className={cardDateClass}
               editClassName={cardDateInputClass}
               isDate
-              language={application.language}
+              language={language}
               title={`Tap to edit ${label} date`}
             />
           </div>
@@ -149,9 +151,8 @@ export function ApplicationCard({
       onClick={open}
     >
       {/* Company */}
-      <div className="flex items-center gap-1.5 w-[190px] shrink-0 min-w-0">
-        <span className="[font-family:var(--font-mono)] text-[12.5px] text-[color:var(--ink-invert)] truncate">{application.company}</span>
-        <span className="text-[10px] leading-none shrink-0 opacity-60" title={application.language ?? 'en'}>{langFlag}</span>
+      <div className="w-[190px] shrink-0 min-w-0 [font-family:var(--font-mono)] text-[12.5px] text-[color:var(--ink-invert)] truncate">
+        {application.company}
       </div>
 
       {/* Role */}
@@ -173,6 +174,11 @@ export function ApplicationCard({
             ↗
           </a>
         )}
+      </div>
+
+      {/* Language */}
+      <div className="w-[44px] shrink-0 flex items-center justify-center">
+        <span className={`${langBadgeClass} text-[9.5px]`} title={LANGUAGE_LABELS[language]}>{language}</span>
       </div>
 
       {/* Status — inline select on click */}
@@ -210,7 +216,7 @@ export function ApplicationCard({
         className={dateCellClass}
         editClassName={dateInputClass}
         isDate
-        language={application.language}
+        language={language}
         title="Click to edit applied date"
       />
 
@@ -221,7 +227,7 @@ export function ApplicationCard({
         className={dateCellClass}
         editClassName={dateInputClass}
         isDate
-        language={application.language}
+        language={language}
         title="Click to edit interview date"
       />
 
@@ -232,7 +238,7 @@ export function ApplicationCard({
         className={dateCellClass}
         editClassName={dateInputClass}
         isDate
-        language={application.language}
+        language={language}
         title="Click to edit final decision date"
       />
 

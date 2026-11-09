@@ -22,9 +22,9 @@ import {
 import {
   isFileSystemAccessSupported, getSavedExportFolder, chooseExportFolder, ensureExportFolderPermission,
 } from '../utils/exportFolder';
+import { LANGUAGE_LABELS, languageOf } from '../utils/language';
 import type { ApplicationConfig, ApplicationStatus, AppFont, CoverLetter } from '../types';
 
-const LANG_FLAGS: Record<string, string> = { en: '🇬🇧', de: '🇩🇪' };
 
 export function ApplicationPage() {
   const { id } = useParams<{ id: string }>();
@@ -55,7 +55,7 @@ function ApplicationContent({ staticApp }: { staticApp: ApplicationConfig }) {
   const clExportRef = useRef<HTMLDivElement>(null);
 
   const profile = resolveApplicationProfile(app);
-  const langFlag = LANG_FLAGS[app.language ?? 'en'];
+  const language = languageOf(app);
   const fsaSupported = isFileSystemAccessSupported();
 
   useEffect(() => {
@@ -169,7 +169,7 @@ function ApplicationContent({ staticApp }: { staticApp: ApplicationConfig }) {
         <div className="flex items-center gap-2.5 overflow-hidden min-w-0">
           <span className="text-[13px] font-semibold text-[color:var(--ink-invert)] whitespace-nowrap">{app.company}</span>
           <span className="text-[12px] text-[color:var(--ink-3)] whitespace-nowrap overflow-hidden text-ellipsis">{app.role}</span>
-          <span className="text-[13px] leading-none" title={`Language: ${app.language ?? 'en'}`}>{langFlag}</span>
+          <span className="[font-family:var(--font-mono)] text-[9.5px] uppercase tracking-[0.06em] leading-none text-[color:var(--ink-2)] border border-[color:var(--rule)] rounded px-1 py-[3px] shrink-0" title={LANGUAGE_LABELS[language]}>{language}</span>
           {isDirty && (
             <span className="[font-family:var(--font-mono)] text-[9px] tracking-[0.1em] uppercase text-[color:var(--status-sent)] border border-[color:var(--status-sent)] rounded-[10px] py-px px-[7px] opacity-80">
               edited
