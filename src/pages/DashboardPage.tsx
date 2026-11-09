@@ -1,7 +1,5 @@
 import { useState } from 'react';
 import { storage } from '../utils/storage';
-import { logoutAndReload } from '../utils/api';
-import { Link } from 'react-router-dom';
 import { applications as staticApps } from '../data/applications';
 import { getLocalApplications, deleteLocalApplication } from '../utils/localApplications';
 import { getConfigOverride, setConfigOverride } from '../utils/appStorage';
@@ -11,6 +9,8 @@ import { ApplicationCard } from '../components/dashboard/ApplicationCard';
 import type { DateFieldName } from '../components/dashboard/ApplicationCard';
 import { ImportApplicationModal } from '../components/ImportApplicationModal';
 import { BackupModal } from '../components/BackupModal';
+import { DashboardNav } from '../components/dashboard/DashboardNav';
+import { getDeletedBaseProfiles } from '../utils/baseProfiles';
 import type { ApplicationConfig, ApplicationStatus } from '../types';
 
 function readStatus(id: string, fallback: ApplicationStatus): ApplicationStatus {
@@ -162,51 +162,7 @@ export function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-[color:var(--bg)] pt-6 px-4 pb-32 max-w-[1220px] mx-auto sm:pt-12 sm:px-8">
-      <header className="mb-6 sm:mb-8 flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
-        <div className="[font-family:var(--font-mono)] text-[15px]">
-          <span className="text-[color:var(--ink-3)]">~/</span>
-          <span className="text-[color:var(--accent)]">applications</span>
-          <span className="text-[color:var(--ink-3)] animate-pulse"> _</span>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <Link
-            className="[font-family:var(--font-mono)] text-[11px] text-[color:var(--ink-3)] no-underline border border-[color:var(--rule)] px-3 py-1.5 hover:text-[color:var(--ink-2)] hover:border-[color:var(--ink-2)] transition-colors duration-150"
-            to="/profiles"
-          >
-            base profiles
-          </Link>
-          <button
-            className="[font-family:var(--font-mono)] text-[11px] text-[color:var(--ink-3)] bg-transparent border border-[color:var(--rule)] px-3 py-1.5 cursor-pointer hover:text-[color:var(--ink-2)] hover:border-[color:var(--ink-2)] transition-colors duration-150"
-            onClick={() => setImportOpen(true)}
-          >
-            import
-          </button>
-          <button
-            className="[font-family:var(--font-mono)] text-[11px] text-[color:var(--ink-3)] bg-transparent border border-[color:var(--rule)] px-3 py-1.5 cursor-pointer hover:text-[color:var(--ink-2)] hover:border-[color:var(--ink-2)] transition-colors duration-150"
-            onClick={() => setBackupOpen(true)}
-          >
-            backup
-          </button>
-          <Link
-            className="[font-family:var(--font-mono)] text-[11px] text-[color:var(--ink-3)] no-underline border border-[color:var(--rule)] px-3 py-1.5 hover:text-[color:var(--accent)] hover:border-[color:var(--accent)] transition-colors duration-150"
-            to="/application/new"
-          >
-            + new
-          </Link>
-          <Link
-            className="[font-family:var(--font-mono)] text-[11px] text-[color:var(--ink-3)] no-underline border border-[color:var(--rule)] px-3 py-1.5 hover:text-[color:var(--ink-2)] hover:border-[color:var(--ink-2)] transition-colors duration-150"
-            to="/account"
-          >
-            account
-          </Link>
-          <button
-            className="[font-family:var(--font-mono)] text-[11px] text-[color:var(--ink-3)] bg-transparent border border-[color:var(--rule)] px-3 py-1.5 cursor-pointer hover:text-[color:var(--ink-2)] hover:border-[color:var(--ink-2)] transition-colors duration-150"
-            onClick={() => void logoutAndReload()}
-          >
-            log out
-          </button>
-        </div>
-      </header>
+      <DashboardNav trashCount={getDeletedBaseProfiles().length} onImport={() => setImportOpen(true)} onBackup={() => setBackupOpen(true)} />
 
       {/* Search + filters */}
       <div className="flex flex-wrap items-center gap-2 mb-4">
