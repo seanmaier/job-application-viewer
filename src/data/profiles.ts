@@ -19,6 +19,7 @@ function loadProfile(lang: AppLanguage): Profile {
 const profiles: Record<AppLanguage, Profile> = {
   en: loadProfile('en'),
   de: loadProfile('de'),
+  sv: loadProfile('sv'),
 };
 
 export function getProfile(language?: AppLanguage): Profile {

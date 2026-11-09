@@ -26,6 +26,11 @@ const LABELS = {
     recipientFallback: 'Personalabteilung',
     subjectPrefix: 'Betreff:',
   },
+  sv: {
+    contact: 'Kontakt',
+    recipientFallback: 'Rekryteringsteamet',
+    subjectPrefix: 'Ang.:',
+  },
 } as const;
 
 export function CoverLetterDocument({ profile, application, paginate = false }: Props) {

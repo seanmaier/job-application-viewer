@@ -4,7 +4,7 @@ import { applications } from '../data/applications';
 import { getAllLocalApplications } from '../utils/localApplications';
 import { TrashedNotice } from '../components/TrashedNotice';
 import type { ApplicationConfig, AppFont, AppLanguage, CoverLetter, SkillGroup } from '../types';
-import { LANG_FLAGS } from '../utils/language';
+import { LANG_FLAGS, LANGUAGE_LABELS, LANGUAGES } from '../utils/language';
 import { ALL_FONTS, FONT_LABELS } from '../utils/fonts';
 import { getProfile } from '../data/profiles';
 import { getBaseProfiles } from '../utils/baseProfiles';
@@ -235,8 +235,11 @@ function EditContent({ staticApp, onReload }: { staticApp: ApplicationConfig; on
                 </optgroup>
               )}
               <optgroup label="Language defaults">
-                <option value={`${LANGUAGE_DEFAULT_PREFIX}en`}>{LANG_FLAGS.en} English default</option>
-                <option value={`${LANGUAGE_DEFAULT_PREFIX}de`}>{LANG_FLAGS.de} Deutsch default</option>
+                {LANGUAGES.map((lang) => (
+                  <option key={lang} value={`${LANGUAGE_DEFAULT_PREFIX}${lang}`}>
+                    {LANG_FLAGS[lang]} {LANGUAGE_LABELS[lang]} default
+                  </option>
+                ))}
               </optgroup>
             </select>
             <span className={nafOptional}>The application's language follows the selected profile.</span>

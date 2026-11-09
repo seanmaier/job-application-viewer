@@ -4,4 +4,5 @@ import type { AppLanguage } from '../types';
 export const DEFAULT_CLOSINGS: Record<AppLanguage, string> = {
   en: 'Sincerely,',
   de: 'Mit freundlichen Grüßen',
+  sv: 'Med vänliga hälsningar',
 };

@@ -3,9 +3,9 @@ import type { AppLanguage } from '../types';
 export type PrintTarget = 'both' | 'cv' | 'coverLetter';
 
 const PREFIXES: Record<PrintTarget, Record<AppLanguage, string>> = {
-  cv: { en: 'cv', de: 'lebenslauf' },
-  coverLetter: { en: 'cover-letter', de: 'anschreiben' },
-  both: { en: 'application-documents', de: 'Bewerbungsunterlagen' },
+  cv: { en: 'cv', de: 'lebenslauf', sv: 'cv' },
+  coverLetter: { en: 'cover-letter', de: 'anschreiben', sv: 'personligt-brev' },
+  both: { en: 'application-documents', de: 'Bewerbungsunterlagen', sv: 'ansokningshandlingar' },
 };
 
 function slugify(value: string): string {

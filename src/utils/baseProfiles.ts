@@ -6,10 +6,9 @@ import { getLocalApplications } from './localApplications';
 import { getConfigOverride } from './appStorage';
 import { slugify, uniqueId } from './slug';
 import { TRASH_RETENTION_DAYS } from './trash';
+import { LANGUAGES, LANGUAGE_LABELS } from './language';
 
 const KEY = 'base-profiles';
-
-const LANGUAGE_LABELS: Record<AppLanguage, string> = { en: 'English', de: 'Deutsch' };
 
 function readList(): BaseProfile[] | null {
   try {
@@ -29,7 +28,7 @@ function writeList(list: BaseProfile[]): void {
 // `getProfile`) into one named base profile per language, so existing users
 // keep their edits instead of losing them when this feature ships.
 function seedFromLegacyProfiles(): BaseProfile[] {
-  const seeded: BaseProfile[] = (['en', 'de'] as AppLanguage[]).map((language) => ({
+  const seeded: BaseProfile[] = LANGUAGES.map((language) => ({
     id: `default-${language}`,
     name: `${LANGUAGE_LABELS[language]} (default)`,
     language,

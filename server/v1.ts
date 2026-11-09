@@ -7,7 +7,7 @@ import type { AppLanguage, ApplicationConfig, ApplicationStatus, BaseProfile, Sk
 import { validateApplicationConfig } from '../src/utils/parseApplicationConfig.ts';
 import { validateProfile } from '../src/utils/parseProfile.ts';
 import { validateSkillGroups } from '../src/utils/parseSkillGroups.ts';
-import { isAppLanguage, LANGUAGES, languageOf } from '../src/utils/language.ts';
+import { isAppLanguage, LANGUAGE_ERROR, LANGUAGES, languageOf } from '../src/utils/language.ts';
 import { slugify, uniqueId } from '../src/utils/slug.ts';
 import { purgeDate } from '../src/utils/trash.ts';
 import type { User } from './auth.ts';
@@ -54,7 +54,7 @@ function listView<T extends { deletedAt?: string }>(c: Context, items: T[]) {
 
 v1.get('/me', (c) => c.json(c.get('user')));
 
-// Optional ?language=de|en narrows the list; applications without a stored
+// Optional ?language=en|de|sv narrows the list; applications without a stored
 // language count as English, like in the app.
 v1.get('/applications', (c) => {
   const userId = c.get('user').id;
@@ -214,7 +214,7 @@ v1.patch('/applications/:id', async (c) => {
 function validateBaseProfile(input: Body): Validated<Omit<BaseProfile, 'id'>> {
   const errors: string[] = [];
   if (typeof input.name !== 'string' || !input.name.trim()) errors.push('"name" is required and must be a non-empty string.');
-  if (!LANGUAGES.includes(input.language as AppLanguage)) errors.push('"language" must be "en" or "de".');
+  if (!isAppLanguage(input.language)) errors.push(LANGUAGE_ERROR);
   const profile = validateProfile(input.profile);
   if (!profile.ok) errors.push(...profile.errors.map((e) => `profile: ${e}`));
   if (errors.length || !profile.ok) return { ok: false, errors };

@@ -10,7 +10,7 @@ data, and use it to manage your own applications.
 ## Features
 
 - Dashboard listing all applications with status tracking
-- Print-optimized CV and cover letter documents (clean 2-page PDF export)
+- Print-optimized CV and cover letter documents in English, German or Swedish (clean 2-page PDF export)
 - Plain-text export for pasting into LLMs or application forms
 - Form-based and raw-JSON editing for each application
 - Per-user login; all edits are stored on the server, not in the browser
@@ -39,6 +39,7 @@ never committed. Set it up from the provided examples:
 ```bash
 cp private/profiles/en.example.json private/profiles/en.json
 cp private/profiles/de.example.json private/profiles/de.json
+cp private/profiles/sv.example.json private/profiles/sv.json   # optional, Swedish
 cp private/applications/example.json private/applications/<your-application-id>.json
 ```
 
@@ -101,7 +102,7 @@ Tokens work only here, not on login, password, token or raw-data routes.
 | Method | Path | |
 |--------|------|-|
 | GET | `/api/v1/me` | the token's user |
-| GET | `/api/v1/applications`, `/api/v1/applications/:id` | applications as the app shows them (saved edits and status merged in); the list takes `?language=en|de`, leaves out trashed ones, and `?trash=true` lists only those |
+| GET | `/api/v1/applications`, `/api/v1/applications/:id` | applications as the app shows them (saved edits and status merged in); the list takes `?language=en|de|sv`, leaves out trashed ones, and `?trash=true` lists only those |
 | POST | `/api/v1/applications` | create; always starts as `drafting` |
 | PATCH | `/api/v1/applications/:id` | update given fields, `null` removes one (not while trashed) |
 | GET | `/api/v1/base-profiles`, `/api/v1/base-profiles/:id` | base profiles; the list leaves out trashed ones, `?trash=true` lists only those (with `purgesAt`) |
