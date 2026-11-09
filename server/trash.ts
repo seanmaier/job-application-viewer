@@ -1,33 +1,53 @@
-import type { BaseProfile } from '../src/types.ts';
 import { isPurgeDue } from '../src/utils/trash.ts';
 import { db, transaction } from './db.ts';
-import { KEYS, setJson } from './store.ts';
+import { KEYS, removeValue, setJson } from './store.ts';
+
+interface Trashable {
+  id: string;
+  deletedAt?: string;
+}
 
 /**
- * Removes trashed base profiles whose retention period has passed, for every
- * user. Applications still pointing at one fall back to the language default
- * profile, as the trash and delete dialogs warn. Returns how many were removed.
+ * Removes the entries of one stored list (local-apps or base-profiles) whose
+ * time in the trash is up, for every user, and returns them per user.
  */
-export function purgeExpiredBaseProfiles(now: number = Date.now()): number {
-  return transaction(() => {
-    const rows = db.prepare('SELECT user_id, value FROM kv WHERE key = ?').all(KEYS.baseProfiles) as {
-      user_id: number;
-      value: string;
-    }[];
-    let removed = 0;
-    for (const row of rows) {
-      let list: unknown;
-      try {
-        list = JSON.parse(row.value);
-      } catch {
-        continue; // Leave a corrupt value for the user to notice rather than erasing it.
-      }
-      if (!Array.isArray(list)) continue;
-      const kept = (list as BaseProfile[]).filter((p) => !(p.deletedAt && isPurgeDue(p.deletedAt, now)));
-      if (kept.length === list.length) continue;
-      removed += list.length - kept.length;
-      setJson(row.user_id, KEYS.baseProfiles, kept);
+function purgeList(key: string, now: number): { userId: number; purged: Trashable[] }[] {
+  const rows = db.prepare('SELECT user_id, value FROM kv WHERE key = ?').all(key) as { user_id: number; value: string }[];
+  const result: { userId: number; purged: Trashable[] }[] = [];
+  for (const row of rows) {
+    let list: unknown;
+    try {
+      list = JSON.parse(row.value);
+    } catch {
+      continue; // Leave a corrupt value for the user to notice rather than erasing it.
     }
-    return removed;
+    if (!Array.isArray(list)) continue;
+    const due = (item: Trashable) => !!item.deletedAt && isPurgeDue(item.deletedAt, now);
+    const purged = (list as Trashable[]).filter(due);
+    if (!purged.length) continue;
+    setJson(row.user_id, key, (list as Trashable[]).filter((item) => !due(item)));
+    result.push({ userId: row.user_id, purged });
+  }
+  return result;
+}
+
+/**
+ * Permanently removes trashed applications and base profiles whose retention
+ * period has passed. A purged application takes its saved edits and status
+ * with it; applications still pointing at a purged base profile fall back to
+ * the language default profile, as the app warns. Returns the counts.
+ */
+export function purgeTrash(now: number = Date.now()): { applications: number; baseProfiles: number } {
+  return transaction(() => {
+    const apps = purgeList(KEYS.localApps, now);
+    for (const { userId, purged } of apps) {
+      for (const app of purged) {
+        removeValue(userId, KEYS.appConfig(app.id));
+        removeValue(userId, KEYS.status(app.id));
+      }
+    }
+    const profiles = purgeList(KEYS.baseProfiles, now);
+    const count = (r: { purged: Trashable[] }[]) => r.reduce((n, { purged }) => n + purged.length, 0);
+    return { applications: count(apps), baseProfiles: count(profiles) };
   });
 }

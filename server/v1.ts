@@ -23,11 +23,12 @@ function localApps(userId: number): ApplicationConfig[] {
 
 // Mirrors what the app renders: the stored application, overlaid with the
 // edits saved for it (useApplication) and its separately kept status
-// (useApplicationStatus).
+// (useApplicationStatus). Whether it's in the trash is only ever recorded on
+// the stored entry.
 function effectiveApplication(userId: number, base: ApplicationConfig): ApplicationConfig {
   const override = getJson<StoredConfig>(userId, KEYS.appConfig(base.id));
   const status = getValue(userId, KEYS.status(base.id)) as ApplicationStatus | null;
-  return { ...base, ...override, id: base.id, status: status ?? base.status };
+  return { ...base, ...override, id: base.id, status: status ?? base.status, deletedAt: base.deletedAt };
 }
 
 function findApplication(userId: number, id: string): ApplicationConfig | null {
@@ -39,11 +40,22 @@ function baseProfiles(userId: number): BaseProfile[] | null {
   return getJson<BaseProfile[]>(userId, KEYS.baseProfiles);
 }
 
+/**
+ * Lists leave trashed items out; with `?trash=true` they list only those,
+ * each with the time it will be purged.
+ */
+function listView<T extends { deletedAt?: string }>(c: Context, items: T[]) {
+  if (c.req.query('trash') !== 'true') return c.json(items.filter((i) => !i.deletedAt));
+  return c.json(
+    items.filter((i) => i.deletedAt).map((i) => ({ ...i, purgesAt: purgeDate(i.deletedAt!).toISOString() })),
+  );
+}
+
 v1.get('/me', (c) => c.json(c.get('user')));
 
 v1.get('/applications', (c) => {
   const userId = c.get('user').id;
-  return c.json(localApps(userId).map((a) => effectiveApplication(userId, a)));
+  return listView(c, localApps(userId).map((a) => effectiveApplication(userId, a)));
 });
 
 v1.get('/applications/:id', (c) => {
@@ -52,15 +64,8 @@ v1.get('/applications/:id', (c) => {
 });
 
 // Empty until the app has been opened once: the frontend seeds the list from
-// the legacy per-language profiles on first use. Trashed profiles are left
-// out; `?trash=true` lists only those, with the time they'll be purged.
-v1.get('/base-profiles', (c) => {
-  const list = baseProfiles(c.get('user').id) ?? [];
-  if (c.req.query('trash') !== 'true') return c.json(list.filter((p) => !p.deletedAt));
-  return c.json(
-    list.filter((p) => p.deletedAt).map((p) => ({ ...p, purgesAt: purgeDate(p.deletedAt!).toISOString() })),
-  );
-});
+// the legacy per-language profiles on first use.
+v1.get('/base-profiles', (c) => listView(c, baseProfiles(c.get('user').id) ?? []));
 
 v1.get('/base-profiles/:id', (c) => {
   const profile = baseProfiles(c.get('user').id)?.find((p) => p.id === c.req.param('id'));
@@ -71,6 +76,7 @@ v1.get('/base-profiles/:id', (c) => {
 // Every write is one read-modify-write inside a transaction, so concurrent
 // API calls can't lose each other's changes. Nothing here deletes for good:
 // base profiles only go to the trash (see below), applications not at all.
+// Items in the trash can't be changed until they're restored.
 
 const APPLICATION_FIELDS = [
   'id', 'company', 'role', 'status', 'language', 'font', 'appliedDate', 'interviewDate', 'finalDecisionDate',
@@ -168,9 +174,10 @@ v1.patch('/applications/:id', async (c) => {
   const userId = c.get('user').id;
   const profileError = baseProfileIdError(userId, body);
   if (profileError) return invalid(c, [profileError]);
-  const outcome = transaction((): Validated<null> | null => {
+  const outcome = transaction((): Validated<null> | 'trashed' | null => {
     const current = findApplication(userId, id);
     if (!current) return null;
+    if (current.deletedAt) return 'trashed';
     const merged: Body = { ...current };
     for (const [key, value] of Object.entries(body)) {
       if (value === null) delete merged[key];
@@ -186,6 +193,7 @@ v1.patch('/applications/:id', async (c) => {
   });
 
   if (!outcome) return c.json({ error: 'No such application.' }, 404);
+  if (outcome === 'trashed') return c.json({ error: 'This application is in the trash. Restore it in the app first.' }, 409);
   if (!outcome.ok) return invalid(c, outcome.errors);
   return c.json(findApplication(userId, id));
 });
@@ -261,16 +269,16 @@ v1.put('/base-profiles/:id', async (c) => {
 });
 
 // ---- Trash ----------------------------------------------------------------
-// The API only soft-deletes: the profile moves to the trash, where the user
-// can restore it or delete it for good in the app, and the server purges it
-// after TRASH_RETENTION_DAYS. Permanent deletion is deliberately left to the
-// user in the app.
+// The API only soft-deletes base profiles: they move to the trash, where the
+// user can restore them or delete them for good in the app, and the server
+// purges them after TRASH_RETENTION_DAYS. Applications are trashed only by
+// the user in the app; the API just leaves trashed ones out of its lists.
 
-/** Applications (with their saved edits) that render with this base profile. */
+/** Applications not in the trash (with their saved edits) that render with this base profile. */
 function applicationsUsing(userId: number, profileId: string): ApplicationConfig[] {
   return localApps(userId)
     .map((a) => effectiveApplication(userId, a))
-    .filter((a) => a.baseProfileId === profileId);
+    .filter((a) => !a.deletedAt && a.baseProfileId === profileId);
 }
 
 // Refuses profiles that applications still use: once purged, those would
