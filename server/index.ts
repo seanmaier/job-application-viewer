@@ -36,7 +36,15 @@ const COOKIE = 'session';
 
 const app = new Hono<{ Variables: { user: User } }>();
 
-app.use('/api/*', csrf());
+// CSRF only threatens cookie auth. A bearer-token request to /api/v1 can't be
+// forged cross-site: browsers never add an Authorization header on their own,
+// and a page setting one triggers a CORS preflight this server never allows.
+// Without this, body-less script calls (DELETE, POST …/restore) count as
+// text/plain form posts and are refused.
+const csrfCheck = csrf();
+app.use('/api/*', (c, next) =>
+  c.req.path.startsWith('/api/v1/') && c.req.header('authorization') !== undefined ? next() : csrfCheck(c, next),
+);
 app.use('/api/*', bodyLimit({ maxSize: 10 * 1024 * 1024 }));
 
 function startSession(c: Context, userId: number) {
