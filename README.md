@@ -17,7 +17,7 @@ data, and use it to manage your own applications.
 - Users change their own password and manage their API tokens under **account** on the dashboard
 - Your personal data (profile, cover letters) is kept out of git entirely
 - Token-authenticated `/api/v1` and Claude Code skills for AI-assisted applications
-- Deleted base profiles go to a trash for 7 days (restore or delete permanently), then the server purges them
+- Deleted applications and base profiles go to a trash for 7 days (restore or delete permanently), then the server purges them
 
 ## Tech stack
 
@@ -101,9 +101,9 @@ Tokens work only here, not on login, password, token or raw-data routes.
 | Method | Path | |
 |--------|------|-|
 | GET | `/api/v1/me` | the token's user |
-| GET | `/api/v1/applications`, `/api/v1/applications/:id` | applications as the app shows them (saved edits and status merged in) |
+| GET | `/api/v1/applications`, `/api/v1/applications/:id` | applications as the app shows them (saved edits and status merged in); the list leaves out trashed ones, `?trash=true` lists only those |
 | POST | `/api/v1/applications` | create; always starts as `drafting` |
-| PATCH | `/api/v1/applications/:id` | update given fields, `null` removes one |
+| PATCH | `/api/v1/applications/:id` | update given fields, `null` removes one (not while trashed) |
 | GET | `/api/v1/base-profiles`, `/api/v1/base-profiles/:id` | base profiles; the list leaves out trashed ones, `?trash=true` lists only those (with `purgesAt`) |
 | POST | `/api/v1/base-profiles` | create (`name`, `language`, `profile`, optional `id`) |
 | PUT | `/api/v1/base-profiles/:id` | replace name, language and profile (not while trashed) |
@@ -112,7 +112,7 @@ Tokens work only here, not on login, password, token or raw-data routes.
 
 Bodies are validated with the same parsers the app uses; unknown fields are
 rejected. Nothing is deleted for good through the API: base profiles only go
-to the trash, applications can't be deleted at all.
+to the trash; applications are only trashed by you in the app.
 Only applications stored on the server are visible, not the JSON files in
 `private/applications/`. Open tabs reload their data when you switch back
 to them, so they don't overwrite what the API changed.

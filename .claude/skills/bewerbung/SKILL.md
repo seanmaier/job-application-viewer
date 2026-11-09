@@ -28,7 +28,8 @@ node scripts/api.ts POST base-profiles <datei.json>
 node scripts/api.ts PUT base-profiles/<id> <datei.json>
 node scripts/api.ts DELETE base-profiles/<id>               # nur Papierkorb (Soft Delete)
 node scripts/api.ts POST base-profiles/<id>/restore         # aus dem Papierkorb holen
-node scripts/api.ts GET "base-profiles?trash=true"          # Inhalt des Papierkorbs
+node scripts/api.ts GET "base-profiles?trash=true"          # Basis-Profile im Papierkorb
+node scripts/api.ts GET "applications?trash=true"           # Bewerbungen im Papierkorb
 ```
 
 - Pfade **ohne** führenden Slash (Git Bash würde `/applications` umschreiben).
@@ -40,6 +41,8 @@ node scripts/api.ts GET "base-profiles?trash=true"          # Inhalt des Papierk
   featuredProjectIds, skillGroupsOverride, coverLetter` (siehe `src/types.ts`).
   `PATCH` überschreibt nur die übergebenen Felder; `null` entfernt ein optionales Feld.
 - Neue Bewerbungen bekommen serverseitig immer den Status `drafting`.
+- Listen enthalten nichts aus dem Papierkorb. Dinge im Papierkorb lassen sich nicht ändern
+  (`409`). Bewerbungen löscht nur der Nutzer in der App; dafür gibt es keinen API-Aufruf.
 
 ## Vorbereitung
 
