@@ -5,7 +5,7 @@ import type {
   Experience, Project, HumanLanguage,
 } from '../types';
 import {
-  getBaseProfile, saveBaseProfile, deleteBaseProfile, applicationsUsingBaseProfile,
+  getBaseProfile, saveBaseProfile, trashBaseProfile, trashConfirmMessage,
 } from '../utils/baseProfiles';
 import { CVDocument } from '../components/cv/CVDocument';
 import { FitToWidth } from '../components/FitToWidth';
@@ -79,6 +79,16 @@ export function BaseProfileEditPage() {
     );
   }
 
+  // Saving would silently take it out of the trash, so it has to be restored first.
+  if (stored.deletedAt) {
+    return (
+      <div className="py-20 px-10 [font-family:var(--font-mono)] text-[color:var(--ink-2)] flex flex-col gap-4">
+        <p>"{stored.name}" is in the trash. Restore it there to edit it again.</p>
+        <Link className="text-[color:var(--accent)]" to="/trash">→ Go to trash</Link>
+      </div>
+    );
+  }
+
   return <BaseProfileEditContent stored={stored} />;
 }
 
@@ -130,14 +140,8 @@ function BaseProfileEditContent({ stored }: { stored: BaseProfile }) {
   };
 
   const handleDelete = () => {
-    const usedBy = applicationsUsingBaseProfile(stored.id);
-    const message = usedBy.length > 0
-      ? `"${stored.name}" is used by ${usedBy.length} application${usedBy.length === 1 ? '' : 's'} ` +
-        `(${usedBy.map((a) => a.company).join(', ')}). Deleting it will fall them back to the ` +
-        `language default profile. Delete anyway?`
-      : `Delete base profile "${stored.name}"? This cannot be undone.`;
-    if (!confirm(message)) return;
-    deleteBaseProfile(stored.id);
+    if (!confirm(trashConfirmMessage(stored))) return;
+    trashBaseProfile(stored.id);
     navigate('/profiles');
   };
 

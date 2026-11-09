@@ -1,6 +1,6 @@
 import type { ApplicationConfig, ApplicationStatus, AppLanguage, BaseProfile, Profile } from '../types';
 import { storage } from './storage';
-import { getBaseProfiles } from './baseProfiles';
+import { getAllBaseProfiles } from './baseProfiles';
 
 const LOCAL_APPS_KEY = 'local-apps';
 const STATUS_PREFIX = 'status-';
@@ -48,7 +48,8 @@ export function exportAllData(): DataBackup {
 
   // Goes through getBaseProfiles so an account that never opened the profiles
   // page still exports the profiles it would show (seeded from the legacy ones).
-  const baseProfiles = getBaseProfiles();
+  // Trashed profiles are included, so restoring keeps them restorable.
+  const baseProfiles = getAllBaseProfiles();
 
   return { version: 2, exportedAt: new Date().toISOString(), localApps, statuses, configOverrides, profileOverrides, baseProfiles };
 }

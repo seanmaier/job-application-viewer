@@ -4,6 +4,7 @@ import { getProfile } from '../data/profiles';
 import { applications } from '../data/applications';
 import { getLocalApplications } from './localApplications';
 import { slugify, uniqueId } from './slug';
+import { TRASH_RETENTION_DAYS } from './trash';
 
 const KEY = 'base-profiles';
 
@@ -37,25 +38,64 @@ function seedFromLegacyProfiles(): BaseProfile[] {
   return seeded;
 }
 
-export function getBaseProfiles(): BaseProfile[] {
+/** Every stored base profile, including the ones in the trash. Writes must start from this list. */
+export function getAllBaseProfiles(): BaseProfile[] {
   return readList() ?? seedFromLegacyProfiles();
 }
 
+/** The base profiles to offer and list: everything not in the trash. */
+export function getBaseProfiles(): BaseProfile[] {
+  return getAllBaseProfiles().filter((p) => !p.deletedAt);
+}
+
+export function getDeletedBaseProfiles(): BaseProfile[] {
+  return getAllBaseProfiles().filter((p) => p.deletedAt);
+}
+
+// Includes trashed profiles, so applications that use one keep rendering it
+// until it's purged.
 export function getBaseProfile(id: string): BaseProfile | undefined {
-  return getBaseProfiles().find((p) => p.id === id);
+  return getAllBaseProfiles().find((p) => p.id === id);
 }
 
 export function saveBaseProfile(baseProfile: BaseProfile): void {
-  const rest = getBaseProfiles().filter((p) => p.id !== baseProfile.id);
+  const rest = getAllBaseProfiles().filter((p) => p.id !== baseProfile.id);
   writeList([...rest, baseProfile]);
 }
 
-export function deleteBaseProfile(id: string): void {
-  writeList(getBaseProfiles().filter((p) => p.id !== id));
+function updateBaseProfile(id: string, change: (p: BaseProfile) => BaseProfile): void {
+  writeList(getAllBaseProfiles().map((p) => (p.id === id ? change(p) : p)));
 }
 
+/** Soft delete: moves the profile to the trash, from which the server purges it after the retention period. */
+export function trashBaseProfile(id: string): void {
+  updateBaseProfile(id, (p) => ({ ...p, deletedAt: new Date().toISOString() }));
+}
+
+/** The confirmation shown before moving a profile to the trash, warning about applications that use it. */
+export function trashConfirmMessage(profile: BaseProfile): string {
+  const usedBy = applicationsUsingBaseProfile(profile.id);
+  const retention = `${TRASH_RETENTION_DAYS} days`;
+  if (usedBy.length === 0) return `Move "${profile.name}" to the trash? You can restore it there for ${retention}.`;
+  return (
+    `Move "${profile.name}" to the trash? It's used by ${usedBy.length} application${usedBy.length === 1 ? '' : 's'} ` +
+    `(${usedBy.map((a) => a.company).join(', ')}). They keep using it while it's in the trash and fall back to ` +
+    `the language default profile once it's deleted for good after ${retention}.`
+  );
+}
+
+export function restoreBaseProfile(id: string): void {
+  updateBaseProfile(id, ({ deletedAt: _deletedAt, ...rest }) => rest);
+}
+
+/** Hard delete: removes the profile right away, without going through the trash. */
+export function deleteBaseProfilePermanently(id: string): void {
+  writeList(getAllBaseProfiles().filter((p) => p.id !== id));
+}
+
+// Trashed profiles keep their id until purged, so a restore never collides.
 export function uniqueBaseProfileId(name: string): string {
-  return uniqueId(slugify(name) || 'profile', new Set(getBaseProfiles().map((p) => p.id)));
+  return uniqueId(slugify(name) || 'profile', new Set(getAllBaseProfiles().map((p) => p.id)));
 }
 
 export function blankProfile(language: AppLanguage): Profile {
