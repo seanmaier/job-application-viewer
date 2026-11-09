@@ -18,6 +18,8 @@ dist-ssr
 !/private/applications/example.json
 /private/profiles/*.json
 !/private/profiles/*.example.json
+/private/knowledge/*
+!/private/knowledge/*.example.md
 
 # Editor directories and files
 .vscode/*
@@ -33,3 +35,5 @@ dist-ssr
 # Local SQLite database from `npm run dev:server`
 /data
 .env
+# API token for scripts/api.ts and the assistant skills
+.env.assistant
