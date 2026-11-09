@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { TrashedNotice } from '../components/TrashedNotice';
 import { useParams, Link, useNavigate, useBlocker } from 'react-router-dom';
 import type {
   ApplicationConfig, BaseProfile, Profile,
@@ -79,15 +80,7 @@ export function BaseProfileEditPage() {
     );
   }
 
-  // Saving would silently take it out of the trash, so it has to be restored first.
-  if (stored.deletedAt) {
-    return (
-      <div className="py-20 px-10 [font-family:var(--font-mono)] text-[color:var(--ink-2)] flex flex-col gap-4">
-        <p>"{stored.name}" is in the trash. Restore it there to edit it again.</p>
-        <Link className="text-[color:var(--accent)]" to="/trash">→ Go to trash</Link>
-      </div>
-    );
-  }
+  if (stored.deletedAt) return <TrashedNotice name={stored.name} />;
 
   return <BaseProfileEditContent stored={stored} />;
 }

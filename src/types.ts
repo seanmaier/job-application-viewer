@@ -106,4 +106,9 @@ export interface ApplicationConfig {
   featuredProjectIds?: string[];
   skillGroupsOverride?: SkillGroup[];
   coverLetter?: CoverLetter;
+  /**
+   * Set (ISO timestamp) on the stored entry when the application is moved to
+   * the trash; the server purges it after TRASH_RETENTION_DAYS.
+   */
+  deletedAt?: string;
 }

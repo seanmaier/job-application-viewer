@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { storage } from '../utils/storage';
 import { applications as staticApps } from '../data/applications';
-import { getLocalApplications, deleteLocalApplication } from '../utils/localApplications';
+import { getLocalApplications, trashLocalApplication } from '../utils/localApplications';
+import { countTrashed } from '../utils/trashCount';
+import { TRASH_RETENTION_DAYS } from '../utils/trash';
 import { getConfigOverride, setConfigOverride } from '../utils/appStorage';
 import { autoAppliedDateFor, autoInterviewDateFor, autoFinalDecisionDateFor } from '../utils/autoStatusDates';
 import { STATUS_LABELS } from '../utils/status';
@@ -10,7 +12,6 @@ import type { DateFieldName } from '../components/dashboard/ApplicationCard';
 import { ImportApplicationModal } from '../components/ImportApplicationModal';
 import { BackupModal } from '../components/BackupModal';
 import { DashboardNav } from '../components/dashboard/DashboardNav';
-import { getDeletedBaseProfiles } from '../utils/baseProfiles';
 import type { ApplicationConfig, ApplicationStatus } from '../types';
 
 function readStatus(id: string, fallback: ApplicationStatus): ApplicationStatus {
@@ -117,10 +118,14 @@ export function DashboardPage() {
     }
   };
 
-  const handleDelete = (id: string) => {
-    if (!confirm('Delete this application?')) return;
-    deleteLocalApplication(id);
+  const [trashSize, setTrashSize] = useState(countTrashed);
+
+  const handleDelete = (app: ApplicationConfig) => {
+    const message = `Move "${app.company} – ${app.role}" to the trash? You can restore it there for ${TRASH_RETENTION_DAYS} days.`;
+    if (!confirm(message)) return;
+    trashLocalApplication(app.id);
     setLocalApps(getLocalApplications());
+    setTrashSize(countTrashed());
   };
 
   const hasActiveFilter = !!(search || statusFilter);
@@ -162,7 +167,7 @@ export function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-[color:var(--bg)] pt-6 px-4 pb-32 max-w-[1220px] mx-auto sm:pt-12 sm:px-8">
-      <DashboardNav trashCount={getDeletedBaseProfiles().length} onImport={() => setImportOpen(true)} onBackup={() => setBackupOpen(true)} />
+      <DashboardNav trashCount={trashSize} onImport={() => setImportOpen(true)} onBackup={() => setBackupOpen(true)} />
 
       {/* Search + filters */}
       <div className="flex flex-wrap items-center gap-2 mb-4">
@@ -286,7 +291,7 @@ export function DashboardPage() {
                 notes={notes[app.id]}
                 onStatusChange={(s) => handleStatusChange(app.id, s)}
                 onFieldChange={(field, value) => handleFieldChange(app.id, field, value)}
-                onDelete={isLocal ? () => handleDelete(app.id) : undefined}
+                onDelete={isLocal ? () => handleDelete(app) : undefined}
               />
             );
           })}

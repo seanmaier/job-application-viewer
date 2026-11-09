@@ -1,9 +1,11 @@
 import type { ApplicationConfig } from '../types';
 import { storage } from './storage';
+import { clearConfigOverride } from './appStorage';
 
 const KEY = 'local-apps';
 
-export function getLocalApplications(): ApplicationConfig[] {
+/** Every stored application, including the ones in the trash. Writes must start from this list. */
+export function getAllLocalApplications(): ApplicationConfig[] {
   try {
     const raw = storage.getItem(KEY);
     return raw ? (JSON.parse(raw) as ApplicationConfig[]) : [];
@@ -12,16 +14,44 @@ export function getLocalApplications(): ApplicationConfig[] {
   }
 }
 
-export function saveLocalApplication(app: ApplicationConfig): void {
-  const rest = getLocalApplications().filter((a) => a.id !== app.id);
-  storage.setItem(KEY, JSON.stringify([...rest, app]));
+/** The applications to show and work with: everything not in the trash. */
+export function getLocalApplications(): ApplicationConfig[] {
+  return getAllLocalApplications().filter((a) => !a.deletedAt);
 }
 
-export function deleteLocalApplication(id: string): void {
-  const rest = getLocalApplications().filter((a) => a.id !== id);
-  storage.setItem(KEY, JSON.stringify(rest));
+export function getDeletedLocalApplications(): ApplicationConfig[] {
+  return getAllLocalApplications().filter((a) => a.deletedAt);
+}
+
+function writeList(list: ApplicationConfig[]): void {
+  storage.setItem(KEY, JSON.stringify(list));
+}
+
+export function saveLocalApplication(app: ApplicationConfig): void {
+  const rest = getAllLocalApplications().filter((a) => a.id !== app.id);
+  writeList([...rest, app]);
+}
+
+function updateLocalApplication(id: string, change: (a: ApplicationConfig) => ApplicationConfig): void {
+  writeList(getAllLocalApplications().map((a) => (a.id === id ? change(a) : a)));
+}
+
+/** Soft delete: moves the application to the trash, from which the server purges it after the retention period. */
+export function trashLocalApplication(id: string): void {
+  updateLocalApplication(id, (a) => ({ ...a, deletedAt: new Date().toISOString() }));
+}
+
+export function restoreLocalApplication(id: string): void {
+  updateLocalApplication(id, ({ deletedAt: _deletedAt, ...rest }) => rest);
+}
+
+/** Hard delete: removes the application with its saved edits and status right away. */
+export function deleteLocalApplicationPermanently(id: string): void {
+  writeList(getAllLocalApplications().filter((a) => a.id !== id));
+  clearConfigOverride(id);
+  storage.removeItem(`status-${id}`);
 }
 
 export function isLocalApplication(id: string): boolean {
-  return getLocalApplications().some((a) => a.id === id);
+  return getAllLocalApplications().some((a) => a.id === id);
 }

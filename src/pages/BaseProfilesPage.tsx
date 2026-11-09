@@ -2,8 +2,9 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import type { AppLanguage } from '../types';
 import {
-  getBaseProfiles, getDeletedBaseProfiles, trashBaseProfile, trashConfirmMessage, applicationsUsingBaseProfile,
+  getBaseProfiles, trashBaseProfile, trashConfirmMessage, applicationsUsingBaseProfile,
 } from '../utils/baseProfiles';
+import { countTrashed } from '../utils/trashCount';
 import type { BaseProfile } from '../types';
 import { CreateBaseProfileModal } from '../components/CreateBaseProfileModal';
 
@@ -12,14 +13,14 @@ const LANG_FLAGS: Record<AppLanguage, string> = { en: '🇬🇧', de: '🇩🇪'
 export function BaseProfilesPage() {
   const navigate = useNavigate();
   const [profiles, setProfiles] = useState(() => getBaseProfiles());
-  const [trashCount, setTrashCount] = useState(() => getDeletedBaseProfiles().length);
+  const [trashCount, setTrashCount] = useState(countTrashed);
   const [createOpen, setCreateOpen] = useState(false);
 
   const handleTrash = (profile: BaseProfile) => {
     if (!confirm(trashConfirmMessage(profile))) return;
     trashBaseProfile(profile.id);
     setProfiles(getBaseProfiles());
-    setTrashCount(getDeletedBaseProfiles().length);
+    setTrashCount(countTrashed());
   };
 
   return (

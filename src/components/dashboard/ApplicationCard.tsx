@@ -92,8 +92,8 @@ export function ApplicationCard({
             <button
               className="[font-family:var(--font-mono)] text-[12px] text-[color:var(--ink-2)] bg-transparent border border-[color:var(--rule)] rounded w-8 h-8 cursor-pointer leading-none"
               onClick={(e) => { e.stopPropagation(); onDelete(); }}
-              title="Delete"
-              aria-label="Delete application"
+              title="Move to trash"
+              aria-label="Move application to trash"
             >
               ✕
             </button>
@@ -252,7 +252,7 @@ export function ApplicationCard({
           <button
             className="[font-family:var(--font-mono)] text-[11px] text-[color:var(--ink-2)] bg-transparent border border-[color:var(--rule)] rounded w-[24px] h-[22px] cursor-pointer leading-none hover:text-[color:var(--status-rejected)] hover:border-[color:var(--status-rejected)] transition-colors"
             onClick={(e) => { e.stopPropagation(); onDelete(); }}
-            title="Delete"
+            title="Move to trash"
           >
             ✕
           </button>

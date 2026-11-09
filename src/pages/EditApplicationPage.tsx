@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { useParams, Link, useNavigate, useBlocker } from 'react-router-dom';
 import { applications } from '../data/applications';
-import { getLocalApplications } from '../utils/localApplications';
+import { getAllLocalApplications } from '../utils/localApplications';
+import { TrashedNotice } from '../components/TrashedNotice';
 import type { ApplicationConfig, AppFont, AppLanguage, CoverLetter, SkillGroup } from '../types';
 import { ALL_FONTS, FONT_LABELS } from '../utils/fonts';
 import { getProfile } from '../data/profiles';
@@ -544,7 +545,7 @@ function EditContent({ staticApp, onReload }: { staticApp: ApplicationConfig; on
 
 export function EditApplicationPage() {
   const { id } = useParams<{ id: string }>();
-  const staticApp = id ? [...applications, ...getLocalApplications()].find((a) => a.id === id) : undefined;
+  const staticApp = id ? [...applications, ...getAllLocalApplications()].find((a) => a.id === id) : undefined;
   const [formVersion, setFormVersion] = useState(0);
 
   if (!staticApp) {
@@ -555,6 +556,8 @@ export function EditApplicationPage() {
       </div>
     );
   }
+
+  if (staticApp.deletedAt) return <TrashedNotice name={`${staticApp.company} – ${staticApp.role}`} />;
 
   return <EditContent key={formVersion} staticApp={staticApp} onReload={() => setFormVersion((v) => v + 1)} />;
 }
