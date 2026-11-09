@@ -36,6 +36,21 @@ jobs:
       - name: Set up Buildx
         uses: docker/setup-buildx-action@v3
 
+      # Tested before pushing, so a broken image never becomes :latest and
+      # never triggers a redeploy.
+      - name: Build image for testing
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          load: true
+          tags: job-applications:test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Start the image and check it serves
+        run: sh scripts/smoke-test-image.sh job-applications:test
+
+      # Reuses the layers just built via the cache.
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
