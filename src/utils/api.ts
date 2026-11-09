@@ -1,4 +1,4 @@
-import { flush } from './storage';
+import { flush, hydrate, localWriteCount } from './storage';
 
 export interface SessionUser {
   id: number;
@@ -43,6 +43,19 @@ export async function fetchUserData(): Promise<Record<string, string>> {
   const res = await fetch('/api/data');
   if (!res.ok) throw new Error(`Loading data failed (HTTP ${res.status}).`);
   return res.json();
+}
+
+/**
+ * Replaces the in-memory copy with the server's current data, e.g. after the
+ * API changed it while this tab was in the background. Without this, the next
+ * save here would write back the stale lists and undo those changes. Skipped
+ * if anything was edited meanwhile, so local edits are never thrown away.
+ */
+export async function refreshUserData(): Promise<void> {
+  await flush();
+  const before = localWriteCount();
+  const entries = await fetchUserData();
+  if (localWriteCount() === before) hydrate(entries);
 }
 
 /** Saves any pending edits, ends the session, and returns to the login screen. */

@@ -7,6 +7,13 @@ const pendingSet = new Map<string, string>();
 const pendingRemove = new Set<string>();
 let flushTimer: ReturnType<typeof setTimeout> | null = null;
 let inFlight: Promise<void> = Promise.resolve();
+// Counts local writes, so a refresh can tell whether one happened while it
+// was fetching and its (older) server copy must not replace the newer data.
+let writeCount = 0;
+
+export function localWriteCount(): number {
+  return writeCount;
+}
 
 type SyncListener = (error: string | null) => void;
 const listeners = new Set<SyncListener>();
@@ -92,12 +99,14 @@ export const storage = {
   },
   setItem(key: string, value: string): void {
     data.set(key, value);
+    writeCount++;
     pendingRemove.delete(key);
     pendingSet.set(key, value);
     scheduleFlush();
   },
   removeItem(key: string): void {
     data.delete(key);
+    writeCount++;
     pendingSet.delete(key);
     pendingRemove.add(key);
     scheduleFlush();
