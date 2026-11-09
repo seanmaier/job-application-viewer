@@ -9,19 +9,24 @@ import type { Context } from 'hono';
 import {
   checkCredentials,
   clearFailures,
+  createApiToken,
   createSession,
   deleteExpiredSessions,
   deleteSession,
+  getApiTokenUser,
   getSessionUser,
   isLockedOut,
+  listApiTokens,
   MAX_PASSWORD_LENGTH,
   MIN_PASSWORD_LENGTH,
   recordFailure,
+  revokeApiToken,
   setPassword,
   SESSION_TTL_MS,
   type User,
 } from './auth.ts';
 import { db, transaction } from './db.ts';
+import { v1 } from './v1.ts';
 
 const PORT = Number(process.env.PORT ?? 3000);
 const STATIC_DIR = process.env.STATIC_DIR ?? './dist';
@@ -77,6 +82,21 @@ const requireUser = createMiddleware<{ Variables: { user: User } }>(async (c, ne
   await next();
 });
 
+// /api/v1 also accepts `Authorization: Bearer <api token>`, so scripts can
+// call it without a password. Tokens are deliberately not accepted on the
+// routes above: they can't change the password or overwrite raw storage.
+const requireUserOrToken = createMiddleware<{ Variables: { user: User } }>(async (c, next) => {
+  const auth = c.req.header('authorization');
+  if (auth !== undefined) {
+    const match = /^Bearer\s+(\S+)$/i.exec(auth);
+    const user = match ? getApiTokenUser(match[1]) : null;
+    if (!user) return c.json({ error: 'Invalid API token.' }, 401);
+    c.set('user', user);
+    return next();
+  }
+  return requireUser(c, next);
+});
+
 app.get('/api/health', (c) => c.json({ ok: true }));
 
 app.get('/api/me', requireUser, (c) => c.json(c.get('user')));
@@ -109,6 +129,22 @@ app.post('/api/password', requireUser, async (c) => {
   // only the other devices are signed out.
   await setPassword(id, newPassword);
   startSession(c, id);
+  return c.body(null, 204);
+});
+
+// Users manage their own API tokens from the account page. These routes take
+// the session cookie only: a token must not be able to mint or revoke tokens.
+app.get('/api/tokens', requireUser, (c) => c.json(listApiTokens(c.get('user').id)));
+
+app.post('/api/tokens', requireUser, async (c) => {
+  const body: { name?: unknown } = await c.req.json().catch(() => ({}));
+  const result = createApiToken(c.get('user').id, typeof body.name === 'string' ? body.name : '');
+  if (!result.ok) return c.json({ error: result.error }, result.status);
+  return c.json({ token: result.token }, 201);
+});
+
+app.delete('/api/tokens/:name', requireUser, (c) => {
+  if (!revokeApiToken(c.get('user').id, c.req.param('name'))) return c.json({ error: 'No such token.' }, 404);
   return c.body(null, 204);
 });
 
@@ -145,6 +181,9 @@ app.put('/api/data', requireUser, async (c) => {
   });
   return c.body(null, 204);
 });
+
+app.use('/api/v1/*', requireUserOrToken);
+app.route('/api/v1', v1);
 
 app.all('/api/*', (c) => c.json({ error: 'Not found.' }, 404));
 

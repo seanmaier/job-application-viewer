@@ -1,0 +1,234 @@
+// Resource-oriented API for scripts and assistants (authenticated with an API
+// token or the session cookie). Unlike /api/data, which the frontend uses to
+// sync raw storage keys, these routes work on one application or base profile
+// at a time and return the merged, effective view of it.
+import { Hono, type Context } from 'hono';
+import type { AppLanguage, ApplicationConfig, ApplicationStatus, BaseProfile, SkillGroup } from '../src/types.ts';
+import { validateApplicationConfig } from '../src/utils/parseApplicationConfig.ts';
+import { validateProfile } from '../src/utils/parseProfile.ts';
+import { validateSkillGroups } from '../src/utils/parseSkillGroups.ts';
+import { slugify, uniqueId } from '../src/utils/slug.ts';
+import type { User } from './auth.ts';
+import { transaction } from './db.ts';
+import { getJson, getValue, KEYS, removeValue, setJson, setValue } from './store.ts';
+
+type StoredConfig = Omit<ApplicationConfig, 'status'>;
+
+export const v1 = new Hono<{ Variables: { user: User } }>();
+
+function localApps(userId: number): ApplicationConfig[] {
+  return getJson<ApplicationConfig[]>(userId, KEYS.localApps) ?? [];
+}
+
+// Mirrors what the app renders: the stored application, overlaid with the
+// edits saved for it (useApplication) and its separately kept status
+// (useApplicationStatus).
+function effectiveApplication(userId: number, base: ApplicationConfig): ApplicationConfig {
+  const override = getJson<StoredConfig>(userId, KEYS.appConfig(base.id));
+  const status = getValue(userId, KEYS.status(base.id)) as ApplicationStatus | null;
+  return { ...base, ...override, id: base.id, status: status ?? base.status };
+}
+
+function findApplication(userId: number, id: string): ApplicationConfig | null {
+  const base = localApps(userId).find((a) => a.id === id);
+  return base ? effectiveApplication(userId, base) : null;
+}
+
+function baseProfiles(userId: number): BaseProfile[] | null {
+  return getJson<BaseProfile[]>(userId, KEYS.baseProfiles);
+}
+
+v1.get('/me', (c) => c.json(c.get('user')));
+
+v1.get('/applications', (c) => {
+  const userId = c.get('user').id;
+  return c.json(localApps(userId).map((a) => effectiveApplication(userId, a)));
+});
+
+v1.get('/applications/:id', (c) => {
+  const app = findApplication(c.get('user').id, c.req.param('id'));
+  return app ? c.json(app) : c.json({ error: 'No such application.' }, 404);
+});
+
+// Empty until the app has been opened once: the frontend seeds the list from
+// the legacy per-language profiles on first use.
+v1.get('/base-profiles', (c) => c.json(baseProfiles(c.get('user').id) ?? []));
+
+v1.get('/base-profiles/:id', (c) => {
+  const profile = baseProfiles(c.get('user').id)?.find((p) => p.id === c.req.param('id'));
+  return profile ? c.json(profile) : c.json({ error: 'No such base profile.' }, 404);
+});
+
+// ---- Writes ---------------------------------------------------------------
+// Every write is one read-modify-write inside a transaction, so concurrent
+// API calls can't lose each other's changes. There is no DELETE on purpose:
+// removing data stays a deliberate action in the app.
+
+const APPLICATION_FIELDS = [
+  'id', 'company', 'role', 'status', 'language', 'font', 'appliedDate', 'interviewDate', 'finalDecisionDate',
+  'notes', 'url', 'baseProfileId', 'summaryOverride', 'featuredProjectIds', 'skillGroupsOverride', 'coverLetter',
+];
+const BASE_PROFILE_FIELDS = ['id', 'name', 'language', 'profile'];
+const LANGUAGES: AppLanguage[] = ['en', 'de'];
+
+type Body = Record<string, unknown>;
+
+function isPlainObject(v: unknown): v is Body {
+  return typeof v === 'object' && v !== null && !Array.isArray(v);
+}
+
+function invalid(c: Context, details: string[]) {
+  return c.json({ error: 'Validation failed.', details }, 400);
+}
+
+/** Reads a JSON object body, or lists what's wrong with it, including fields a typo would silently drop. */
+async function readBody(c: Context, allowed: string[]): Promise<Body | string[]> {
+  const body: unknown = await c.req.json().catch(() => undefined);
+  if (!isPlainObject(body)) return ['Expected a JSON object body.'];
+  const unknownFields = Object.keys(body).filter((k) => !allowed.includes(k));
+  if (unknownFields.length) return [`Unknown field(s): ${unknownFields.join(', ')}. Allowed: ${allowed.join(', ')}.`];
+  return body;
+}
+
+type Validated<T> = { ok: true; value: T } | { ok: false; errors: string[] };
+
+// validateApplicationConfig doesn't carry skillGroupsOverride through, so it
+// is validated and re-attached here.
+function validateApplication(input: Body): Validated<ApplicationConfig> {
+  const result = validateApplicationConfig(input);
+  const errors = result.ok ? [] : [...result.errors];
+  let skillGroups: SkillGroup[] | undefined;
+  if (input.skillGroupsOverride !== undefined) {
+    const sg = validateSkillGroups(input.skillGroupsOverride);
+    if (sg.ok) skillGroups = sg.skillGroups;
+    else errors.push(...sg.errors.map((e) => `skillGroupsOverride: ${e}`));
+  }
+  if (!result.ok || errors.length) return { ok: false, errors };
+  return { ok: true, value: { ...result.config, ...(skillGroups && { skillGroupsOverride: skillGroups }) } };
+}
+
+// New applications always start as drafts, so nothing the assistant creates
+// looks finished until the user has reviewed it in the app.
+v1.post('/applications', async (c) => {
+  const body = await readBody(c, APPLICATION_FIELDS);
+  if (Array.isArray(body)) return invalid(c, body);
+  const result = validateApplication({ ...body, status: 'drafting' });
+  if (!result.ok) return invalid(c, result.errors);
+
+  const userId = c.get('user').id;
+  const explicitId = typeof body.id === 'string' && body.id.trim() !== '';
+  if (!result.value.id) return invalid(c, ['Could not derive an id from "company"; pass an "id".']);
+
+  const outcome = transaction(() => {
+    const apps = localApps(userId);
+    const taken = new Set(apps.map((a) => a.id));
+    if (explicitId && taken.has(result.value.id)) return null;
+    const config = { ...result.value, id: explicitId ? result.value.id : uniqueId(result.value.id, taken) };
+    // A previously deleted application with the same id may have left its
+    // edits and status behind; they must not resurface on the new one.
+    removeValue(userId, KEYS.appConfig(config.id));
+    removeValue(userId, KEYS.status(config.id));
+    setJson(userId, KEYS.localApps, [...apps, config]);
+    return config;
+  });
+
+  if (!outcome) return c.json({ error: `An application with id "${result.value.id}" already exists.` }, 409);
+  return c.json(effectiveApplication(userId, outcome), 201);
+});
+
+// Partial update: given fields replace the current value, null removes an
+// optional one. Saved the way the app's editor saves (the app-config
+// override plus the separate status key), so the app shows it immediately.
+v1.patch('/applications/:id', async (c) => {
+  const body = await readBody(c, APPLICATION_FIELDS);
+  if (Array.isArray(body)) return invalid(c, body);
+  const id = c.req.param('id');
+  if (body.id !== undefined && body.id !== id) return invalid(c, ['"id" cannot be changed.']);
+
+  const userId = c.get('user').id;
+  const outcome = transaction((): Validated<null> | null => {
+    const current = findApplication(userId, id);
+    if (!current) return null;
+    const merged: Body = { ...current };
+    for (const [key, value] of Object.entries(body)) {
+      if (value === null) delete merged[key];
+      else merged[key] = value;
+    }
+    const result = validateApplication(merged);
+    if (!result.ok) return result;
+
+    const { status, ...stored } = result.value;
+    setJson(userId, KEYS.appConfig(id), stored);
+    if ('status' in body) setValue(userId, KEYS.status(id), status);
+    return { ok: true, value: null };
+  });
+
+  if (!outcome) return c.json({ error: 'No such application.' }, 404);
+  if (!outcome.ok) return invalid(c, outcome.errors);
+  return c.json(findApplication(userId, id));
+});
+
+function validateBaseProfile(input: Body): Validated<Omit<BaseProfile, 'id'>> {
+  const errors: string[] = [];
+  if (typeof input.name !== 'string' || !input.name.trim()) errors.push('"name" is required and must be a non-empty string.');
+  if (!LANGUAGES.includes(input.language as AppLanguage)) errors.push('"language" must be "en" or "de".');
+  const profile = validateProfile(input.profile);
+  if (!profile.ok) errors.push(...profile.errors.map((e) => `profile: ${e}`));
+  if (errors.length || !profile.ok) return { ok: false, errors };
+  return {
+    ok: true,
+    value: { name: (input.name as string).trim(), language: input.language as AppLanguage, profile: profile.profile },
+  };
+}
+
+const NOT_SEEDED = 'Base profiles are set up the first time the app is opened. Open it once, then retry.';
+
+v1.post('/base-profiles', async (c) => {
+  const body = await readBody(c, BASE_PROFILE_FIELDS);
+  if (Array.isArray(body)) return invalid(c, body);
+  const result = validateBaseProfile(body);
+  if (!result.ok) return invalid(c, result.errors);
+  const givenId = body.id;
+  if (givenId !== undefined && (typeof givenId !== 'string' || !givenId || slugify(givenId) !== givenId)) {
+    return invalid(c, ['"id" must be a lowercase slug like "backend-de".']);
+  }
+
+  const userId = c.get('user').id;
+  const outcome = transaction((): BaseProfile | 'not-seeded' | 'conflict' => {
+    // Writing a list before the app seeded it would stop the app from ever
+    // adding the default profiles, so this waits for that first run.
+    const list = baseProfiles(userId);
+    if (!list) return 'not-seeded';
+    const taken = new Set(list.map((p) => p.id));
+    if (givenId !== undefined && taken.has(givenId)) return 'conflict';
+    const id = givenId ?? uniqueId(slugify(result.value.name) || 'profile', taken);
+    const created: BaseProfile = { id, ...result.value };
+    setJson(userId, KEYS.baseProfiles, [...list, created]);
+    return created;
+  });
+
+  if (outcome === 'not-seeded') return c.json({ error: NOT_SEEDED }, 409);
+  if (outcome === 'conflict') return c.json({ error: `A base profile with id "${givenId}" already exists.` }, 409);
+  return c.json(outcome, 201);
+});
+
+// Full replacement of name, language and profile; the id stays.
+v1.put('/base-profiles/:id', async (c) => {
+  const body = await readBody(c, BASE_PROFILE_FIELDS);
+  if (Array.isArray(body)) return invalid(c, body);
+  const id = c.req.param('id');
+  if (body.id !== undefined && body.id !== id) return invalid(c, ['"id" cannot be changed.']);
+  const result = validateBaseProfile(body);
+  if (!result.ok) return invalid(c, result.errors);
+
+  const userId = c.get('user').id;
+  const updated = transaction(() => {
+    const list = baseProfiles(userId);
+    if (!list?.some((p) => p.id === id)) return null;
+    const replacement: BaseProfile = { id, ...result.value };
+    setJson(userId, KEYS.baseProfiles, list.map((p) => (p.id === id ? replacement : p)));
+    return replacement;
+  });
+
+  return updated ? c.json(updated) : c.json({ error: 'No such base profile.' }, 404);
+});

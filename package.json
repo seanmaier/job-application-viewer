@@ -9,6 +9,7 @@
     "build": "tsc -b && vite build",
     "start": "node server/index.ts",
     "users": "node server/cli.ts",
+    "api": "node scripts/api.ts",
     "lint": "oxlint",
     "preview": "vite preview"
   },

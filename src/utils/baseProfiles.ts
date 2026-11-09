@@ -3,6 +3,7 @@ import { storage } from './storage';
 import { getProfile } from '../data/profiles';
 import { applications } from '../data/applications';
 import { getLocalApplications } from './localApplications';
+import { slugify, uniqueId } from './slug';
 
 const KEY = 'base-profiles';
 
@@ -53,17 +54,8 @@ export function deleteBaseProfile(id: string): void {
   writeList(getBaseProfiles().filter((p) => p.id !== id));
 }
 
-function slugify(name: string): string {
-  return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-}
-
 export function uniqueBaseProfileId(name: string): string {
-  const base = slugify(name) || 'profile';
-  const existingIds = new Set(getBaseProfiles().map((p) => p.id));
-  if (!existingIds.has(base)) return base;
-  let i = 2;
-  while (existingIds.has(`${base}-${i}`)) i++;
-  return `${base}-${i}`;
+  return uniqueId(slugify(name) || 'profile', new Set(getBaseProfiles().map((p) => p.id)));
 }
 
 export function blankProfile(language: AppLanguage): Profile {

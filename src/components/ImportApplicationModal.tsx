@@ -4,6 +4,7 @@ import type { ApplicationConfig } from '../types';
 import { applications } from '../data/applications';
 import { getLocalApplications, saveLocalApplication } from '../utils/localApplications';
 import { parseApplicationConfig } from '../utils/parseApplicationConfig';
+import { uniqueId } from '../utils/slug';
 import { ApplicationConfigPreview } from './ApplicationConfigPreview';
 import { JsonFileButton } from './JsonFileButton';
 
@@ -17,13 +18,6 @@ const PLACEHOLDER = `{
   "language": "en",
   "coverLetter": { "recipientOrg": "Example Corp", "date": "...", "subjectRole": "Backend Engineer", "paragraphs": ["..."] }
 }`;
-
-function uniqueId(candidate: string, existingIds: Set<string>): string {
-  if (!existingIds.has(candidate)) return candidate;
-  let i = 2;
-  while (existingIds.has(`${candidate}-${i}`)) i++;
-  return `${candidate}-${i}`;
-}
 
 export function ImportApplicationModal({ onClose }: Props) {
   const navigate = useNavigate();

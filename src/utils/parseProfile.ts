@@ -1,4 +1,4 @@
-import type { Education, Experience, HumanLanguage, Profile, Project, SkillGroup } from '../types';
+import type { Education, Experience, HumanLanguage, Profile, Project, SkillGroup } from '../types.ts';
 
 const SKILL_GROUP_VARIANTS = ['default', 'learning'] as const;
 

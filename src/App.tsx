@@ -8,7 +8,7 @@ import { BaseProfilesPage } from './pages/BaseProfilesPage';
 import { BaseProfileEditPage } from './pages/BaseProfileEditPage';
 import { LoginPage } from './pages/LoginPage';
 import { AccountPage } from './pages/AccountPage';
-import { fetchCurrentUser, fetchUserData } from './utils/api';
+import { fetchCurrentUser, fetchUserData, refreshUserData } from './utils/api';
 import { hasPendingWrites, hydrate, onSyncStatus } from './utils/storage';
 
 const router = createBrowserRouter([
@@ -47,6 +47,17 @@ export function App() {
   }, []);
 
   useEffect(() => onSyncStatus(setSyncError), []);
+
+  // Pick up changes made elsewhere (another device, the /api/v1 API) when the
+  // tab comes back into view. Pages show them on their next render or visit.
+  useEffect(() => {
+    if (auth.kind !== 'ready') return;
+    const refresh = () => {
+      if (document.visibilityState === 'visible') refreshUserData().catch(() => {});
+    };
+    document.addEventListener('visibilitychange', refresh);
+    return () => document.removeEventListener('visibilitychange', refresh);
+  }, [auth.kind]);
 
   useEffect(() => {
     const warn = (e: BeforeUnloadEvent) => {

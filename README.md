@@ -14,8 +14,9 @@ data, and use it to manage your own applications.
 - Plain-text export for pasting into LLMs or application forms
 - Form-based and raw-JSON editing for each application
 - Per-user login; all edits are stored on the server, not in the browser
-- Users change their own password under **account** on the dashboard
+- Users change their own password and manage their API tokens under **account** on the dashboard
 - Your personal data (profile, cover letters) is kept out of git entirely
+- Token-authenticated `/api/v1` and Claude Code skills for AI-assisted applications
 
 ## Tech stack
 
@@ -66,6 +67,50 @@ backup there and restore it after logging in.
 - `npm run dev:server` — run the API with auto-reload
 - `npm run users -- <add|passwd|remove|list> [username] [password]` — manage users
   (`passwd` is for resetting a forgotten password; users change their own in the app)
+- `npm run users -- <token-add|token-revoke> <username> <name>` / `token-list <username>` —
+  manage API tokens as admin (users do it themselves on the account page)
+- `npm run api -- <GET|POST|PUT|PATCH> <path> [body.json]` — call `/api/v1`
+
+## AI-assisted applications
+
+The repo ships two Claude Code skills that work against your deployed data:
+
+- `/basiswissen` interviews you and builds `private/knowledge/about-me.md`
+  (gitignored, template: `about-me.example.md`): the stories, numbers and
+  honest skill levels behind your CV.
+- `/bewerbung <job ad URL or text>` picks a base profile, tailors skills,
+  summary and featured projects, drafts the cover letter and, after you
+  confirm, saves it as a `drafting` application. When three or more
+  applications share the same tailoring, it proposes a new base profile.
+  `/bewerbung muster` runs only that analysis.
+
+Setup:
+
+1. In the app, open **account** → **API tokens** and create one, e.g. `claude`.
+   It is shown only once; revoke it there when it's no longer needed.
+2. `cp .env.assistant.example .env.assistant` and fill in the URL and token.
+3. Check it: `npm run api -- GET me`.
+
+### `/api/v1`
+
+Authenticated with `Authorization: Bearer <token>` (or the session cookie).
+Tokens work only here, not on login, password, token or raw-data routes.
+
+| Method | Path | |
+|--------|------|-|
+| GET | `/api/v1/me` | the token's user |
+| GET | `/api/v1/applications`, `/api/v1/applications/:id` | applications as the app shows them (saved edits and status merged in) |
+| POST | `/api/v1/applications` | create; always starts as `drafting` |
+| PATCH | `/api/v1/applications/:id` | update given fields, `null` removes one |
+| GET | `/api/v1/base-profiles`, `/api/v1/base-profiles/:id` | base profiles |
+| POST | `/api/v1/base-profiles` | create (`name`, `language`, `profile`, optional `id`) |
+| PUT | `/api/v1/base-profiles/:id` | replace name, language and profile |
+
+Bodies are validated with the same parsers the app uses; unknown fields are
+rejected. There is no DELETE: deleting stays a deliberate action in the app.
+Only applications stored on the server are visible, not the JSON files in
+`private/applications/`. Open tabs reload their data when you switch back
+to them, so they don't overwrite what the API changed.
 
 ## Deployment
 

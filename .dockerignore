@@ -6,9 +6,11 @@ data
 .idea
 .claude
 .env
+.env.assistant
 
 # Personal data must never end up in an image pushed to a registry — only the
 # committed example templates are needed for the build.
 private/**/*.json
+private/knowledge
 !private/applications/example.json
 !private/profiles/*.example.json

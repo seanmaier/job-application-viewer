@@ -33,6 +33,18 @@ db.exec(`
     value   TEXT NOT NULL,
     PRIMARY KEY (user_id, key)
   );
+
+  -- Long-lived bearer tokens for scripts and assistants calling /api/v1.
+  -- Like sessions, only the hash is stored; the token is shown once on creation.
+  CREATE TABLE IF NOT EXISTS api_tokens (
+    id           INTEGER PRIMARY KEY,
+    user_id      INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    name         TEXT NOT NULL,
+    token_hash   TEXT NOT NULL UNIQUE,
+    created_at   TEXT NOT NULL DEFAULT (datetime('now')),
+    last_used_at TEXT,
+    UNIQUE (user_id, name)
+  );
 `);
 
 export function transaction<T>(fn: () => T): T {

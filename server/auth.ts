@@ -73,6 +73,70 @@ export function getSessionUser(token: string): User | null {
   return row ?? null;
 }
 
+// The prefix makes a leaked token recognisable (e.g. to secret scanners) and
+// lets the server tell it apart from a session token at a glance.
+const API_TOKEN_PREFIX = 'jat_';
+
+export interface ApiTokenInfo {
+  name: string;
+  created_at: string;
+  last_used_at: string | null;
+}
+
+export const MAX_TOKEN_NAME_LENGTH = 64;
+export const MAX_TOKENS_PER_USER = 20;
+
+export type CreateApiTokenResult =
+  | { ok: true; token: string }
+  | { ok: false; error: string; status: 400 | 409 };
+
+/**
+ * Creates a named API token for a user and returns it; it can't be retrieved
+ * again later. Shared by the CLI and the account page, so both apply the
+ * same rules.
+ */
+export function createApiToken(userId: number, rawName: string): CreateApiTokenResult {
+  const name = rawName.trim();
+  if (!name) return { ok: false, status: 400, error: 'A token name is required.' };
+  if (name.length > MAX_TOKEN_NAME_LENGTH) {
+    return { ok: false, status: 400, error: `Token names can be at most ${MAX_TOKEN_NAME_LENGTH} characters.` };
+  }
+  const { count } = db.prepare('SELECT COUNT(*) AS count FROM api_tokens WHERE user_id = ?').get(userId) as {
+    count: number;
+  };
+  if (count >= MAX_TOKENS_PER_USER) {
+    return { ok: false, status: 400, error: `At most ${MAX_TOKENS_PER_USER} tokens per user. Revoke one first.` };
+  }
+  const taken = db.prepare('SELECT 1 FROM api_tokens WHERE user_id = ? AND name = ?').get(userId, name);
+  if (taken) return { ok: false, status: 409, error: `A token named "${name}" already exists.` };
+
+  const token = API_TOKEN_PREFIX + randomBytes(32).toString('base64url');
+  db.prepare('INSERT INTO api_tokens (user_id, name, token_hash) VALUES (?, ?, ?)').run(userId, name, hashToken(token));
+  return { ok: true, token };
+}
+
+export function getApiTokenUser(token: string): User | null {
+  if (!token.startsWith(API_TOKEN_PREFIX)) return null;
+  const hash = hashToken(token);
+  const row = db
+    .prepare('SELECT u.id, u.username FROM api_tokens t JOIN users u ON u.id = t.user_id WHERE t.token_hash = ?')
+    .get(hash) as User | undefined;
+  if (!row) return null;
+  db.prepare("UPDATE api_tokens SET last_used_at = datetime('now') WHERE token_hash = ?").run(hash);
+  return { id: row.id, username: row.username };
+}
+
+export function listApiTokens(userId: number): ApiTokenInfo[] {
+  return db
+    .prepare('SELECT name, created_at, last_used_at FROM api_tokens WHERE user_id = ? ORDER BY created_at')
+    .all(userId) as unknown as ApiTokenInfo[];
+}
+
+/** Returns whether a token with that name existed. */
+export function revokeApiToken(userId: number, name: string): boolean {
+  return db.prepare('DELETE FROM api_tokens WHERE user_id = ? AND name = ?').run(userId, name).changes > 0;
+}
+
 export function deleteSession(token: string): void {
   db.prepare('DELETE FROM sessions WHERE token_hash = ?').run(hashToken(token));
 }

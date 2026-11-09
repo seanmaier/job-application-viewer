@@ -24,6 +24,9 @@ COPY package*.json ./
 RUN npm ci --omit=dev && npm cache clean --force
 
 COPY server ./server
+# The /api/v1 routes validate with the same parsers the frontend uses.
+COPY src/types.ts ./src/types.ts
+COPY src/utils/slug.ts src/utils/parseApplicationConfig.ts src/utils/parseProfile.ts src/utils/parseSkillGroups.ts ./src/utils/
 COPY --from=builder /app/dist ./dist
 
 RUN mkdir /data && chown node:node /data
