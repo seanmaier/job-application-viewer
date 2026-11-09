@@ -5,6 +5,12 @@ export interface SessionUser {
   username: string;
 }
 
+/** The server's `{ error }` message for a failed response, or a generic one with the status. */
+async function errorFrom(res: Response, fallback: string): Promise<Error> {
+  const body: { error?: unknown } = await res.json().catch(() => ({}));
+  return new Error(typeof body.error === 'string' ? body.error : `${fallback} (HTTP ${res.status}).`);
+}
+
 export async function fetchCurrentUser(): Promise<SessionUser | null> {
   const res = await fetch('/api/me');
   if (res.status === 401) return null;
@@ -18,9 +24,8 @@ export async function login(username: string, password: string): Promise<Session
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ username, password }),
   });
-  const body = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(body.error ?? `Login failed (HTTP ${res.status}).`);
-  return body;
+  if (!res.ok) throw await errorFrom(res, 'Login failed');
+  return res.json();
 }
 
 export async function logout(): Promise<void> {
@@ -34,9 +39,36 @@ export async function changePassword(currentPassword: string, newPassword: strin
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ currentPassword, newPassword }),
   });
-  if (res.ok) return;
-  const body = await res.json().catch(() => ({}));
-  throw new Error(body.error ?? `Changing the password failed (HTTP ${res.status}).`);
+  if (!res.ok) throw await errorFrom(res, 'Changing the password failed');
+}
+
+export interface ApiToken {
+  name: string;
+  created_at: string;
+  last_used_at: string | null;
+}
+
+export async function fetchApiTokens(): Promise<ApiToken[]> {
+  const res = await fetch('/api/tokens');
+  if (!res.ok) throw await errorFrom(res, 'Loading API tokens failed');
+  return res.json();
+}
+
+/** Creates a token and returns its secret, which the server never shows again. */
+export async function createApiToken(name: string): Promise<string> {
+  const res = await fetch('/api/tokens', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name }),
+  });
+  if (!res.ok) throw await errorFrom(res, 'Creating the token failed');
+  const body: { token: string } = await res.json();
+  return body.token;
+}
+
+export async function revokeApiToken(name: string): Promise<void> {
+  const res = await fetch(`/api/tokens/${encodeURIComponent(name)}`, { method: 'DELETE' });
+  if (!res.ok) throw await errorFrom(res, 'Revoking the token failed');
 }
 
 export async function fetchUserData(): Promise<Record<string, string>> {

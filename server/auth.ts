@@ -83,11 +83,36 @@ export interface ApiTokenInfo {
   last_used_at: string | null;
 }
 
-/** Creates a named API token for a user and returns it; it can't be retrieved again later. */
-export function createApiToken(userId: number, name: string): string {
+export const MAX_TOKEN_NAME_LENGTH = 64;
+export const MAX_TOKENS_PER_USER = 20;
+
+export type CreateApiTokenResult =
+  | { ok: true; token: string }
+  | { ok: false; error: string; status: 400 | 409 };
+
+/**
+ * Creates a named API token for a user and returns it; it can't be retrieved
+ * again later. Shared by the CLI and the account page, so both apply the
+ * same rules.
+ */
+export function createApiToken(userId: number, rawName: string): CreateApiTokenResult {
+  const name = rawName.trim();
+  if (!name) return { ok: false, status: 400, error: 'A token name is required.' };
+  if (name.length > MAX_TOKEN_NAME_LENGTH) {
+    return { ok: false, status: 400, error: `Token names can be at most ${MAX_TOKEN_NAME_LENGTH} characters.` };
+  }
+  const { count } = db.prepare('SELECT COUNT(*) AS count FROM api_tokens WHERE user_id = ?').get(userId) as {
+    count: number;
+  };
+  if (count >= MAX_TOKENS_PER_USER) {
+    return { ok: false, status: 400, error: `At most ${MAX_TOKENS_PER_USER} tokens per user. Revoke one first.` };
+  }
+  const taken = db.prepare('SELECT 1 FROM api_tokens WHERE user_id = ? AND name = ?').get(userId, name);
+  if (taken) return { ok: false, status: 409, error: `A token named "${name}" already exists.` };
+
   const token = API_TOKEN_PREFIX + randomBytes(32).toString('base64url');
   db.prepare('INSERT INTO api_tokens (user_id, name, token_hash) VALUES (?, ?, ?)').run(userId, name, hashToken(token));
-  return token;
+  return { ok: true, token };
 }
 
 export function getApiTokenUser(token: string): User | null {

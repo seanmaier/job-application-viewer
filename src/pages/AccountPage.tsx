@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { changePassword, fetchCurrentUser } from '../utils/api';
-import { nafInput, nafLabel, nafSection } from '../styles/formStyles';
+import { nafInput, nafLabel, nafSection, primaryButton } from '../styles/formStyles';
+import { ApiTokensSection } from '../components/ApiTokensSection';
 
 // Mirrors MIN_PASSWORD_LENGTH on the server, which has the final say.
 const MIN_PASSWORD_LENGTH = 10;
@@ -111,13 +112,15 @@ export function AccountPage() {
         )}
 
         <button
-          className="self-start [font-family:var(--font-mono)] text-[12px] bg-[color:var(--accent)] text-[color:var(--ink)] font-semibold border-none rounded px-4 py-2 cursor-pointer transition-[filter] duration-150 hover:brightness-110 disabled:opacity-60 disabled:cursor-default"
+          className={primaryButton}
           type="submit"
           disabled={busy}
         >
           {busy ? 'saving…' : 'change password'}
         </button>
       </form>
+
+      <ApiTokensSection />
     </div>
   );
 }

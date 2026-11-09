@@ -9,15 +9,18 @@ import type { Context } from 'hono';
 import {
   checkCredentials,
   clearFailures,
+  createApiToken,
   createSession,
   deleteExpiredSessions,
   deleteSession,
   getApiTokenUser,
   getSessionUser,
   isLockedOut,
+  listApiTokens,
   MAX_PASSWORD_LENGTH,
   MIN_PASSWORD_LENGTH,
   recordFailure,
+  revokeApiToken,
   setPassword,
   SESSION_TTL_MS,
   type User,
@@ -126,6 +129,22 @@ app.post('/api/password', requireUser, async (c) => {
   // only the other devices are signed out.
   await setPassword(id, newPassword);
   startSession(c, id);
+  return c.body(null, 204);
+});
+
+// Users manage their own API tokens from the account page. These routes take
+// the session cookie only: a token must not be able to mint or revoke tokens.
+app.get('/api/tokens', requireUser, (c) => c.json(listApiTokens(c.get('user').id)));
+
+app.post('/api/tokens', requireUser, async (c) => {
+  const body: { name?: unknown } = await c.req.json().catch(() => ({}));
+  const result = createApiToken(c.get('user').id, typeof body.name === 'string' ? body.name : '');
+  if (!result.ok) return c.json({ error: result.error }, result.status);
+  return c.json({ token: result.token }, 201);
+});
+
+app.delete('/api/tokens/:name', requireUser, (c) => {
+  if (!revokeApiToken(c.get('user').id, c.req.param('name'))) return c.json({ error: 'No such token.' }, 404);
   return c.body(null, 204);
 });
 

@@ -6,6 +6,8 @@ export const nafLabel = '[font-family:var(--font-mono)] text-[9.5px] tracking-[0
 export const nafOptional = 'text-[color:var(--ink-3)] normal-case tracking-normal text-[9px]';
 export const nafInput = '[font-family:var(--font-sans)] text-[13px] bg-[color:var(--surface)] border-[1.5px] border-[color:var(--rule)] rounded-[5px] py-2 px-[11px] text-[color:var(--ink-invert)] [color-scheme:dark] transition-[border-color] duration-150 w-full focus:outline-none focus:border-[color:var(--accent)]';
 export const nafTextarea = '[font-family:var(--font-sans)] text-[12.5px] bg-[color:var(--surface)] border-[1.5px] border-[color:var(--rule)] rounded-[5px] py-2 px-[11px] text-[color:var(--ink-invert)] w-full leading-[1.55] transition-[border-color] duration-150 focus:outline-none focus:border-[color:var(--accent)]';
+// Primary action button on standalone forms such as the account page.
+export const primaryButton = 'self-start [font-family:var(--font-mono)] text-[12px] bg-[color:var(--accent)] text-[color:var(--ink)] font-semibold border-none rounded px-4 py-2 cursor-pointer transition-[filter] duration-150 hover:brightness-110 disabled:opacity-60 disabled:cursor-default';
 export const nafCheckboxes = 'flex flex-col gap-1.5';
 export const nafCheckboxLabel = 'flex items-center gap-2 text-[12.5px] text-[color:var(--ink-2)] cursor-pointer';
 export const nafCheckboxInput = 'accent-[var(--accent)] w-3.5 h-3.5 cursor-pointer';

@@ -79,14 +79,9 @@ switch (command) {
   }
   case 'token-add': {
     if (!username || !tokenName) fail('Usage: token-add <username> <name>');
-    const user = userIdOrFail(username);
-    let token: string;
-    try {
-      token = createApiToken(user, tokenName);
-    } catch {
-      fail(`"${username}" already has a token named "${tokenName}". Revoke it first or pick another name.`);
-    }
-    console.log(`Created API token "${tokenName}" for "${username}". It is shown only this once:\n${token}`);
+    const result = createApiToken(userIdOrFail(username), tokenName);
+    if (!result.ok) fail(result.error);
+    console.log(`Created API token "${tokenName}" for "${username}". It is shown only this once:\n${result.token}`);
     break;
   }
   case 'token-list': {
