@@ -7,6 +7,7 @@ import type { AppLanguage, ApplicationConfig, ApplicationStatus, BaseProfile, Sk
 import { validateApplicationConfig } from '../src/utils/parseApplicationConfig.ts';
 import { validateProfile } from '../src/utils/parseProfile.ts';
 import { validateSkillGroups } from '../src/utils/parseSkillGroups.ts';
+import { isAppLanguage, LANGUAGES, languageOf } from '../src/utils/language.ts';
 import { slugify, uniqueId } from '../src/utils/slug.ts';
 import type { User } from './auth.ts';
 import { transaction } from './db.ts';
@@ -40,9 +41,16 @@ function baseProfiles(userId: number): BaseProfile[] | null {
 
 v1.get('/me', (c) => c.json(c.get('user')));
 
+// Optional ?language=de|en narrows the list; applications without a stored
+// language count as English, like in the app.
 v1.get('/applications', (c) => {
   const userId = c.get('user').id;
-  return c.json(localApps(userId).map((a) => effectiveApplication(userId, a)));
+  const language = c.req.query('language');
+  if (language !== undefined && !isAppLanguage(language)) {
+    return invalid(c, [`Unknown language "${language}". Use one of: ${LANGUAGES.join(', ')}.`]);
+  }
+  const apps = localApps(userId).map((a) => effectiveApplication(userId, a));
+  return c.json(language ? apps.filter((a) => languageOf(a) === language) : apps);
 });
 
 v1.get('/applications/:id', (c) => {
@@ -69,7 +77,6 @@ const APPLICATION_FIELDS = [
   'notes', 'url', 'baseProfileId', 'summaryOverride', 'featuredProjectIds', 'skillGroupsOverride', 'coverLetter',
 ];
 const BASE_PROFILE_FIELDS = ['id', 'name', 'language', 'profile'];
-const LANGUAGES: AppLanguage[] = ['en', 'de'];
 
 type Body = Record<string, unknown>;
 
