@@ -3,6 +3,7 @@ import type { FormEvent } from 'react';
 import { login } from '../utils/api';
 import type { SessionUser } from '../utils/api';
 import { nafInput, nafLabel, nafSection } from '../styles/formStyles';
+import { AppLogo } from '../components/AppLogo';
 
 export function LoginPage({ onLoggedIn }: { onLoggedIn: (user: SessionUser) => void }) {
   const [username, setUsername] = useState('');
@@ -28,10 +29,13 @@ export function LoginPage({ onLoggedIn }: { onLoggedIn: (user: SessionUser) => v
         className="w-full max-w-[340px] flex flex-col gap-5 bg-[color:var(--ink)] p-7 rounded-md"
         onSubmit={submit}
       >
-        <div className="[font-family:var(--font-mono)] text-[15px]">
-          <span className="text-[color:var(--ink-3)]">~/</span>
-          <span className="text-[color:var(--accent)]">login</span>
-          <span className="text-[color:var(--ink-3)] animate-pulse"> _</span>
+        <div className="flex items-center gap-2.5 [font-family:var(--font-mono)] text-[15px]">
+          <AppLogo />
+          <span>
+            <span className="text-[color:var(--ink-3)]">~/</span>
+            <span className="text-[color:var(--accent)]">login</span>
+            <span className="text-[color:var(--ink-3)] animate-pulse"> _</span>
+          </span>
         </div>
         <label className={nafSection}>
           <span className={nafLabel}>Username</span>

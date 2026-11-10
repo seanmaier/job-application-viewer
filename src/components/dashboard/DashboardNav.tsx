@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { logoutAndReload } from '../../utils/api';
 import { isDemo } from '../../demo/demoMode';
 import { startTour } from '../../tour/tourControl';
+import { AppLogo } from '../AppLogo';
 
 // Each group gets its own colour (from the existing tokens), so actions of the
 // same kind are recognisable at a glance: blue creates, purple manages what
@@ -66,10 +67,13 @@ export function DashboardNav({ trashCount, onImport, onBackup }: Props) {
   return (
     <header className="mb-6 sm:mb-8 flex flex-col gap-5">
       <div className="flex items-center justify-between gap-4">
-        <div className="[font-family:var(--font-mono)] text-[15px]">
-          <span className="text-[color:var(--ink-3)]">~/</span>
-          <span className="text-[color:var(--accent)]">applications</span>
-          <span className="text-[color:var(--ink-3)] animate-pulse"> _</span>
+        <div className="flex items-center gap-2.5 [font-family:var(--font-mono)] text-[15px]">
+          <AppLogo />
+          <span>
+            <span className="text-[color:var(--ink-3)]">~/</span>
+            <span className="text-[color:var(--accent)]">applications</span>
+            <span className="text-[color:var(--ink-3)] animate-pulse"> _</span>
+          </span>
         </div>
         {/* The demo has no account to manage or log out of. */}
         {!isDemo && (
