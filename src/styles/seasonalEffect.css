@@ -1,6 +1,6 @@
-/* Decorative overlay for the seasonal themes: a handful of symbols drift
-   across the viewport on a loop. Purely visual, so it's hidden from print and
-   from anyone who asked for reduced motion (see SeasonalEffect.tsx). */
+/* Decorative overlay for the seasonal themes: falling symbols, a snow/sand
+   ledge along the bottom, and (summer) a sun. Purely visual — click-through
+   and hidden from print (see SeasonalEffect.tsx). */
 .seasonal-effect {
   position: fixed;
   inset: 0;
@@ -11,20 +11,12 @@
 
 .seasonal-effect__particle {
   position: absolute;
+  top: -10%;
   line-height: 1;
   will-change: transform;
+  animation-name: seasonal-fall;
   animation-timing-function: linear;
   animation-iteration-count: infinite;
-}
-
-.seasonal-effect__particle--fall {
-  top: -10%;
-  animation-name: seasonal-fall;
-}
-
-.seasonal-effect__particle--rise {
-  bottom: -10%;
-  animation-name: seasonal-rise;
 }
 
 .seasonal-effect__particle--winter {
@@ -36,11 +28,6 @@
   opacity: 0.8;
 }
 
-.seasonal-effect__particle--summer {
-  color: var(--accent);
-  opacity: 0.7;
-}
-
 .seasonal-effect__particle--autumn {
   opacity: 0.75;
 }
@@ -50,7 +37,53 @@
   to   { transform: translate(var(--drift), 110vh) rotate(360deg); }
 }
 
-@keyframes seasonal-rise {
-  from { transform: translate(0, 10vh) rotate(0deg); }
-  to   { transform: translate(var(--drift), -130vh) rotate(-20deg); }
+/* ── Bottom ledge: a row of rounded mounds, like snow or sand piled up on a
+   windowsill. Static (no motion) so it isn't affected by reduced-motion. ── */
+.seasonal-ledge {
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 0;
+}
+
+.seasonal-ledge__mound {
+  position: absolute;
+  bottom: 0;
+  border-radius: 100% 100% 0 0 / 55% 55% 0 0;
+}
+
+.seasonal-ledge--snow .seasonal-ledge__mound {
+  background: linear-gradient(to bottom, #fbfdff, #d9e8f5);
+  box-shadow: 0 -2px 14px rgba(230, 241, 250, 0.4);
+}
+
+.seasonal-ledge--sand .seasonal-ledge__mound {
+  background: linear-gradient(to bottom, #f3dba3, #dcae63);
+  box-shadow: 0 -2px 14px rgba(243, 219, 163, 0.3);
+}
+
+/* ── Summer sun, sitting in the upper part of the viewport. ── */
+.seasonal-sun {
+  position: absolute;
+  top: 7%;
+  right: 9%;
+  width: clamp(64px, 9vw, 120px);
+  height: clamp(64px, 9vw, 120px);
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #fff6d8, var(--accent) 65%, #e8903c 100%);
+  box-shadow: 0 0 min(10vw, 70px) min(3vw, 22px) color-mix(in srgb, var(--accent) 40%, transparent);
+}
+
+.seasonal-sun--pulse {
+  animation: seasonal-sun-pulse 6s ease-in-out infinite;
+}
+
+@keyframes seasonal-sun-pulse {
+  0%, 100% { transform: scale(1); opacity: 0.95; }
+  50%      { transform: scale(1.05); opacity: 1; }
+}
+
+.seasonal-beach-prop {
+  position: absolute;
+  bottom: 2px;
+  line-height: 1;
 }
