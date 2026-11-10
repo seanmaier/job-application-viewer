@@ -3,7 +3,7 @@ import { slugify } from './slug.ts';
 import { isAppLanguage, LANGUAGE_ERROR } from './language.ts';
 import { normalizeNotes } from './notes.ts';
 
-const STATUSES: ApplicationStatus[] = ['drafting', 'ready', 'sent', 'interview', 'offer', 'rejected', 'withdrawn'];
+const STATUSES: ApplicationStatus[] = ['drafting', 'ready', 'sent', 'interview', 'offer', 'rejected', 'ghosted', 'withdrawn'];
 const FONTS: AppFont[] = ['sans', 'serif', 'mono'];
 
 export type ParseResult =

@@ -1,7 +1,7 @@
 import type { ApplicationConfig, ApplicationStatus } from '../types';
 import { numericDateToIso, todayIso } from './date';
 
-export type StatKey = 'total' | 'thisMonth' | 'active' | 'interviews' | 'offers';
+export type StatKey = 'total' | 'thisMonth' | 'active' | 'interviews' | 'offers' | 'ghosted';
 
 const ACTIVE_STATUSES: ApplicationStatus[] = ['sent', 'interview'];
 
@@ -19,6 +19,8 @@ export function matchesStat(app: ApplicationConfig, key: StatKey | null): boolea
       return app.status === 'interview' || !!app.interviewDate;
     case 'offers':
       return app.status === 'offer';
+    case 'ghosted':
+      return app.status === 'ghosted';
   }
 }
 

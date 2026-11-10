@@ -6,7 +6,7 @@ import { countTrashed } from '../utils/trashCount';
 import { TRASH_RETENTION_DAYS } from '../utils/trash';
 import { getConfigOverride, setConfigOverride } from '../utils/appStorage';
 import { autoAppliedDateFor, autoInterviewDateFor, autoFinalDecisionDateFor } from '../utils/autoStatusDates';
-import { STATUS_LABELS } from '../utils/status';
+import { STATUS_LABELS, withAutoGhosting } from '../utils/status';
 import { ApplicationCard } from '../components/dashboard/ApplicationCard';
 import type { DateFieldName } from '../components/dashboard/ApplicationCard';
 import { ImportApplicationModal } from '../components/ImportApplicationModal';
@@ -44,7 +44,14 @@ export function DashboardPage() {
   const allApps = [...staticApps, ...localApps];
 
   const [statuses, setStatuses] = useState<Record<string, ApplicationStatus>>(() =>
-    Object.fromEntries(allApps.map((a) => [a.id, readStatus(a.id, a.status)])),
+    Object.fromEntries(allApps.map((a) => {
+      const stored = readStatus(a.id, a.status);
+      const status = withAutoGhosting(stored, getConfigOverride(a.id)?.appliedDate ?? a.appliedDate);
+      // Persist an automatic move to "ghosted" right away (idempotent, so
+      // safe if React runs this initializer twice).
+      if (status !== stored) writeStatus(a.id, status);
+      return [a.id, status];
+    })),
   );
 
   const [appliedDates, setAppliedDates] = useState<Record<string, string | undefined>>(() =>

@@ -1,5 +1,5 @@
-import { STATUS_COLORS } from '../utils/status';
-import { formatDateNumeric, formatDateTime, numericDateToIso, toIsoDate } from '../utils/date';
+import { STATUS_COLORS, GHOSTED_AFTER_DAYS, ghostedOn } from '../utils/status';
+import { formatDateNumeric, formatDateTime, numericDateToIso, todayIso, toIsoDate } from '../utils/date';
 import { linkify } from '../utils/linkify';
 import type { ApplicationConfig, ApplicationStatus, AppLanguage } from '../types';
 
@@ -46,8 +46,9 @@ function noteSortKey(createdAt: string | undefined): string {
 
 /**
  * The application's history in chronological order: its notes together with
- * the status dates (applied, interview, decision). The earliest note is
- * labelled as the initial one.
+ * the status dates (applied, interview, decision) and, for a ghosted
+ * application, the day it went without a response for too long. The
+ * earliest note is labelled as the initial one.
  */
 function buildTimeline(app: ApplicationConfig, status: ApplicationStatus, language: AppLanguage): TimelineEvent[] {
   const decisionLabel = DECISION_LABELS[status];
@@ -71,6 +72,19 @@ function buildTimeline(app: ApplicationConfig, status: ApplicationStatus, langua
       noteId: note.id,
     })),
   ];
+  if (status === 'ghosted') {
+    // Set by hand before the deadline, the deadline would lie in the future.
+    const due = ghostedOn(app.appliedDate);
+    const date = due && due < todayIso() ? due : todayIso();
+    events.push({
+      key: 'ghosted',
+      sortKey: due ? date : '￿', // without an applied date: last
+      dateLabel: due ? formatDateNumeric(date, language) : '',
+      label: 'Ghosted',
+      color: STATUS_COLORS.ghosted,
+      text: `No response ${GHOSTED_AFTER_DAYS}+ days after applying.`,
+    });
+  }
   events.sort((a, b) => a.sortKey.localeCompare(b.sortKey));
   const firstNote = events.find((e) => e.noteId);
   if (firstNote) firstNote.label = 'Initial note';

@@ -48,7 +48,7 @@ export function ApplicationPage() {
 
 function ApplicationContent({ staticApp }: { staticApp: ApplicationConfig }) {
   const { app, save, isDirty } = useApplication(staticApp);
-  const [status, setStatus] = useApplicationStatus(staticApp.id, staticApp.status);
+  const [status, setStatus] = useApplicationStatus(staticApp.id, staticApp.status, app.appliedDate);
   const [exportOpen, setExportOpen] = useState(false);
   const [exportFolderName, setExportFolderName] = useState<string | null>(null);
   const [downloading, setDownloading] = useState(false);
