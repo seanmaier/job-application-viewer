@@ -41,8 +41,8 @@ jobs:
         with:
           context: .
           load: true
-          tags: job-applications:ci
+          tags: vita:ci
           cache-from: type=gha
 
       - name: Start the image and check it serves
-        run: sh scripts/smoke-test-image.sh job-applications:ci
+        run: sh scripts/smoke-test-image.sh vita:ci

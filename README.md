@@ -44,8 +44,8 @@ Backend: Hono on Node 24 · SQLite (`node:sqlite`) · session cookie login
 ## Getting started
 
 ```bash
-git clone https://github.com/seanmaier/job-application-viewer.git
-cd job-application-viewer
+git clone https://github.com/seanmaier/vita.git
+cd vita
 npm install
 ```
 
@@ -137,19 +137,21 @@ to them, so they don't overwrite what the API changed.
 ## Deployment
 
 Pushing to `main` builds an image and publishes it to
-`ghcr.io/seanmaier/job-application-viewer` (`.github/workflows/docker.yml`).
+`ghcr.io/seanmaier/vita` (`.github/workflows/docker.yml`).
 Files under `private/` are never part of the image.
 
 1. Create the data volume once on the host:
    `docker volume create job-applications-data` (or set `DATA_VOLUME` to use
-   another name). It is external, so removing the stack or running
-   `docker compose down -v` never deletes the database.
+   another name). The default keeps its name from before the app was called
+   Vita, since Docker can't rename volumes. It is external, so removing the
+   stack or running `docker compose down -v` never deletes the database.
 2. In Portainer, create a stack in Repository mode with compose path
    `deploy/docker-compose.yml`. If the GHCR package is private, add a
    registry for `ghcr.io` with a token that has `read:packages`.
 3. Set the stack environment variable `PROXY_NETWORK` to the existing Docker
    network your reverse proxy or tunnel container is in. The app publishes no
-   port; point the proxy at `http://job-applications:3000`. The proxy must
+   port; point the proxy at `http://vita:3000` (`http://job-applications:3000`
+   still works for setups from before the rename). The proxy must
    serve the app over HTTPS, since the session cookie is `Secure`.
 4. Open the container console and create a user:
    `node server/cli.ts add <username>`
@@ -162,9 +164,10 @@ recent writes in `app.db-wal`, so back up the whole volume with the container
 stopped:
 
 ```bash
-docker stop job-applications-app-1
-docker run --rm -v job-applications-data:/data -v "$PWD":/backup alpine \n  tar czf /backup/job-applications-$(date +%F).tar.gz -C /data .
-docker start job-applications-app-1
+docker stop vita-app-1        # <stack name>-app-1
+docker run --rm -v job-applications-data:/data -v "$PWD":/backup alpine \
+  tar czf /backup/vita-$(date +%F).tar.gz -C /data .
+docker start vita-app-1
 ```
 
 ## License

@@ -12,8 +12,8 @@ export const isDemo =
   typeof window !== 'undefined' &&
   (window.location.pathname === DEMO_BASENAME || window.location.pathname.startsWith(`${DEMO_BASENAME}/`));
 
-const DATA_KEY = 'job-applications-demo';
-const LOCALE_KEY = 'job-applications-demo-locale';
+const DATA_KEY = 'vita-demo';
+const LOCALE_KEY = 'vita-demo-locale';
 
 function readSession(key: string): string | null {
   try {
