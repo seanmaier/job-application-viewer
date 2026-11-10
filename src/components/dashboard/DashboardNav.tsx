@@ -4,6 +4,7 @@ import { logoutAndReload } from '../../utils/api';
 import { isDemo } from '../../demo/demoMode';
 import { startTour } from '../../tour/tourControl';
 import { AppLogo } from '../AppLogo';
+import { useTheme } from '../../hooks/useTheme';
 
 // Each group gets its own colour (from the existing tokens), so actions of the
 // same kind are recognisable at a glance: blue creates, purple manages what
@@ -64,6 +65,8 @@ interface Props {
 
 /** The dashboard's header: title and account at the top, the grouped actions below. */
 export function DashboardNav({ trashCount, onImport, onBackup }: Props) {
+  const { theme, setTheme } = useTheme();
+
   return (
     <header className="mb-6 sm:mb-8 flex flex-col gap-5">
       <div className="flex items-center justify-between gap-4">
@@ -75,14 +78,25 @@ export function DashboardNav({ trashCount, onImport, onBackup }: Props) {
             <span className="text-[color:var(--ink-3)] animate-pulse"> _</span>
           </span>
         </div>
-        {/* The demo has no account to manage or log out of. */}
-        {!isDemo && (
-          <nav className="flex items-center gap-2" aria-label="Account">
-            <button className={accountItem} type="button" onClick={startTour} data-tour="tour-button">tour</button>
-            <Link className={accountItem} to="/account">account</Link>
-            <button className={accountItem} type="button" onClick={() => void logoutAndReload()}>log out</button>
-          </nav>
-        )}
+        <nav className="flex items-center gap-2" aria-label="Account">
+          <button
+            className={accountItem}
+            type="button"
+            onClick={() => setTheme(theme === 'winter' ? 'default' : 'winter')}
+            aria-pressed={theme === 'winter'}
+            title="Toggle winter theme"
+          >
+            {theme === 'winter' ? '❄ winter' : '❄ default'}
+          </button>
+          {/* The demo has no account to manage or log out of. */}
+          {!isDemo && (
+            <>
+              <button className={accountItem} type="button" onClick={startTour} data-tour="tour-button">tour</button>
+              <Link className={accountItem} to="/account">account</Link>
+              <button className={accountItem} type="button" onClick={() => void logoutAndReload()}>log out</button>
+            </>
+          )}
+        </nav>
       </div>
 
       <nav className="flex flex-wrap items-end gap-x-4 gap-y-3" aria-label="Actions">
