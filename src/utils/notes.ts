@@ -1,4 +1,4 @@
-import type { Note } from '../types';
+import type { Note } from '../types.ts';
 
 function generateNoteId(): string {
   return typeof crypto !== 'undefined' && crypto.randomUUID
