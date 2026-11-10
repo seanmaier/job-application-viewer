@@ -73,6 +73,13 @@ export interface CoverLetter {
 export type AppLanguage = 'en' | 'de' | 'sv';
 export type AppFont = 'sans' | 'serif' | 'mono';
 
+export interface Note {
+  id: string;
+  text: string;
+  /** ISO timestamp set when the note was created; absent for notes carried over from the old single free-text field. */
+  createdAt?: string;
+}
+
 // A named, reusable profile a user can maintain independently of any single
 // application — e.g. "Backend (EN)" vs "Frontend (DE)" — so applying for
 // different kinds of roles no longer means overwriting the one base profile.
@@ -99,7 +106,7 @@ export interface ApplicationConfig {
   appliedDate?: string;
   interviewDate?: string;
   finalDecisionDate?: string;
-  notes?: string;
+  notes?: Note[];
   url?: string;
   baseProfileId?: string;
   summaryOverride?: string;

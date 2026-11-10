@@ -1,54 +1,33 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { NotesView } from './NotesView';
+import type { AppLanguage, Note } from '../types';
 
 interface Props {
   company: string;
-  value: string;
-  onSave: (value: string) => void;
+  notes: Note[];
+  language: AppLanguage;
+  onAdd: (text: string) => void;
+  onDelete: (id: string) => void;
   onClose: () => void;
-  /** Open straight into editing instead of the read-only view. */
-  startEditing?: boolean;
 }
 
 const secondaryBtn = '[font-family:var(--font-mono)] text-[11px] bg-transparent text-[color:var(--ink-2)] border border-white/12 rounded px-3.5 py-[6px] cursor-pointer hover:text-[color:var(--ink-invert)]';
-const primaryBtn = '[font-family:var(--font-mono)] text-[11px] bg-[color:var(--accent)] text-[color:var(--ink)] border-none rounded px-4 py-[6px] cursor-pointer hover:opacity-90';
+const primaryBtn = '[font-family:var(--font-mono)] text-[11px] bg-[color:var(--accent)] text-[color:var(--ink)] border-none rounded px-4 py-[6px] cursor-pointer hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:opacity-40';
 
-// An application's notes, larger than the dashboard's narrow table cell allows:
-// a read-only view first (empty notes start in edit mode), with an Edit button
-// to switch to a textarea. In edit mode Ctrl/Cmd+Enter saves; Escape closes.
-export function NotesDialog({ company, value, onSave, onClose, startEditing = false }: Props) {
-  const [editing, setEditing] = useState(startEditing || !value.trim());
-  const [draft, setDraft] = useState(value);
+// An application's notes: a composer for adding a new, separately timestamped
+// entry, and the growing list of everything added so far below it. Ctrl/Cmd+Enter
+// adds the draft; Escape closes.
+export function NotesDialog({ company, notes, language, onAdd, onDelete, onClose }: Props) {
+  const [draft, setDraft] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
 
-  // Focus the textarea when editing, otherwise the dialog itself so Escape
-  // works without clicking into it first.
-  useEffect(() => {
-    const el = textareaRef.current;
-    if (editing && el) {
-      el.focus();
-      el.setSelectionRange(el.value.length, el.value.length);
-    } else {
-      dialogRef.current?.focus();
-    }
-  }, [editing]);
-
-  const save = () => {
-    if (draft !== value) onSave(draft);
-    onClose();
-  };
-
-  // Cancelling an edit goes back to the read-only view when the dialog was
-  // opened there and there is something to show; a dialog opened straight
-  // into editing (e.g. from the application page) just closes.
-  const cancelEdit = () => {
-    if (!startEditing && value.trim()) {
-      setDraft(value);
-      setEditing(false);
-    } else {
-      onClose();
-    }
+  const addNote = () => {
+    const text = draft.trim();
+    if (!text) return;
+    onAdd(text);
+    setDraft('');
+    textareaRef.current?.focus();
   };
 
   return (
@@ -69,40 +48,30 @@ export function NotesDialog({ company, value, onSave, onClose, startEditing = fa
           Notes · <span className="text-[color:var(--accent)] normal-case">{company}</span>
         </div>
 
-        {editing ? (
-          <textarea
-            ref={textareaRef}
-            className="[font-family:var(--font-mono)] text-[12.5px] leading-[1.6] bg-[color:var(--surface)] text-[color:var(--ink-invert)] border-[1.5px] border-[color:var(--rule)] rounded-[5px] p-3 h-[320px] resize-y focus:outline-none focus:border-[color:var(--accent)]"
-            placeholder="Contacts, next steps, anything worth remembering…"
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); save(); }
-            }}
-          />
-        ) : (
-          <div className="bg-[color:var(--surface)] border-[1.5px] border-[color:var(--rule)] rounded-[5px] p-3 min-h-[120px] max-h-[60vh] overflow-y-auto">
-            <NotesView notes={value} />
-          </div>
-        )}
+        <textarea
+          ref={textareaRef}
+          autoFocus
+          className="[font-family:var(--font-mono)] text-[12.5px] leading-[1.6] bg-[color:var(--surface)] text-[color:var(--ink-invert)] border-[1.5px] border-[color:var(--rule)] rounded-[5px] p-3 h-[90px] resize-y focus:outline-none focus:border-[color:var(--accent)]"
+          placeholder="Add a new note… (contacts, next steps, anything worth remembering)"
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); addNote(); }
+          }}
+        />
+        <div className="flex justify-end -mt-2">
+          <button className={primaryBtn} onClick={addNote} disabled={!draft.trim()}>+ Add note</button>
+        </div>
+
+        <div className="border-t border-[color:var(--rule)] pt-3 max-h-[40vh] overflow-y-auto">
+          <NotesView notes={notes} language={language} onDelete={onDelete} />
+        </div>
 
         <div className="flex items-center justify-between gap-2">
           <span className="[font-family:var(--font-mono)] text-[10.5px] text-[color:var(--ink-2)]">
-            {editing ? 'Ctrl+Enter to save · Esc to close' : 'Esc to close'}
+            Ctrl+Enter to add · Esc to close
           </span>
-          <div className="flex gap-2">
-            {editing ? (
-              <>
-                <button className={secondaryBtn} onClick={cancelEdit}>Cancel</button>
-                <button className={primaryBtn} onClick={save}>Save</button>
-              </>
-            ) : (
-              <>
-                <button className={secondaryBtn} onClick={onClose}>Close</button>
-                <button className={primaryBtn} onClick={() => setEditing(true)}>Edit</button>
-              </>
-            )}
-          </div>
+          <button className={secondaryBtn} onClick={onClose}>Close</button>
         </div>
       </div>
     </div>

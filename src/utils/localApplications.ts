@@ -1,6 +1,7 @@
 import type { ApplicationConfig } from '../types';
 import { storage } from './storage';
 import { clearConfigOverride } from './appStorage';
+import { normalizeNotes } from './notes';
 
 const KEY = 'local-apps';
 
@@ -8,7 +9,8 @@ const KEY = 'local-apps';
 export function getAllLocalApplications(): ApplicationConfig[] {
   try {
     const raw = storage.getItem(KEY);
-    return raw ? (JSON.parse(raw) as ApplicationConfig[]) : [];
+    const parsed = raw ? (JSON.parse(raw) as ApplicationConfig[]) : [];
+    return parsed.map((a) => ({ ...a, notes: normalizeNotes(a.notes) }));
   } catch {
     return [];
   }

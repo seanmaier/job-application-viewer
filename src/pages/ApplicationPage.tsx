@@ -15,6 +15,7 @@ import { FONT_LABELS, ALL_FONTS } from '../utils/fonts';
 import { generateTextExport } from '../utils/textExport';
 import { NotesDialog } from '../components/NotesDialog';
 import { NotesView } from '../components/NotesView';
+import { createNote } from '../utils/notes';
 import { buildPdfFilename } from '../utils/pdfFilename';
 import { autoAppliedDateFor, autoInterviewDateFor, autoFinalDecisionDateFor } from '../utils/autoStatusDates';
 import {
@@ -65,9 +66,15 @@ function ApplicationContent({ staticApp }: { staticApp: ApplicationConfig }) {
     getSavedExportFolder().then((handle) => setExportFolderName(handle?.name ?? null));
   }, []);
 
-  const handleNotesSave = (notes: string) => {
+  const handleNotesAdd = (text: string) => {
     const { status: _s, ...rest } = app;
-    save({ ...rest, notes: notes.trim() || undefined });
+    save({ ...rest, notes: [createNote(text), ...(app.notes ?? [])] });
+  };
+
+  const handleNotesDelete = (id: string) => {
+    const { status: _s, ...rest } = app;
+    const updated = (app.notes ?? []).filter((n) => n.id !== id);
+    save({ ...rest, notes: updated.length ? updated : undefined });
   };
 
   const handleFontChange = (font: AppFont) => {
@@ -252,10 +259,15 @@ function ApplicationContent({ staticApp }: { staticApp: ApplicationConfig }) {
               className="[font-family:var(--font-mono)] text-[11px] bg-transparent text-[color:var(--ink-2)] border border-[color:var(--rule)] rounded px-2.5 py-1 cursor-pointer hover:text-[color:var(--ink-invert)] hover:border-[color:var(--ink-2)]"
               onClick={() => setNotesOpen(true)}
             >
-              {app.notes ? 'Edit' : '+ Add'}
+              + Add
             </button>
           </div>
-          <NotesView notes={app.notes ?? ''} className="max-h-[calc(100vh-180px)] overflow-y-auto" />
+          <NotesView
+            notes={app.notes ?? []}
+            language={language}
+            onDelete={handleNotesDelete}
+            className="max-h-[calc(100vh-180px)] overflow-y-auto"
+          />
         </aside>
 
         <div data-tour="documents" className="w-full max-w-[794px] shrink-0 print:max-w-none">
@@ -275,9 +287,10 @@ function ApplicationContent({ staticApp }: { staticApp: ApplicationConfig }) {
       {notesOpen && (
         <NotesDialog
           company={app.company}
-          value={app.notes ?? ''}
-          startEditing
-          onSave={handleNotesSave}
+          notes={app.notes ?? []}
+          language={language}
+          onAdd={handleNotesAdd}
+          onDelete={handleNotesDelete}
           onClose={() => setNotesOpen(false)}
         />
       )}

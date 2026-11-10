@@ -18,6 +18,13 @@ export function formatDateNumeric(isoDate: string, language: AppLanguage): strin
   return new Intl.DateTimeFormat(LOCALES[language], { year: 'numeric', month: '2-digit', day: '2-digit' }).format(date);
 }
 
+/** Formats an ISO timestamp (date + time, as produced by `new Date().toISOString()`) for a note's "created at" label. */
+export function formatDateTime(isoTimestamp: string, language: AppLanguage): string {
+  const date = new Date(isoTimestamp);
+  if (Number.isNaN(date.getTime())) return '';
+  return new Intl.DateTimeFormat(LOCALES[language], { dateStyle: 'medium', timeStyle: 'short' }).format(date);
+}
+
 /** Best-effort parse of a freeform display date (e.g. "July 5, 2026") back to "YYYY-MM-DD" for <input type="date">. */
 export function parseToIsoDate(value: string): string {
   if (!value) return '';
