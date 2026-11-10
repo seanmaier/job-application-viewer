@@ -16,7 +16,7 @@ import { generateTextExport } from '../utils/textExport';
 import { NotesDialog } from '../components/NotesDialog';
 import { NotesView } from '../components/NotesView';
 import { createNote } from '../utils/notes';
-import { buildPdfFilename } from '../utils/pdfFilename';
+import { buildPdfFilename, type PrintTarget } from '../utils/pdfFilename';
 import { autoAppliedDateFor, autoInterviewDateFor, autoFinalDecisionDateFor } from '../utils/autoStatusDates';
 import {
   sanitizeFolderName, renderPageCanvases, buildPdfBlob, writeApplicationPdfs, downloadPdfBlob,
@@ -143,19 +143,20 @@ function ApplicationContent({ staticApp }: { staticApp: ApplicationConfig }) {
       const clCanvases = clPages.length > 0 ? await renderPageCanvases(clPages) : [];
 
       const lang = app.language ?? 'en';
+      const pdfName = (target: PrintTarget) => `${buildPdfFilename(target, lang, profile.name, app.company)}.pdf`;
       const files: Array<{ filename: string; blob: Blob }> = [
-        { filename: `${buildPdfFilename('cv', lang, profile.name)}.pdf`, blob: buildPdfBlob(cvCanvases) },
+        { filename: pdfName('cv'), blob: buildPdfBlob(cvCanvases) },
       ];
       if (clCanvases.length > 0) {
-        files.push({ filename: `${buildPdfFilename('coverLetter', lang, profile.name)}.pdf`, blob: buildPdfBlob(clCanvases) });
-        files.push({ filename: `${buildPdfFilename('both', lang, profile.name)}.pdf`, blob: buildPdfBlob([...cvCanvases, ...clCanvases]) });
+        files.push({ filename: pdfName('coverLetter'), blob: buildPdfBlob(clCanvases) });
+        files.push({ filename: pdfName('both'), blob: buildPdfBlob([...cvCanvases, ...clCanvases]) });
       }
 
+      // The company is already part of every filename, so plain downloads need no extra prefix.
       if (fsaSupported && handle) {
         await writeApplicationPdfs(handle, sanitizeFolderName(app.company), files);
       } else {
-        const companyPrefix = sanitizeFolderName(app.company);
-        files.forEach(({ filename, blob }) => downloadPdfBlob(`${companyPrefix} - ${filename}`, blob));
+        files.forEach(({ filename, blob }) => downloadPdfBlob(filename, blob));
       }
     } catch (e) {
       console.error(e);
