@@ -13,6 +13,7 @@ import { ImportApplicationModal } from '../components/ImportApplicationModal';
 import { BackupModal } from '../components/BackupModal';
 import { DashboardNav } from '../components/dashboard/DashboardNav';
 import { StatsBar } from '../components/dashboard/StatsBar';
+import { numericDateToIso } from '../utils/date';
 import { matchesStat, type StatKey } from '../utils/applicationStats';
 import { createNote } from '../utils/notes';
 import { LANGUAGE_LABELS, languageOf } from '../utils/language';
@@ -201,9 +202,10 @@ export function DashboardPage() {
       const value = (app: typeof a) => {
         if (sortField === 'status') return statuses[app.id] ?? app.status;
         if (sortField === 'language') return languageFor(app);
-        if (sortField === 'appliedDate') return appliedDates[app.id] ?? app.appliedDate ?? '';
-        if (sortField === 'interviewDate') return interviewDates[app.id] ?? app.interviewDate ?? '';
-        if (sortField === 'finalDecisionDate') return finalDecisionDates[app.id] ?? app.finalDecisionDate ?? '';
+        // Dates are stored formatted per language, so compare them as ISO dates.
+        if (sortField === 'appliedDate') return numericDateToIso(appliedDates[app.id] ?? app.appliedDate ?? '');
+        if (sortField === 'interviewDate') return numericDateToIso(interviewDates[app.id] ?? app.interviewDate ?? '');
+        if (sortField === 'finalDecisionDate') return numericDateToIso(finalDecisionDates[app.id] ?? app.finalDecisionDate ?? '');
         return app[sortField] ?? '';
       };
       const cmp = value(a).localeCompare(value(b));
