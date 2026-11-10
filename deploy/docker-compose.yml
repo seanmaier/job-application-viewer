@@ -4,19 +4,23 @@
 #
 # No port is published: the app joins an existing Docker network that your
 # reverse proxy / tunnel container is in, and is reachable there as
-#   http://job-applications:3000
+#   http://vita:3000
+# (also as http://job-applications:3000, its name before the rename, until
+# proxies have moved over).
 #
 # Before the first deploy, create the data volume once on the host. It is
 # external so that `docker compose down -v` or removing the stack never
 # deletes the database:
 #   docker volume create job-applications-data
+# Docker can't rename volumes, so the default keeps the name from before
+# the app was called Vita; existing deployments need no change.
 #
 # Stack environment variables (set them in Portainer, not here):
 #   PROXY_NETWORK  required, name of that existing Docker network
 #   DATA_VOLUME    optional, defaults to job-applications-data
 services:
   app:
-    image: ghcr.io/seanmaier/job-application-viewer:latest
+    image: ghcr.io/seanmaier/vita:latest
     restart: unless-stopped
     environment:
       NODE_ENV: production
@@ -25,6 +29,7 @@ services:
     networks:
       proxy:
         aliases:
+          - vita
           - job-applications
 
 volumes:

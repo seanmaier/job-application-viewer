@@ -1,3 +1,4 @@
+// Named before the app became Vita; renaming it would forget the folder people chose.
 const DB_NAME = 'job-applications';
 const STORE_NAME = 'settings';
 const HANDLE_KEY = 'export-folder-handle';
