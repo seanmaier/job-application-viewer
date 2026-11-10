@@ -1,7 +1,7 @@
 {
-  "name": "Job Applications",
-  "short_name": "Applications",
-  "description": "Track job applications and generate a tailored CV and cover letter for each one.",
+  "name": "Vita",
+  "short_name": "Vita",
+  "description": "One tailored CV and cover letter per job, and every application at a glance.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#161B22",

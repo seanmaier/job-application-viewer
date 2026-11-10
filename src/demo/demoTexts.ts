@@ -13,21 +13,21 @@ interface DemoTexts {
 export const DEMO_TEXTS: Record<AppLanguage, DemoTexts> = {
   en: {
     badge: 'demo',
-    banner: 'Track job applications and generate a tailored, print-ready CV and cover letter for each one. All data is fictional.',
+    banner: 'Vita tracks job applications and generates a tailored, print-ready CV and cover letter for each one. All data is fictional.',
     startTour: 'start tour',
     reset: 'reset demo',
     language: 'Language',
   },
   de: {
     badge: 'Demo',
-    banner: 'Bewerbungen verwalten und für jede Stelle einen passenden, druckfertigen Lebenslauf samt Anschreiben erzeugen. Alle Daten sind erfunden.',
+    banner: 'Vita verwaltet Bewerbungen und erzeugt für jede Stelle einen passenden, druckfertigen Lebenslauf samt Anschreiben. Alle Daten sind erfunden.',
     startTour: 'Tour starten',
     reset: 'Demo zurücksetzen',
     language: 'Sprache',
   },
   sv: {
     badge: 'demo',
-    banner: 'Håll koll på jobbansökningar och skapa ett anpassat, utskriftsklart CV och personligt brev för varje tjänst. All data är påhittad.',
+    banner: 'Vita håller koll på jobbansökningar och skapar ett anpassat, utskriftsklart CV och personligt brev för varje tjänst. All data är påhittad.',
     startTour: 'starta guiden',
     reset: 'återställ demon',
     language: 'Språk',

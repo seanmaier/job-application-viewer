@@ -60,7 +60,7 @@ export function downloadBackup(backup: DataBackup): void {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `job-applications-backup-${backup.exportedAt.slice(0, 10)}.json`;
+  a.download = `vita-backup-${backup.exportedAt.slice(0, 10)}.json`;
   document.body.appendChild(a);
   a.click();
   a.remove();
