@@ -1,18 +1,19 @@
 import { useEffect, useState } from 'react';
 
 /** 'auto' follows the current season; the others pin a theme regardless of date. */
-export type ThemePreference = 'auto' | 'default' | 'winter' | 'autumn';
-export type Theme = 'default' | 'winter' | 'autumn';
+export type ThemePreference = 'auto' | 'default' | 'spring' | 'summer' | 'autumn' | 'winter';
+export type Theme = 'default' | 'spring' | 'summer' | 'autumn' | 'winter';
 
 const STORAGE_KEY = 'vita:theme';
-export const THEME_PREFERENCES: readonly ThemePreference[] = ['auto', 'default', 'winter', 'autumn'];
+export const THEME_PREFERENCES: readonly ThemePreference[] = ['auto', 'default', 'spring', 'summer', 'autumn', 'winter'];
 
-/** Meteorological seasons: only winter (snow) and autumn (leaves) have a theme; spring/summer fall back to default. */
+/** Meteorological seasons, each with its own theme. */
 function seasonTheme(date: Date): Theme {
   const month = date.getMonth(); // 0 = January
   if (month === 11 || month <= 1) return 'winter'; // Dec-Feb
-  if (month >= 8 && month <= 10) return 'autumn'; // Sep-Nov
-  return 'default'; // Mar-Aug
+  if (month <= 4) return 'spring'; // Mar-May
+  if (month <= 7) return 'summer'; // Jun-Aug
+  return 'autumn'; // Sep-Nov
 }
 
 function resolveTheme(preference: ThemePreference): Theme {

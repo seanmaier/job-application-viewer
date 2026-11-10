@@ -53,3 +53,33 @@
   --ph-bg:        #332113;
   --ph-ink:       #F2B860;
 }
+
+/* Spring theme: same structure again, hues shifted to fresh green with a blossom-pink accent. */
+:root[data-theme="spring"] {
+  --ink:          #0A1408;
+  --ink-2:        #8FB37A;
+  --ink-3:        #3F5C34;
+  --ink-invert:   #EAF6E3;
+  --accent:       #FF9FC2;
+  --accent-bg:    #1C3314;
+  --bg:           #0E1C0A;
+  --surface:      #182A10;
+  --rule:         #2E4A22;
+  --ph-bg:        #23331A;
+  --ph-ink:       #C3F17A;
+}
+
+/* Summer theme: same structure again, hues shifted to sun-warmed teal with a golden accent. */
+:root[data-theme="summer"] {
+  --ink:          #140F02;
+  --ink-2:        #D9B56A;
+  --ink-3:        #6B5428;
+  --ink-invert:   #FFF6DF;
+  --accent:       #FFD23F;
+  --accent-bg:    #1C3A3F;
+  --bg:           #10262B;
+  --surface:      #17343A;
+  --rule:         #2A4A50;
+  --ph-bg:        #3A2E12;
+  --ph-ink:       #FFEB85;
+}

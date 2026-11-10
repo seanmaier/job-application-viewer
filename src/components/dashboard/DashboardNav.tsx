@@ -6,7 +6,7 @@ import { startTour } from '../../tour/tourControl';
 import { AppLogo } from '../AppLogo';
 import { THEME_PREFERENCES, useTheme } from '../../hooks/useTheme';
 
-const THEME_ICON = { default: '•', winter: '❄', autumn: '🍂' } as const;
+const THEME_ICON = { default: '•', spring: '🌸', summer: '☀️', autumn: '🍂', winter: '❄' } as const;
 
 // Each group gets its own colour (from the existing tokens), so actions of the
 // same kind are recognisable at a glance: blue creates, purple manages what
