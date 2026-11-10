@@ -74,6 +74,12 @@ npm run dev:server                   # API on :3000, SQLite in ./data/app.db
 npm run dev                          # Vite on :5173, proxies /api
 ```
 
+Or start both with `npm run dev:all`. It first seeds a test user **`dev`**
+with the password **`devpassword`** and sample applications, one of them
+with a version history to try the editor's **History** button. Seeding
+skips a user that already exists; `npm run seed -- --reset` rebuilds it,
+and it never runs with `NODE_ENV=production`.
+
 All edits (applications, statuses, notes, base profiles) are stored per user
 on the server. To move data over from the old browser-only version, export a
 backup there and restore it after logging in.
@@ -85,6 +91,8 @@ backup there and restore it after logging in.
 - `npm run lint` — run Oxlint
 - `npm run preview` — preview the production build locally
 - `npm run dev:server` — run the API with auto-reload
+- `npm run dev:all` — seed the test user, then run the API and the dev server together
+- `npm run seed [-- --reset]` — create (or rebuild) the `dev` test user with sample data
 - `npm run users -- <add|passwd|remove|list> [username] [password]` — manage users
   (`passwd` is for resetting a forgotten password; users change their own in the app)
 - `npm run users -- <token-add|token-revoke> <username> <name>` / `token-list <username>` —
