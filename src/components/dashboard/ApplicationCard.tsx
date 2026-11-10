@@ -4,7 +4,8 @@ import { STATUS_LABELS, STATUS_COLORS } from '../../utils/status';
 import { EditableCell } from './EditableCell';
 import { NotesDialog } from '../NotesDialog';
 import { LANGUAGE_LABELS } from '../../utils/language';
-import type { AppLanguage, ApplicationConfig, ApplicationStatus } from '../../types';
+import { summarizeNotes } from '../../utils/notes';
+import type { AppLanguage, ApplicationConfig, ApplicationStatus, Note } from '../../types';
 
 export type DateFieldName = 'appliedDate' | 'interviewDate' | 'finalDecisionDate';
 
@@ -27,15 +28,17 @@ interface Props {
   appliedDate?: string;
   interviewDate?: string;
   finalDecisionDate?: string;
-  notes?: string;
+  notes?: Note[];
   onStatusChange: (status: ApplicationStatus) => void;
-  onFieldChange: (field: DateFieldName | 'notes', value: string) => void;
+  onFieldChange: (field: DateFieldName, value: string) => void;
+  onNotesAdd: (text: string) => void;
+  onNotesDelete: (id: string) => void;
   onDelete?: () => void;
 }
 
 export function ApplicationCard({
   application, language, status, appliedDate, interviewDate, finalDecisionDate, notes, onStatusChange, onFieldChange,
-  onDelete,
+  onNotesAdd, onNotesDelete, onDelete,
 }: Props) {
   const navigate = useNavigate();
   const [editingStatus, setEditingStatus] = useState(false);
@@ -140,8 +143,8 @@ export function ApplicationCard({
         onClick={(e) => { e.stopPropagation(); setNotesOpen(true); }}
       >
         <div className={cardLabelClass}>notes</div>
-        <p className={`[font-family:var(--font-mono)] text-[12px] text-[color:var(--ink-2)] mt-1 line-clamp-2 whitespace-pre-line ${notes ? '' : 'opacity-40'}`}>
-          {notes || 'tap to add notes'}
+        <p className={`[font-family:var(--font-mono)] text-[12px] text-[color:var(--ink-2)] mt-1 line-clamp-2 whitespace-pre-line ${notes?.length ? '' : 'opacity-40'}`}>
+          {notes?.length ? summarizeNotes(notes) : 'tap to add notes'}
         </p>
       </div>
     </div>
@@ -243,13 +246,13 @@ export function ApplicationCard({
         title="Click to edit final decision date"
       />
 
-      {/* Notes — the cell only previews; editing happens in a dialog */}
+      {/* Notes — the cell only previews; adding/viewing happens in a dialog */}
       <span
-        className={`[font-family:var(--font-mono)] text-[11px] text-[color:var(--ink-2)] w-[170px] shrink-0 pl-3 truncate cursor-pointer hover:opacity-70 transition-opacity ${notes ? '' : 'opacity-40'}`}
+        className={`[font-family:var(--font-mono)] text-[11px] text-[color:var(--ink-2)] w-[170px] shrink-0 pl-3 truncate cursor-pointer hover:opacity-70 transition-opacity ${notes?.length ? '' : 'opacity-40'}`}
         onClick={(e) => { e.stopPropagation(); setNotesOpen(true); }}
-        title={notes ? `${notes}\n\nClick to edit notes` : 'Click to add notes'}
+        title={notes?.length ? 'Click to view notes' : 'Click to add notes'}
       >
-        {notes || '—'}
+        {notes?.length ? summarizeNotes(notes) : '—'}
       </span>
 
       {/* Delete (local apps only) — pinned to the right edge so it stays in
@@ -270,8 +273,10 @@ export function ApplicationCard({
     {notesOpen && (
       <NotesDialog
         company={application.company}
-        value={notes ?? ''}
-        onSave={(v) => onFieldChange('notes', v)}
+        notes={notes ?? []}
+        language={language}
+        onAdd={onNotesAdd}
+        onDelete={onNotesDelete}
         onClose={() => setNotesOpen(false)}
       />
     )}

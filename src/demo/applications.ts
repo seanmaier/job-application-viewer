@@ -1,4 +1,4 @@
-import type { AppLanguage, ApplicationConfig } from '../types';
+import type { AppLanguage, ApplicationConfig, Note } from '../types';
 import { formatDateLong } from '../utils/date';
 import { demoLocale } from './demoMode';
 
@@ -172,13 +172,24 @@ const DEMO: DemoBase[] = [
   },
 ];
 
+// Demo notes carry a plausible creation time (the day applied, when known) so
+// the timestamp badge has something to show instead of "undated".
+function demoNotes(id: string, language: AppLanguage, text: string | undefined, appliedDate: string | undefined): Note[] | undefined {
+  if (!text) return undefined;
+  return [{
+    id: `${id}-${language}-note`,
+    text,
+    ...(appliedDate && { createdAt: `${appliedDate}T09:00:00.000Z` }),
+  }];
+}
+
 function inLanguage({ text, ...base }: DemoBase, language: AppLanguage): ApplicationConfig {
   const t = text[language];
   return {
     ...base,
     language,
     role: t.role,
-    notes: t.notes,
+    notes: demoNotes(base.id, language, t.notes, base.appliedDate),
     summaryOverride: t.summaryOverride,
     coverLetter: t.paragraphs && {
       recipientOrg: t.recipientOrg ?? base.company,

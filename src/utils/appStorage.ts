@@ -1,5 +1,6 @@
 import type { ApplicationConfig } from '../types';
 import { storage } from './storage';
+import { normalizeNotes } from './notes';
 
 type StoredConfig = Omit<ApplicationConfig, 'status'>;
 
@@ -8,7 +9,9 @@ const key = (id: string) => `app-config-${id}`;
 export function getConfigOverride(id: string): StoredConfig | null {
   try {
     const raw = storage.getItem(key(id));
-    return raw ? (JSON.parse(raw) as StoredConfig) : null;
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as StoredConfig;
+    return { ...parsed, notes: normalizeNotes(parsed.notes) };
   } catch {
     return null;
   }

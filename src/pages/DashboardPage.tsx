@@ -12,8 +12,11 @@ import type { DateFieldName } from '../components/dashboard/ApplicationCard';
 import { ImportApplicationModal } from '../components/ImportApplicationModal';
 import { BackupModal } from '../components/BackupModal';
 import { DashboardNav } from '../components/dashboard/DashboardNav';
+import { StatsBar } from '../components/dashboard/StatsBar';
+import { matchesStat, type StatKey } from '../utils/applicationStats';
+import { createNote } from '../utils/notes';
 import { LANGUAGE_LABELS, languageOf } from '../utils/language';
-import type { AppLanguage, ApplicationConfig, ApplicationStatus } from '../types';
+import type { AppLanguage, ApplicationConfig, ApplicationStatus, Note } from '../types';
 
 function readStatus(id: string, fallback: ApplicationStatus): ApplicationStatus {
   return (storage.getItem(`status-${id}`) as ApplicationStatus | null) ?? fallback;
@@ -55,7 +58,7 @@ export function DashboardPage() {
     Object.fromEntries(allApps.map((a) => [a.id, getConfigOverride(a.id)?.finalDecisionDate ?? a.finalDecisionDate])),
   );
 
-  const [notes, setNotes] = useState<Record<string, string | undefined>>(() =>
+  const [notes, setNotes] = useState<Record<string, Note[] | undefined>>(() =>
     Object.fromEntries(allApps.map((a) => [a.id, getConfigOverride(a.id)?.notes ?? a.notes])),
   );
 
@@ -74,6 +77,10 @@ export function DashboardPage() {
   const [languageFilter, setLanguageFilter] = useState<AppLanguage | ''>('');
   const [sortField, setSortField] = useState<SortField | null>(null);
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
+  const [statFilter, setStatFilter] = useState<StatKey | null>(null);
+  const handleStatSelect = (key: StatKey) => {
+    setStatFilter((prev) => (prev === key || key === 'total' ? null : key));
+  };
 
   const applyAutoDates = (app: ApplicationConfig, prevStatus: ApplicationStatus, nextStatus: ApplicationStatus) => {
     const autoApplied = autoAppliedDateFor(prevStatus, nextStatus, appliedDates[app.id] ?? app.appliedDate, app.language);
@@ -101,7 +108,7 @@ export function DashboardPage() {
     setStatuses((prev) => ({ ...prev, [id]: status }));
   };
 
-  const handleFieldChange = (id: string, field: DateFieldName | 'notes', value: string) => {
+  const handleFieldChange = (id: string, field: DateFieldName, value: string) => {
     const app = allApps.find((a) => a.id === id);
     if (!app) return;
     const { status: _s, ...rest } = app;
@@ -121,11 +128,27 @@ export function DashboardPage() {
         setConfigOverride(id, { ...base, finalDecisionDate: trimmed });
         setFinalDecisionDates((prev) => ({ ...prev, [id]: trimmed }));
         break;
-      case 'notes':
-        setConfigOverride(id, { ...base, notes: trimmed });
-        setNotes((prev) => ({ ...prev, [id]: trimmed }));
-        break;
     }
+  };
+
+  const handleNotesAdd = (id: string, text: string) => {
+    const app = allApps.find((a) => a.id === id);
+    if (!app) return;
+    const { status: _s, ...rest } = app;
+    const base = getConfigOverride(id) ?? rest;
+    const updated = [createNote(text), ...(notes[id] ?? [])];
+    setConfigOverride(id, { ...base, notes: updated });
+    setNotes((prev) => ({ ...prev, [id]: updated }));
+  };
+
+  const handleNotesDelete = (id: string, noteId: string) => {
+    const app = allApps.find((a) => a.id === id);
+    if (!app) return;
+    const { status: _s, ...rest } = app;
+    const base = getConfigOverride(id) ?? rest;
+    const updated = (notes[id] ?? []).filter((n) => n.id !== noteId);
+    setConfigOverride(id, { ...base, notes: updated.length ? updated : undefined });
+    setNotes((prev) => ({ ...prev, [id]: updated.length ? updated : undefined }));
   };
 
   const [trashSize, setTrashSize] = useState(countTrashed);
@@ -138,11 +161,19 @@ export function DashboardPage() {
     setTrashSize(countTrashed());
   };
 
-  const hasActiveFilter = !!(search || statusFilter || languageFilter);
+  const statsApps = allApps.map((app) => ({
+    ...app,
+    status: statuses[app.id] ?? app.status,
+    appliedDate: appliedDates[app.id] ?? app.appliedDate,
+    interviewDate: interviewDates[app.id] ?? app.interviewDate,
+  }));
+
+  const hasActiveFilter = !!(search || statusFilter || languageFilter || statFilter);
   const clearFilters = () => {
     setSearch('');
     setStatusFilter('');
     setLanguageFilter('');
+    setStatFilter(null);
   };
 
   const toggleSort = (field: SortField) => {
@@ -156,12 +187,13 @@ export function DashboardPage() {
 
   const sortIndicator = (field: SortField) => (sortField === field ? (sortDir === 'asc' ? ' ▲' : ' ▼') : '');
 
-  const visibleApps = allApps
+  const visibleApps = statsApps
     .filter((app) => {
       const q = search.trim().toLowerCase();
       if (q && !app.company.toLowerCase().includes(q) && !app.role.toLowerCase().includes(q)) return false;
       if (statusFilter && (statuses[app.id] ?? app.status) !== statusFilter) return false;
       if (languageFilter && languageFor(app) !== languageFilter) return false;
+      if (!matchesStat(app, statFilter)) return false;
       return true;
     })
     .sort((a, b) => {
@@ -181,6 +213,8 @@ export function DashboardPage() {
   return (
     <div className="min-h-screen bg-[color:var(--bg)] pt-6 px-4 pb-32 max-w-[1220px] mx-auto sm:pt-12 sm:px-8">
       <DashboardNav trashCount={trashSize} onImport={() => setImportOpen(true)} onBackup={() => setBackupOpen(true)} />
+
+      <StatsBar applications={statsApps} activeFilter={statFilter} onSelect={handleStatSelect} />
 
       {/* Search + filters */}
       <div className="flex flex-wrap items-center gap-2 mb-4">
@@ -322,6 +356,8 @@ export function DashboardPage() {
                 notes={notes[app.id]}
                 onStatusChange={(s) => handleStatusChange(app.id, s)}
                 onFieldChange={(field, value) => handleFieldChange(app.id, field, value)}
+                onNotesAdd={(text) => handleNotesAdd(app.id, text)}
+                onNotesDelete={(noteId) => handleNotesDelete(app.id, noteId)}
                 onDelete={isLocal ? () => handleDelete(app) : undefined}
               />
             );

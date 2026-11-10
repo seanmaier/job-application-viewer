@@ -1,6 +1,7 @@
-import type { ApplicationConfig, ApplicationStatus, AppLanguage, AppFont, CoverLetter } from '../types.ts';
+import type { ApplicationConfig, ApplicationStatus, AppLanguage, AppFont, CoverLetter, Note } from '../types.ts';
 import { slugify } from './slug.ts';
 import { isAppLanguage, LANGUAGE_ERROR } from './language.ts';
+import { normalizeNotes } from './notes.ts';
 
 const STATUSES: ApplicationStatus[] = ['drafting', 'ready', 'sent', 'interview', 'offer', 'rejected', 'withdrawn'];
 const FONTS: AppFont[] = ['sans', 'serif', 'mono'];
@@ -86,9 +87,20 @@ export function validateApplicationConfig(input: unknown): ParseResult {
     }
   }
 
-  for (const key of ['appliedDate', 'interviewDate', 'finalDecisionDate', 'notes', 'url', 'baseProfileId', 'summaryOverride'] as const) {
+  for (const key of ['appliedDate', 'interviewDate', 'finalDecisionDate', 'url', 'baseProfileId', 'summaryOverride'] as const) {
     if (input[key] !== undefined && !isString(input[key])) {
       errors.push(`"${key}" must be a string.`);
+    }
+  }
+
+  // Accepts both the current array-of-notes shape and the legacy single
+  // free-text string, migrating the latter on the fly.
+  let notes: Note[] | undefined;
+  if (input.notes !== undefined) {
+    if (isString(input.notes) || Array.isArray(input.notes)) {
+      notes = normalizeNotes(input.notes);
+    } else {
+      errors.push('"notes" must be a string or an array of notes.');
     }
   }
 
@@ -111,7 +123,7 @@ export function validateApplicationConfig(input: unknown): ParseResult {
     ...(isString(input.appliedDate) && input.appliedDate && { appliedDate: input.appliedDate }),
     ...(isString(input.interviewDate) && input.interviewDate && { interviewDate: input.interviewDate }),
     ...(isString(input.finalDecisionDate) && input.finalDecisionDate && { finalDecisionDate: input.finalDecisionDate }),
-    ...(isString(input.notes) && input.notes && { notes: input.notes }),
+    ...(notes && { notes }),
     ...(isString(input.url) && input.url && { url: input.url }),
     ...(isString(input.baseProfileId) && input.baseProfileId && { baseProfileId: input.baseProfileId }),
     ...(isString(input.summaryOverride) && input.summaryOverride && { summaryOverride: input.summaryOverride }),
