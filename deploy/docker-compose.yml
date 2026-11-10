@@ -18,12 +18,14 @@
 # Stack environment variables (set them in Portainer, not here):
 #   PROXY_NETWORK  required, name of that existing Docker network
 #   DATA_VOLUME    optional, defaults to job-applications-data
+#   LOG_LEVEL      optional, debug | info | warn | error, defaults to info
 services:
   app:
     image: ghcr.io/seanmaier/vita:latest
     restart: unless-stopped
     environment:
       NODE_ENV: production
+      LOG_LEVEL: ${LOG_LEVEL:-info}
     volumes:
       - app-data:/data
     networks:

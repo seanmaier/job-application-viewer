@@ -5,6 +5,8 @@ import { bodyLimit } from 'hono/body-limit';
 import { deleteCookie, getCookie, setCookie } from 'hono/cookie';
 import { csrf } from 'hono/csrf';
 import { createMiddleware } from 'hono/factory';
+import { HTTPException } from 'hono/http-exception';
+import { requestId, type RequestIdVariables } from 'hono/request-id';
 import type { Context } from 'hono';
 import {
   checkCredentials,
@@ -26,6 +28,7 @@ import {
   type User,
 } from './auth.ts';
 import { db, transaction } from './db.ts';
+import { accessLog, clientIp, log, requestFields } from './log.ts';
 import { purgeTrash } from './trash.ts';
 import { v1 } from './v1.ts';
 
@@ -35,7 +38,28 @@ const STATIC_DIR = process.env.STATIC_DIR ?? './dist';
 const SECURE_COOKIE = process.env.COOKIE_SECURE ? process.env.COOKIE_SECURE === 'true' : process.env.NODE_ENV === 'production';
 const COOKIE = 'session';
 
-const app = new Hono<{ Variables: { user: User } }>();
+const app = new Hono<{ Variables: { user: User } & RequestIdVariables }>();
+
+// Registered before the logging middleware, so Docker's health check every
+// 30 seconds doesn't fill the log.
+app.get('/api/health', (c) => c.json({ ok: true }));
+
+// Every API request gets an ID (or keeps the X-Request-Id the proxy sent),
+// returned in the response header and logged with everything the request
+// triggers. Static files aren't logged.
+app.use('/api/*', requestId());
+app.use('/api/*', accessLog);
+
+// Anything a handler didn't expect. HTTPExceptions (body too large, CSRF)
+// are deliberate answers and already show up in the access log by status.
+app.onError((err, c) => {
+  if (err instanceof HTTPException) return err.getResponse();
+  log.error('Unhandled error', requestFields(c), err);
+  const requestId = c.get('requestId');
+  return c.req.path.startsWith('/api/')
+    ? c.json({ error: 'Internal server error.', requestId }, 500)
+    : c.text('Internal Server Error', 500);
+});
 
 // CSRF only threatens cookie auth. A bearer-token request to /api/v1 can't be
 // forged cross-site: browsers never add an Authorization header on their own,
@@ -58,6 +82,16 @@ function startSession(c: Context, userId: number) {
   });
 }
 
+/**
+ * Counts a wrong password toward the lockout and logs it with the username
+ * tried, so guessing shows up in the log.
+ */
+function passwordRejected(c: Context, username: string, event: string) {
+  recordFailure(username);
+  log.warn(event, { user: username, ip: clientIp(c) });
+  if (isLockedOut(username)) log.warn('Account locked for 15 minutes', { user: username, ip: clientIp(c) });
+}
+
 app.post('/api/login', async (c) => {
   const body: { username?: unknown; password?: unknown } = await c.req.json().catch(() => ({}));
   const username = typeof body.username === 'string' ? body.username.trim() : '';
@@ -67,12 +101,13 @@ app.post('/api/login', async (c) => {
 
   const user = await checkCredentials(username, password);
   if (!user) {
-    recordFailure(username);
+    passwordRejected(c, username, 'Login failed');
     return c.json({ error: 'Invalid username or password.' }, 401);
   }
 
   clearFailures(username);
   startSession(c, user.id);
+  log.info('Login', { user: user.username, ip: clientIp(c) });
   return c.json(user);
 });
 
@@ -106,8 +141,6 @@ const requireUserOrToken = createMiddleware<{ Variables: { user: User } }>(async
   return requireUser(c, next);
 });
 
-app.get('/api/health', (c) => c.json({ ok: true }));
-
 app.get('/api/me', requireUser, (c) => c.json(c.get('user')));
 
 // A logged-in user changes their own password. The current one is required
@@ -128,7 +161,7 @@ app.post('/api/password', requireUser, async (c) => {
   const { id, username } = c.get('user');
   if (isLockedOut(username)) return c.json({ error: 'Too many failed attempts. Try again in 15 minutes.' }, 429);
   if (!(await checkCredentials(username, currentPassword))) {
-    recordFailure(username);
+    passwordRejected(c, username, 'Password change rejected');
     // 403, not 401: the session itself is fine, only the password was wrong.
     return c.json({ error: 'The current password is incorrect.' }, 403);
   }
@@ -138,6 +171,7 @@ app.post('/api/password', requireUser, async (c) => {
   // only the other devices are signed out.
   await setPassword(id, newPassword);
   startSession(c, id);
+  log.info('Password changed', { user: username, ip: clientIp(c) });
   return c.body(null, 204);
 });
 
@@ -147,13 +181,16 @@ app.get('/api/tokens', requireUser, (c) => c.json(listApiTokens(c.get('user').id
 
 app.post('/api/tokens', requireUser, async (c) => {
   const body: { name?: unknown } = await c.req.json().catch(() => ({}));
-  const result = createApiToken(c.get('user').id, typeof body.name === 'string' ? body.name : '');
+  const name = typeof body.name === 'string' ? body.name.trim() : '';
+  const result = createApiToken(c.get('user').id, name);
   if (!result.ok) return c.json({ error: result.error }, result.status);
+  log.info('API token created', { user: c.get('user').username, token: name });
   return c.json({ token: result.token }, 201);
 });
 
 app.delete('/api/tokens/:name', requireUser, (c) => {
   if (!revokeApiToken(c.get('user').id, c.req.param('name'))) return c.json({ error: 'No such token.' }, 404);
+  log.info('API token revoked', { user: c.get('user').username, token: c.req.param('name') });
   return c.body(null, 204);
 });
 
@@ -205,15 +242,45 @@ app.get('/*', serveStatic({ root: STATIC_DIR, path: 'index.html' }));
 // within an hour of their retention period running out (TRASH_RETENTION_DAYS
 // in src/utils/trash.ts).
 function housekeeping() {
-  deleteExpiredSessions();
-  const purged = purgeTrash();
-  if (purged.applications || purged.baseProfiles) {
-    console.log(`Purged ${purged.applications} application(s) and ${purged.baseProfiles} base profile(s) from the trash.`);
+  try {
+    deleteExpiredSessions();
+    const purged = purgeTrash();
+    if (purged.applications || purged.baseProfiles) {
+      log.info('Purged trash', { applications: purged.applications, baseProfiles: purged.baseProfiles });
+    }
+  } catch (err) {
+    // Logged and retried next hour instead of taking the server down.
+    log.error('Housekeeping failed', {}, err);
   }
 }
 housekeeping();
 setInterval(housekeeping, 60 * 60 * 1000).unref();
 
-serve({ fetch: app.fetch, port: PORT }, (info) => {
-  console.log(`Listening on http://localhost:${info.port}`);
+// Errors outside any request leave the process in an unknown state: log them
+// in the same format, then exit so Docker's restart policy starts it fresh.
+process.on('uncaughtException', (err) => {
+  log.error('Uncaught exception, exiting', {}, err);
+  process.exit(1);
 });
+process.on('unhandledRejection', (reason) => {
+  log.error('Unhandled promise rejection, exiting', {}, reason);
+  process.exit(1);
+});
+
+const server = serve({ fetch: app.fetch, port: PORT }, (info) => {
+  log.info('Listening', { url: `http://localhost:${info.port}`, logLevel: process.env.LOG_LEVEL ?? 'info' });
+});
+
+// Node as PID 1 in the container ignores SIGTERM unless it's handled, so
+// `docker stop` would wait 10 seconds and kill it. Finish open requests and
+// close the database cleanly instead.
+function shutdown(signal: string) {
+  log.info('Shutting down', { signal });
+  setTimeout(() => process.exit(0), 5000).unref();
+  server.close(() => {
+    db.close();
+    process.exit(0);
+  });
+}
+process.once('SIGTERM', shutdown);
+process.once('SIGINT', shutdown);

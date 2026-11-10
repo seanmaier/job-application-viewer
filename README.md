@@ -161,6 +161,40 @@ Files under `private/` are never part of the image.
    Polling mechanism and turn on "Re-pull image" and "Force redeployment"
    (the image tag stays `latest`, so the Git commit alone shows no change).
 
+### Logs
+
+The server writes its log to the container output (`docker logs`, or the
+container's log view in Portainer) in [logfmt](https://brandur.org/logfmt),
+the `key=value` format of Go's `slog`, Heroku and Grafana Loki. Every event
+is exactly one line and starts with `time`, `level` and `msg`:
+
+```
+time=2026-11-10T09:12:03.512Z level=INFO msg=request method=PUT path=/api/data status=204 ms=4 user=sean ip=203.0.113.7 rid=3ca15044-…
+time=2026-11-10T09:12:41.020Z level=WARN msg="Login failed" user=sean ip=203.0.113.7
+```
+
+- Every `/api` request gets a line once it's answered: `INFO` for success,
+  `WARN` for 4xx, `ERROR` for 5xx. The health check and static files are left
+  out; query strings, headers and bodies are never logged.
+- Logins, failed logins, lockouts, password changes and created or revoked API
+  tokens are logged as events.
+- An unexpected error logs `err` and its `stack` (line breaks escaped as `\n`,
+  so the event stays on one line) with the request's `rid`. The same ID comes
+  back in the `X-Request-Id` response header and in the 500 response, so
+  `docker logs vita-app-1 2>&1 | grep <rid>` finds it. An ID the proxy already
+  sent in `X-Request-Id` is kept.
+- `LOG_LEVEL` (`debug`, `info`, `warn`, `error`; default `info`) sets the
+  lowest level shown, e.g. `warn` for errors and failed requests only. Set it
+  as a stack environment variable in Portainer.
+
+To read the log in VS Code, save it to a `.log` file and open it with the
+[Log File Highlighter](https://marketplace.visualstudio.com/items?itemName=emilast.LogFileHighlighter)
+extension, which colors the timestamps, levels and request IDs:
+
+```bash
+docker logs vita-app-1 > vita.log 2>&1
+```
+
 Data lives in that volume (`/data/app.db` in the container). SQLite also keeps
 recent writes in `app.db-wal`, so back up the whole volume with the container
 stopped:
