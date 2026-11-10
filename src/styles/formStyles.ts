@@ -40,3 +40,9 @@ export const editAppCompany = 'text-[color:var(--accent)] font-semibold';
 export const editAppHeaderActions = 'flex items-center gap-2 shrink-0';
 export const editResetBtn = '[font-family:var(--font-mono)] text-[11px] bg-transparent text-[color:var(--ink-3)] border border-white/12 rounded px-3 py-[5px] cursor-pointer tracking-[0.03em] hover:text-[color:var(--status-rejected)] hover:border-[color:var(--status-rejected)]';
 export const editSaveBtn = '[font-family:var(--font-mono)] text-[11px] bg-[color:var(--accent)] text-[color:var(--ink)] font-semibold border-none rounded px-4 py-1.5 cursor-pointer tracking-[0.03em] transition-[filter] duration-150 hover:brightness-110';
+
+// Six-dot grip for drag-reordering. Only shown on fine pointers (mouse/trackpad),
+// where native drag-and-drop works reliably; touch devices keep the ↑/↓ buttons.
+export const nafDragHandle = 'hidden pointer-fine:flex items-center justify-center shrink-0 w-5 h-[34px] text-[color:var(--ink-3)] cursor-grab active:cursor-grabbing rounded hover:text-[color:var(--accent)]';
+export const dropBefore = 'shadow-[0_-2px_0_0_var(--accent)]';
+export const dropAfter = 'shadow-[0_2px_0_0_var(--accent)]';
