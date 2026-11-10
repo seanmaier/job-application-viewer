@@ -1,8 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <!-- A page with a folded corner (CV and cover letter) holding a prompt (the app's terminal look). -->
+  <!-- Vita's mark: a "V" followed by a cursor, as if typing "vita" at a prompt (the app's terminal look). -->
   <rect width="64" height="64" rx="14" fill="#161B22"/>
-  <path d="M19 10h18l10 10v32a4 4 0 0 1-4 4H19a4 4 0 0 1-4-4V14a4 4 0 0 1 4-4z" fill="#0D1117" stroke="#79C0FF" stroke-width="4" stroke-linejoin="round"/>
-  <path d="M37 10v10h10" fill="none" stroke="#79C0FF" stroke-width="4" stroke-linejoin="round"/>
-  <path d="M22.5 30.5l6 5.5-6 5.5" fill="none" stroke="#79C0FF" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M32.5 42h8" fill="none" stroke="#C9D1D9" stroke-width="4" stroke-linecap="round"/>
+  <path d="M13 17l11.5 28L36 17" fill="none" stroke="#79C0FF" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M41.5 45h10" fill="none" stroke="#C9D1D9" stroke-width="7" stroke-linecap="round"/>
 </svg>
