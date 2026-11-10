@@ -5,7 +5,12 @@ export type ThemePreference = 'auto' | 'default' | 'spring' | 'summer' | 'autumn
 export type Theme = 'default' | 'spring' | 'summer' | 'autumn' | 'winter';
 
 const STORAGE_KEY = 'vita:theme';
-export const THEME_PREFERENCES: readonly ThemePreference[] = ['auto', 'default', 'spring', 'summer', 'autumn', 'winter'];
+
+// Pinning a specific season is a dev-only way to preview it; production only
+// ever lets someone turn the (real, current) season on or off.
+export const THEME_PREFERENCES: readonly ThemePreference[] = import.meta.env.DEV
+  ? ['auto', 'default', 'spring', 'summer', 'autumn', 'winter']
+  : ['auto', 'default'];
 
 /** Meteorological seasons, each with its own theme. */
 function seasonTheme(date: Date): Theme {

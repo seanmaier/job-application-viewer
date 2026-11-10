@@ -89,9 +89,11 @@ export function DashboardNav({ trashCount, onImport, onBackup }: Props) {
             className={accountItem}
             type="button"
             onClick={cycleTheme}
-            title="Cycle theme (auto follows the season)"
+            title={import.meta.env.DEV ? 'Cycle theme (auto follows the season; dev-only preview of the others)' : 'Toggle the seasonal theme'}
           >
-            {THEME_ICON[theme]} {preference === 'auto' ? `auto (${theme})` : preference}
+            {import.meta.env.DEV
+              ? `${THEME_ICON[theme]} ${preference === 'auto' ? `auto (${theme})` : preference}`
+              : `${THEME_ICON[theme]} ${preference === 'auto' ? 'on' : 'off'}`}
           </button>
           {/* The demo has no account to manage or log out of. */}
           {!isDemo && (
