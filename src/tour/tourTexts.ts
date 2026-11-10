@@ -44,12 +44,12 @@ export const TOUR_TEXTS: Record<AppLanguage, TourTexts> = {
     done: 'start exploring',
     steps: {
       welcomeDemo: {
-        title: 'Welcome to the demo',
-        body: 'This app manages job applications end to end: one dashboard for all of them, and for each one a CV and cover letter tailored to the job. This short tour points out the important parts. Everything here is made up, and nothing you change leaves this browser tab.',
+        title: 'Welcome to the Vita demo',
+        body: 'Vita manages job applications end to end: one dashboard for all of them, and for each one a CV and cover letter tailored to the job. This short tour points out the important parts. Everything here is made up, and nothing you change leaves this browser tab.',
       },
       welcomeApp: {
-        title: 'Welcome',
-        body: 'This app manages your job applications end to end: one dashboard for all of them, and for each one a CV and cover letter tailored to the job. This short tour points out the important parts; it only shows once, and you can restart it any time.',
+        title: 'Welcome to Vita',
+        body: 'Vita manages your job applications end to end: one dashboard for all of them, and for each one a CV and cover letter tailored to the job. This short tour points out the important parts; it only shows once, and you can restart it any time.',
       },
       list: {
         title: 'Every application at a glance',
@@ -77,7 +77,7 @@ export const TOUR_TEXTS: Record<AppLanguage, TourTexts> = {
       },
       finishDemo: {
         title: 'Over to you',
-        body: 'Click around freely. Up here you can restart this tour, switch the demo language or reset all changes. In the real app every user logs in, data lives on the server, and an API lets an AI assistant draft applications.',
+        body: 'Click around freely. Up here you can restart this tour, switch the demo language or reset all changes. Outside the demo, every user logs in, data lives on the server, and an API lets an AI assistant draft applications.',
       },
       finishApp: {
         title: 'Over to you',
@@ -95,12 +95,12 @@ export const TOUR_TEXTS: Record<AppLanguage, TourTexts> = {
     done: 'Los geht’s',
     steps: {
       welcomeDemo: {
-        title: 'Willkommen zur Demo',
-        body: 'Diese App begleitet Bewerbungen von Anfang bis Ende: ein Dashboard für alle Bewerbungen und zu jeder ein Lebenslauf und Anschreiben, zugeschnitten auf die Stelle. Diese kurze Tour zeigt dir die wichtigsten Stellen. Alles hier ist erfunden, und deine Änderungen verlassen diesen Browser-Tab nicht.',
+        title: 'Willkommen zur Vita-Demo',
+        body: 'Vita begleitet Bewerbungen von Anfang bis Ende: ein Dashboard für alle Bewerbungen und zu jeder ein Lebenslauf und Anschreiben, zugeschnitten auf die Stelle. Diese kurze Tour zeigt dir die wichtigsten Stellen. Alles hier ist erfunden, und deine Änderungen verlassen diesen Browser-Tab nicht.',
       },
       welcomeApp: {
-        title: 'Willkommen',
-        body: 'Diese App begleitet deine Bewerbungen von Anfang bis Ende: ein Dashboard für alle Bewerbungen und zu jeder ein Lebenslauf und Anschreiben, zugeschnitten auf die Stelle. Diese kurze Tour zeigt dir die wichtigsten Stellen; sie erscheint nur einmal, du kannst sie aber jederzeit neu starten.',
+        title: 'Willkommen bei Vita',
+        body: 'Vita begleitet deine Bewerbungen von Anfang bis Ende: ein Dashboard für alle Bewerbungen und zu jeder ein Lebenslauf und Anschreiben, zugeschnitten auf die Stelle. Diese kurze Tour zeigt dir die wichtigsten Stellen; sie erscheint nur einmal, du kannst sie aber jederzeit neu starten.',
       },
       list: {
         title: 'Alle Bewerbungen auf einen Blick',
@@ -128,7 +128,7 @@ export const TOUR_TEXTS: Record<AppLanguage, TourTexts> = {
       },
       finishDemo: {
         title: 'Jetzt bist du dran',
-        body: 'Klick dich frei durch. Hier oben startest du die Tour neu, wechselst die Sprache der Demo oder setzt alle Änderungen zurück. In der echten App meldet sich jeder Nutzer an, die Daten liegen auf dem Server, und über eine API kann ein KI-Assistent Bewerbungen vorbereiten.',
+        body: 'Klick dich frei durch. Hier oben startest du die Tour neu, wechselst die Sprache der Demo oder setzt alle Änderungen zurück. Außerhalb der Demo meldet sich jeder Nutzer an, die Daten liegen auf dem Server, und über eine API kann ein KI-Assistent Bewerbungen vorbereiten.',
       },
       finishApp: {
         title: 'Jetzt bist du dran',
@@ -146,12 +146,12 @@ export const TOUR_TEXTS: Record<AppLanguage, TourTexts> = {
     done: 'börja utforska',
     steps: {
       welcomeDemo: {
-        title: 'Välkommen till demon',
-        body: 'Appen hanterar jobbansökningar från början till slut: en översikt över alla ansökningar och för varje ansökan ett CV och personligt brev anpassat efter tjänsten. Den här korta guiden visar de viktigaste delarna. Allt här är påhittat, och inget du ändrar lämnar den här webbläsarfliken.',
+        title: 'Välkommen till Vita-demon',
+        body: 'Vita hanterar jobbansökningar från början till slut: en översikt över alla ansökningar och för varje ansökan ett CV och personligt brev anpassat efter tjänsten. Den här korta guiden visar de viktigaste delarna. Allt här är påhittat, och inget du ändrar lämnar den här webbläsarfliken.',
       },
       welcomeApp: {
-        title: 'Välkommen',
-        body: 'Appen hanterar dina jobbansökningar från början till slut: en översikt över alla ansökningar och för varje ansökan ett CV och personligt brev anpassat efter tjänsten. Den här korta guiden visar de viktigaste delarna; den visas bara en gång, men du kan starta om den när du vill.',
+        title: 'Välkommen till Vita',
+        body: 'Vita hanterar dina jobbansökningar från början till slut: en översikt över alla ansökningar och för varje ansökan ett CV och personligt brev anpassat efter tjänsten. Den här korta guiden visar de viktigaste delarna; den visas bara en gång, men du kan starta om den när du vill.',
       },
       list: {
         title: 'Alla ansökningar på ett ögonblick',
@@ -179,7 +179,7 @@ export const TOUR_TEXTS: Record<AppLanguage, TourTexts> = {
       },
       finishDemo: {
         title: 'Nu är det din tur',
-        body: 'Klicka runt fritt. Här uppe startar du om guiden, byter språk för demon eller återställer alla ändringar. I den riktiga appen loggar varje användare in, datan sparas på servern och via ett API kan en AI-assistent förbereda ansökningar.',
+        body: 'Klicka runt fritt. Här uppe startar du om guiden, byter språk för demon eller återställer alla ändringar. Utanför demon loggar varje användare in, datan sparas på servern och via ett API kan en AI-assistent förbereda ansökningar.',
       },
       finishApp: {
         title: 'Nu är det din tur',

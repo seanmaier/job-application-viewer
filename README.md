@@ -1,8 +1,9 @@
-# Job Applications
+# Vita
 
-A small React + TypeScript app for managing job applications: it generates a
-print-ready CV and cover letter from structured JSON data, and tracks each
-application's status (drafting, sent, interview, etc.) from a single dashboard.
+**One CV per job.** Vita is a small React + TypeScript app for managing job
+applications: it generates a print-ready CV and cover letter, tailored to
+each job, from structured JSON data, and tracks each application's status
+(drafting, sent, interview, etc.) from a single dashboard.
 
 This is a personal tool, shared as a template — clone it, fill in your own
 data, and use it to manage your own applications.
