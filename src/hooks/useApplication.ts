@@ -6,6 +6,7 @@ import {
   clearConfigOverride,
   hasConfigOverride,
 } from '../utils/appStorage';
+import { setChangeMessage } from '../utils/storage';
 
 export function useApplication(staticApp: ApplicationConfig) {
   const [app, setApp] = useState<ApplicationConfig>(() => {
@@ -15,8 +16,10 @@ export function useApplication(staticApp: ApplicationConfig) {
 
   const [isDirty, setIsDirty] = useState(() => hasConfigOverride(staticApp.id));
 
-  const save = (updated: Omit<ApplicationConfig, 'status'>) => {
+  /** `message` optionally says what changed; it shows in the application's version history. */
+  const save = (updated: Omit<ApplicationConfig, 'status'>, message = '') => {
     const stored = { ...updated, id: staticApp.id };
+    setChangeMessage(staticApp.id, message);
     setConfigOverride(staticApp.id, stored);
     setApp((prev) => ({ ...stored, status: prev.status }));
     setIsDirty(true);
