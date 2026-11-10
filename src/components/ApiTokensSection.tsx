@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import { createApiToken, fetchApiTokens, revokeApiToken, type ApiToken } from '../utils/api';
 import { nafInput, nafLabel, nafRemoveBtn, primaryButton } from '../styles/formStyles';
+import { TokenListSkeleton } from './Skeleton';
 
 const hint = '[font-family:var(--font-mono)] text-[10.5px] text-[color:var(--ink-3)] leading-[1.6]';
 
@@ -73,6 +74,7 @@ export function ApiTokensSection() {
         your password. A token can't log in, change your password or manage tokens.
       </p>
 
+      {!tokens && !error && <TokenListSkeleton />}
       {tokens && tokens.length > 0 && (
         <ul className="flex flex-col gap-2 list-none p-0 m-0">
           {tokens.map((t) => (
