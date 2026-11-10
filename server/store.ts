@@ -19,8 +19,11 @@ export function getValue(userId: number, key: string): string | null {
 
 /** Parses a stored JSON value; a corrupt one reads as missing, like the frontend treats it. */
 export function getJson<T>(userId: number, key: string): T | null {
-  const raw = getValue(userId, key);
-  if (raw === null) return null;
+  return parseJson<T>(getValue(userId, key));
+}
+
+export function parseJson<T>(raw: string | null | undefined): T | null {
+  if (raw === null || raw === undefined) return null;
   try {
     return JSON.parse(raw) as T;
   } catch {

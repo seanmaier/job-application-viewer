@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, Link, useNavigate, useBlocker } from 'react-router-dom';
 import { applications } from '../data/applications';
 import { getAllLocalApplications } from '../utils/localApplications';
@@ -20,6 +20,10 @@ import { SkillGroupsEditor } from '../components/SkillGroupsEditor';
 import { ExportSkillGroupsButton } from '../components/ExportSkillGroupsButton';
 import { ImportSkillGroupsModal } from '../components/ImportSkillGroupsModal';
 import { UnsavedChangesDialog } from '../components/UnsavedChangesDialog';
+import { VersionHistoryDialog } from '../components/VersionHistoryDialog';
+import { ChangeBar } from '../components/ChangeBar';
+import { isDemo } from '../demo/demoMode';
+import type { DiffNames } from '../utils/versionDiff';
 import { JsonConfigPanel } from '../components/JsonConfigPanel';
 import { FeaturedProjectsPicker } from '../components/FeaturedProjectsPicker';
 import { MoveButtons } from '../components/MoveButtons';
@@ -31,7 +35,7 @@ import {
   nafCheckboxLabel, nafCheckboxInput, nafParagraphRow, nafRemoveBtn, nafAddBtn,
   newAppPage, newAppBack, newAppTitle, newAppBody, newAppForm,
   newAppPreview, napHeader, napFilename, napHint,
-  editAppHeader, editAppCompany, editAppHeaderActions, editResetBtn, editSaveBtn,
+  editAppHeader, editAppCompany, editAppHeaderActions, editHistoryBtn, editMessageInput, editResetBtn, editSaveBtn,
 } from '../styles/formStyles';
 
 const LANGUAGE_DEFAULT_PREFIX = 'language-default:';
@@ -52,6 +56,9 @@ function EditContent({ staticApp, onReload }: { staticApp: ApplicationConfig; on
   const [mobilePanel, setMobilePanel] = useState<'form' | 'preview'>('form');
   const [jsonText, setJsonText] = useState('');
   const [jsonBaseline, setJsonBaseline] = useState('');
+  const [historyOpen, setHistoryOpen] = useState(false);
+  // Like a commit message: optionally says what this save changes.
+  const [changeMessage, setChangeMessage] = useState('');
 
   const [company, setCompany] = useState(app.company);
   const [role, setRole] = useState(app.role);
@@ -157,7 +164,7 @@ function EditContent({ staticApp, onReload }: { staticApp: ApplicationConfig; on
   }, [isFormDirty]);
 
   const handleSave = () => {
-    save(buildConfig());
+    save(buildConfig(), changeMessage);
     skipBlockRef.current = true;
     navigate(`/application/${staticApp.id}`);
   };
@@ -167,6 +174,20 @@ function EditContent({ staticApp, onReload }: { staticApp: ApplicationConfig; on
     reset();
     skipBlockRef.current = true;
     navigate(`/application/${staticApp.id}`);
+  };
+
+  // Readable names for the ids a version diff mentions. Projects come from
+  // the profile the form currently shows; ids it doesn't know stay as they are.
+  const historyNames = useMemo((): DiffNames => ({
+    baseProfile: (id) => baseProfiles.find((p) => p.id === id)?.name,
+    project: (id) => profile.projects.find((p) => p.id === id)?.name,
+  }), [baseProfiles, profile]);
+
+  // A restore rewrites the stored config on the server: drop the form's
+  // state and remount it from what's stored now.
+  const handleRestored = () => {
+    setHistoryOpen(false);
+    onReload();
   };
 
   const previewApp: ApplicationConfig = { ...buildConfig(), status: app.status };
@@ -186,7 +207,7 @@ function EditContent({ staticApp, onReload }: { staticApp: ApplicationConfig; on
   // Persists the JSON config, then remounts the form so it shows what was saved.
   const handleApplyJson = (config: ApplicationConfig) => {
     const { status: _status, ...rest } = config;
-    save({ ...rest, id: staticApp.id });
+    save({ ...rest, id: staticApp.id }, changeMessage);
     onReload();
   };
 
@@ -200,10 +221,27 @@ function EditContent({ staticApp, onReload }: { staticApp: ApplicationConfig; on
           Editing &nbsp;<span className={editAppCompany}>{staticApp.company}</span>
         </span>
         <div className={editAppHeaderActions}>
+          {!isDemo && (
+            // On desktop the change bar under the form takes over history and message.
+            <button className={`${editHistoryBtn} lg:hidden`} onClick={() => setHistoryOpen(true)}>
+              History
+            </button>
+          )}
           {isDirty && (
             <button className={editResetBtn} onClick={handleReset}>
               Reset to default
             </button>
+          )}
+          {!isDemo && (
+            <input
+              className={`${editMessageInput} lg:hidden`}
+              placeholder="What changed? (optional)"
+              aria-label="Describe what this save changes (optional)"
+              maxLength={500}
+              value={changeMessage}
+              onChange={(e) => setChangeMessage(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') handleSave(); }}
+            />
           )}
           <button className={editSaveBtn} onClick={handleSave}>
             Save changes
@@ -471,6 +509,16 @@ function EditContent({ staticApp, onReload }: { staticApp: ApplicationConfig; on
               </div>
             </>
           )}
+
+          {!isDemo && (
+            <ChangeBar
+              appId={staticApp.id}
+              message={changeMessage}
+              onMessageChange={setChangeMessage}
+              onSave={handleSave}
+              onOpenHistory={() => setHistoryOpen(true)}
+            />
+          )}
         </div>
 
         {/* ── Live preview ── */}
@@ -528,9 +576,20 @@ function EditContent({ staticApp, onReload }: { staticApp: ApplicationConfig; on
           onCancel={() => blocker.reset()}
           onDiscard={() => blocker.proceed()}
           onSave={() => {
-            save(buildConfig());
+            save(buildConfig(), changeMessage);
             blocker.proceed();
           }}
+        />
+      )}
+
+      {historyOpen && (
+        <VersionHistoryDialog
+          appId={staticApp.id}
+          company={staticApp.company}
+          names={historyNames}
+          hasUnsavedEdits={isFormDirty}
+          onRestored={handleRestored}
+          onClose={() => setHistoryOpen(false)}
         />
       )}
 

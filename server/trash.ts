@@ -1,5 +1,6 @@
 import { isPurgeDue } from '../src/utils/trash.ts';
 import { db, transaction } from './db.ts';
+import { deleteVersions } from './history.ts';
 import { KEYS, removeValue, setJson } from './store.ts';
 
 interface Trashable {
@@ -33,8 +34,8 @@ function purgeList(key: string, now: number): { userId: number; purged: Trashabl
 
 /**
  * Permanently removes trashed applications and base profiles whose retention
- * period has passed. A purged application takes its saved edits and status
- * with it; applications still pointing at a purged base profile fall back to
+ * period has passed. A purged application takes its saved edits, status and
+ * version history with it; applications still pointing at a purged base profile fall back to
  * the language default profile, as the app warns. Returns the counts.
  */
 export function purgeTrash(now: number = Date.now()): { applications: number; baseProfiles: number } {
@@ -44,6 +45,7 @@ export function purgeTrash(now: number = Date.now()): { applications: number; ba
       for (const app of purged) {
         removeValue(userId, KEYS.appConfig(app.id));
         removeValue(userId, KEYS.status(app.id));
+        deleteVersions(userId, app.id);
       }
     }
     const profiles = purgeList(KEYS.baseProfiles, now);

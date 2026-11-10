@@ -5,6 +5,9 @@
 const data = new Map<string, string>();
 const pendingSet = new Map<string, string>();
 const pendingRemove = new Set<string>();
+// Notes on what a save changed, per application id, sent along with the next
+// batch for the server's version history.
+const pendingMessages = new Map<string, string>();
 let flushTimer: ReturnType<typeof setTimeout> | null = null;
 let inFlight: Promise<void> = Promise.resolve();
 // Counts local writes, so a refresh can tell whether one happened while it
@@ -36,7 +39,7 @@ function scheduleFlush() {
   if (flushTimer === null) flushTimer = setTimeout(flushInBackground, 300);
 }
 
-type Backend = (set: Record<string, string>, remove: string[]) => Promise<void>;
+type Backend = (set: Record<string, string>, remove: string[], messages: Record<string, string>) => Promise<void>;
 let send: Backend = sendToServer;
 
 /** Points writes somewhere other than the server, e.g. the demo's sessionStorage. */
@@ -44,11 +47,11 @@ export function setStorageBackend(backend: Backend): void {
   send = backend;
 }
 
-async function sendToServer(set: Record<string, string>, remove: string[]): Promise<void> {
+async function sendToServer(set: Record<string, string>, remove: string[], messages: Record<string, string>): Promise<void> {
   const res = await fetch('/api/data', {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ set, remove }),
+    body: JSON.stringify({ set, remove, ...(Object.keys(messages).length && { messages }) }),
   });
   if (res.status === 401) {
     // Session expired mid-edit: the login screen is the only way forward.
@@ -68,10 +71,12 @@ export function flush(): Promise<void> {
     if (!pendingSet.size && !pendingRemove.size) return;
     const set = Object.fromEntries(pendingSet);
     const remove = [...pendingRemove];
+    const messages = Object.fromEntries(pendingMessages);
     pendingSet.clear();
     pendingRemove.clear();
+    pendingMessages.clear();
     try {
-      await send(set, remove);
+      await send(set, remove, messages);
       notify(null);
     } catch (e) {
       // Put the batch back (unless newer writes to the same key arrived
@@ -81,6 +86,9 @@ export function flush(): Promise<void> {
       });
       remove.forEach((k) => {
         if (!pendingSet.has(k)) pendingRemove.add(k);
+      });
+      Object.entries(messages).forEach(([id, m]) => {
+        if (!pendingMessages.has(id)) pendingMessages.set(id, m);
       });
       notify(e instanceof Error ? e.message : 'Saving failed.');
       setTimeout(flushInBackground, 5000);
@@ -99,6 +107,13 @@ function flushInBackground() {
 
 export function hasPendingWrites(): boolean {
   return pendingSet.size > 0 || pendingRemove.size > 0;
+}
+
+/** Describes the next write to an application's saved edits, for its version history. */
+export function setChangeMessage(appId: string, message: string): void {
+  const trimmed = message.trim();
+  if (trimmed) pendingMessages.set(appId, trimmed);
+  else pendingMessages.delete(appId);
 }
 
 export const storage = {

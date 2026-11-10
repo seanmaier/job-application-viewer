@@ -24,6 +24,7 @@ node scripts/api.ts GET applications
 node scripts/api.ts GET applications/<id>
 node scripts/api.ts POST applications <datei.json>
 node scripts/api.ts PATCH applications/<id> <datei.json>
+node scripts/api.ts GET applications/<id>/versions          # Versionsverlauf, neueste zuerst
 node scripts/api.ts POST base-profiles <datei.json>
 node scripts/api.ts PUT base-profiles/<id> <datei.json>
 node scripts/api.ts DELETE base-profiles/<id>               # nur Papierkorb (Soft Delete)
@@ -101,6 +102,10 @@ einarbeiten, bis der Nutzer zustimmt. **Erst dann schreiben.**
 ### 6. Speichern
 
 JSON ins Scratchpad schreiben, `POST applications` (bzw. `PATCH applications/<id>`).
+Immer ein Feld `changeMessage` mitschicken: ein Satz, was und warum geändert wurde, z. B.
+`"Summary auf DevOps zugeschnitten, Kubernetes ergänzt, PHP entfernt"`. Es erscheint im
+Versionsverlauf der Bewerbung (Button **History** im Editor), über den der Nutzer jede
+Änderung nachvollziehen und rückgängig machen kann.
 Dem Nutzer die ID und den Link `<JOB_APPS_URL>/application/<id>` nennen. Status nie ändern,
 außer der Nutzer verlangt es ausdrücklich.
 

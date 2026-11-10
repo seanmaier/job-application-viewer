@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "dev:server": "node --watch --env-file-if-exists=.env server/index.ts",
-    "dev:all": "concurrently -n frontend,backend -c blue,magenta \"npm:dev\" \"npm:dev:server\"",
+    "dev:all": "npm run seed && concurrently -n frontend,backend -c blue,magenta \"npm:dev\" \"npm:dev:server\"",
+    "seed": "node --env-file-if-exists=.env server/seed.ts",
     "build": "tsc -b && vite build",
     "start": "node server/index.ts",
     "users": "node server/cli.ts",
@@ -16,6 +17,7 @@
   },
   "dependencies": {
     "@hono/node-server": "^2.1.6",
+    "diff": "9.0.0",
     "hono": "^4.13.16",
     "html2canvas": "^1.4.1",
     "jspdf": "^4.2.1",
