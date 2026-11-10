@@ -1,0 +1,34 @@
+/* Decorative overlay for the winter/autumn themes: a handful of symbols drift
+   down the viewport on a loop. Purely visual, so it's hidden from print and
+   from anyone who asked for reduced motion (see SeasonalEffect.tsx). */
+.seasonal-effect {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.seasonal-effect__particle {
+  position: absolute;
+  top: -10%;
+  line-height: 1;
+  will-change: transform;
+  animation-name: seasonal-fall;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+.seasonal-effect__particle--winter {
+  color: var(--ink-invert);
+  opacity: 0.6;
+}
+
+.seasonal-effect__particle--autumn {
+  opacity: 0.75;
+}
+
+@keyframes seasonal-fall {
+  from { transform: translate(0, -10vh) rotate(0deg); }
+  to   { transform: translate(var(--drift), 110vh) rotate(360deg); }
+}

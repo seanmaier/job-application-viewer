@@ -14,6 +14,7 @@ import { hasPendingWrites, hydrate, onSyncStatus, setStorageBackend } from './ut
 import { DEMO_BASENAME, demoLocale, isDemo, loadDemoData, saveDemoData } from './demo/demoMode';
 import { DemoBanner } from './demo/DemoBanner';
 import { TourHost } from './tour/TourHost';
+import { SeasonalEffect } from './components/SeasonalEffect';
 
 // The demo has no account (password, API tokens), so it has no account page.
 const router = createBrowserRouter([
@@ -89,12 +90,19 @@ export function App() {
     return () => window.removeEventListener('beforeunload', warn);
   }, []);
 
-  if (auth.kind === 'loading') return <div className={`${centered} text-[color:var(--ink-3)]`}>loading…</div>;
-  if (auth.kind === 'error') return <div className={`${centered} text-[color:var(--status-rejected)]`}>{auth.message}</div>;
-  if (auth.kind === 'anonymous') return <LoginPage onLoggedIn={() => void loadData()} />;
+  if (auth.kind === 'loading') {
+    return <><SeasonalEffect /><div className={`${centered} text-[color:var(--ink-3)]`}>loading…</div></>;
+  }
+  if (auth.kind === 'error') {
+    return <><SeasonalEffect /><div className={`${centered} text-[color:var(--status-rejected)]`}>{auth.message}</div></>;
+  }
+  if (auth.kind === 'anonymous') {
+    return <><SeasonalEffect /><LoginPage onLoggedIn={() => void loadData()} /></>;
+  }
 
   return (
     <>
+      <SeasonalEffect />
       {isDemo && <DemoBanner />}
       <RouterProvider router={router} />
       <TourHost navigate={tourNavigate} />
