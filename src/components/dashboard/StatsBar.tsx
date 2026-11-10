@@ -24,6 +24,7 @@ export function StatsBar({ applications, activeFilter, onSelect }: Props) {
     { key: 'active', label: 'active', value: countStat(applications, 'active'), color: STATUS_COLORS.sent },
     { key: 'interviews', label: 'interviews', value: countStat(applications, 'interviews'), color: STATUS_COLORS.interview },
     { key: 'offers', label: 'offers', value: countStat(applications, 'offers'), color: STATUS_COLORS.offer },
+    { key: 'ghosted', label: 'ghosted', value: countStat(applications, 'ghosted'), color: STATUS_COLORS.ghosted },
   ], [applications]);
 
   if (applications.length === 0) return null;

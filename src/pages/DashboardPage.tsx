@@ -6,13 +6,14 @@ import { countTrashed } from '../utils/trashCount';
 import { TRASH_RETENTION_DAYS } from '../utils/trash';
 import { getConfigOverride, setConfigOverride } from '../utils/appStorage';
 import { autoAppliedDateFor, autoInterviewDateFor, autoFinalDecisionDateFor } from '../utils/autoStatusDates';
-import { STATUS_LABELS } from '../utils/status';
+import { STATUS_LABELS, withAutoGhosting } from '../utils/status';
 import { ApplicationCard } from '../components/dashboard/ApplicationCard';
 import type { DateFieldName } from '../components/dashboard/ApplicationCard';
 import { ImportApplicationModal } from '../components/ImportApplicationModal';
 import { BackupModal } from '../components/BackupModal';
 import { DashboardNav } from '../components/dashboard/DashboardNav';
 import { StatsBar } from '../components/dashboard/StatsBar';
+import { numericDateToIso } from '../utils/date';
 import { matchesStat, type StatKey } from '../utils/applicationStats';
 import { createNote } from '../utils/notes';
 import { LANGUAGE_LABELS, languageOf } from '../utils/language';
@@ -43,7 +44,14 @@ export function DashboardPage() {
   const allApps = [...staticApps, ...localApps];
 
   const [statuses, setStatuses] = useState<Record<string, ApplicationStatus>>(() =>
-    Object.fromEntries(allApps.map((a) => [a.id, readStatus(a.id, a.status)])),
+    Object.fromEntries(allApps.map((a) => {
+      const stored = readStatus(a.id, a.status);
+      const status = withAutoGhosting(stored, getConfigOverride(a.id)?.appliedDate ?? a.appliedDate);
+      // Persist an automatic move to "ghosted" right away (idempotent, so
+      // safe if React runs this initializer twice).
+      if (status !== stored) writeStatus(a.id, status);
+      return [a.id, status];
+    })),
   );
 
   const [appliedDates, setAppliedDates] = useState<Record<string, string | undefined>>(() =>
@@ -201,9 +209,10 @@ export function DashboardPage() {
       const value = (app: typeof a) => {
         if (sortField === 'status') return statuses[app.id] ?? app.status;
         if (sortField === 'language') return languageFor(app);
-        if (sortField === 'appliedDate') return appliedDates[app.id] ?? app.appliedDate ?? '';
-        if (sortField === 'interviewDate') return interviewDates[app.id] ?? app.interviewDate ?? '';
-        if (sortField === 'finalDecisionDate') return finalDecisionDates[app.id] ?? app.finalDecisionDate ?? '';
+        // Dates are stored formatted per language, so compare them as ISO dates.
+        if (sortField === 'appliedDate') return numericDateToIso(appliedDates[app.id] ?? app.appliedDate ?? '');
+        if (sortField === 'interviewDate') return numericDateToIso(interviewDates[app.id] ?? app.interviewDate ?? '');
+        if (sortField === 'finalDecisionDate') return numericDateToIso(finalDecisionDates[app.id] ?? app.finalDecisionDate ?? '');
         return app[sortField] ?? '';
       };
       const cmp = value(a).localeCompare(value(b));

@@ -58,6 +58,7 @@ export type ApplicationStatus =
   | 'interview'
   | 'offer'
   | 'rejected'
+  | 'ghosted'
   | 'withdrawn';
 
 export interface CoverLetter {

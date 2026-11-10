@@ -1,13 +1,5 @@
 import type { ApplicationStatus, AppLanguage } from '../types';
-import { formatDateNumeric } from './date';
-
-function todayIso(): string {
-  const d = new Date();
-  const yyyy = d.getFullYear();
-  const mm = String(d.getMonth() + 1).padStart(2, '0');
-  const dd = String(d.getDate()).padStart(2, '0');
-  return `${yyyy}-${mm}-${dd}`;
-}
+import { formatDateNumeric, todayIso } from './date';
 
 function autoDateFor(
   shouldTrigger: boolean,

@@ -24,7 +24,7 @@ import { JsonConfigPanel } from '../components/JsonConfigPanel';
 import { FeaturedProjectsPicker } from '../components/FeaturedProjectsPicker';
 import { MoveButtons } from '../components/MoveButtons';
 import { move } from '../utils/move';
-import { formatDateLong, formatDateNumeric, parseToIsoDate } from '../utils/date';
+import { formatDateLong, formatDateNumeric, numericDateToIso, parseToIsoDate } from '../utils/date';
 import { DEFAULT_CLOSINGS } from '../utils/coverLetterClosing';
 import {
   nafSection, nafRow, nafLabel, nafOptional, nafInput, nafTextarea,
@@ -56,9 +56,9 @@ function EditContent({ staticApp, onReload }: { staticApp: ApplicationConfig; on
   const [company, setCompany] = useState(app.company);
   const [role, setRole] = useState(app.role);
   const [url, setUrl] = useState(app.url ?? '');
-  const [appliedDateISO, setAppliedDateISO] = useState(() => parseToIsoDate(app.appliedDate ?? ''));
-  const [interviewDateISO, setInterviewDateISO] = useState(() => parseToIsoDate(app.interviewDate ?? ''));
-  const [finalDecisionDateISO, setFinalDecisionDateISO] = useState(() => parseToIsoDate(app.finalDecisionDate ?? ''));
+  const [appliedDateISO, setAppliedDateISO] = useState(() => numericDateToIso(app.appliedDate ?? ''));
+  const [interviewDateISO, setInterviewDateISO] = useState(() => numericDateToIso(app.interviewDate ?? ''));
+  const [finalDecisionDateISO, setFinalDecisionDateISO] = useState(() => numericDateToIso(app.finalDecisionDate ?? ''));
   const [language, setLanguage] = useState<AppLanguage>(app.language ?? 'en');
   const [font, setFont] = useState<AppFont>(app.font ?? 'sans');
   const [baseProfiles] = useState(() => getBaseProfiles());
