@@ -25,13 +25,39 @@ export function formatDateTime(isoTimestamp: string, language: AppLanguage): str
   return new Intl.DateTimeFormat(LOCALES[language], { dateStyle: 'medium', timeStyle: 'short' }).format(date);
 }
 
+/** Formats a Date as ISO "YYYY-MM-DD" in local time. */
+export function toIsoDate(date: Date): string {
+  const yyyy = date.getFullYear();
+  const mm = String(date.getMonth() + 1).padStart(2, '0');
+  const dd = String(date.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+/** Today as an ISO "YYYY-MM-DD" date in local time. */
+export function todayIso(): string {
+  return toIsoDate(new Date());
+}
+
 /** Best-effort parse of a freeform display date (e.g. "July 5, 2026") back to "YYYY-MM-DD" for <input type="date">. */
 export function parseToIsoDate(value: string): string {
   if (!value) return '';
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return '';
-  const yyyy = date.getFullYear();
-  const mm = String(date.getMonth() + 1).padStart(2, '0');
-  const dd = String(date.getDate()).padStart(2, '0');
-  return `${yyyy}-${mm}-${dd}`;
+  return toIsoDate(date);
+}
+
+/**
+ * Parses a date as stored on an application (formatDateNumeric output:
+ * "10.11.2026" for de, "11/10/2026" for en, "2026-11-10" for sv) back to
+ * "YYYY-MM-DD". Falls back to parseToIsoDate for anything else, such as
+ * hand-written dates.
+ */
+export function numericDateToIso(value: string): string {
+  const trimmed = value.trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) return trimmed;
+  const de = /^(\d{1,2})\.(\d{1,2})\.(\d{4})$/.exec(trimmed);
+  if (de) return `${de[3]}-${de[2].padStart(2, '0')}-${de[1].padStart(2, '0')}`;
+  const en = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(trimmed);
+  if (en) return `${en[3]}-${en[1].padStart(2, '0')}-${en[2].padStart(2, '0')}`;
+  return parseToIsoDate(trimmed);
 }

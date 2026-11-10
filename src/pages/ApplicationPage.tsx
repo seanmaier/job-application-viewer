@@ -14,7 +14,7 @@ import { STATUS_LABELS, STATUS_COLORS } from '../utils/status';
 import { FONT_LABELS, ALL_FONTS } from '../utils/fonts';
 import { generateTextExport } from '../utils/textExport';
 import { NotesDialog } from '../components/NotesDialog';
-import { NotesView } from '../components/NotesView';
+import { ApplicationTimeline } from '../components/ApplicationTimeline';
 import { createNote } from '../utils/notes';
 import { buildPdfFilename } from '../utils/pdfFilename';
 import { autoAppliedDateFor, autoInterviewDateFor, autoFinalDecisionDateFor } from '../utils/autoStatusDates';
@@ -262,12 +262,20 @@ function ApplicationContent({ staticApp }: { staticApp: ApplicationConfig }) {
               + Add
             </button>
           </div>
-          <NotesView
-            notes={app.notes ?? []}
-            language={language}
-            onDelete={handleNotesDelete}
-            className="max-h-[calc(100vh-180px)] overflow-y-auto"
-          />
+          {app.url && (
+            <a
+              href={app.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              title={app.url}
+              className="[font-family:var(--font-mono)] text-[11.5px] text-[color:var(--accent)] underline underline-offset-2 truncate hover:opacity-80"
+            >
+              Job posting ↗
+            </a>
+          )}
+          <div className="max-h-[calc(100vh-200px)] overflow-y-auto">
+            <ApplicationTimeline app={app} status={status} language={language} onDeleteNote={handleNotesDelete} />
+          </div>
         </aside>
 
         <div data-tour="documents" className="w-full max-w-[794px] shrink-0 print:max-w-none">
