@@ -1,4 +1,5 @@
 import { flush, hydrate, localWriteCount } from './storage';
+import type { AppVersion } from './versionDiff';
 
 export interface SessionUser {
   id: number;
@@ -88,6 +89,22 @@ export async function refreshUserData(): Promise<void> {
   const before = localWriteCount();
   const entries = await fetchUserData();
   if (localWriteCount() === before) hydrate(entries);
+}
+
+/** An application's version history, newest first. */
+export async function fetchVersions(appId: string): Promise<AppVersion[]> {
+  await flush();
+  const res = await fetch(`/api/v1/applications/${encodeURIComponent(appId)}/versions`);
+  if (!res.ok) throw await errorFrom(res, 'Loading the history failed');
+  return res.json();
+}
+
+/** Makes an older version the application's current content (itself recorded as a new version). */
+export async function restoreVersion(appId: string, versionId: number): Promise<void> {
+  await flush();
+  const res = await fetch(`/api/v1/applications/${encodeURIComponent(appId)}/versions/${versionId}/restore`, { method: 'POST' });
+  if (!res.ok) throw await errorFrom(res, 'Restoring the version failed');
+  await refreshUserData();
 }
 
 /** Saves any pending edits, ends the session, and returns to the login screen. */
