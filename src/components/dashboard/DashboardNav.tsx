@@ -4,7 +4,9 @@ import { logoutAndReload } from '../../utils/api';
 import { isDemo } from '../../demo/demoMode';
 import { startTour } from '../../tour/tourControl';
 import { AppLogo } from '../AppLogo';
-import { useTheme } from '../../hooks/useTheme';
+import { THEME_PREFERENCES, useTheme } from '../../hooks/useTheme';
+
+const THEME_ICON = { default: '•', winter: '❄', autumn: '🍂' } as const;
 
 // Each group gets its own colour (from the existing tokens), so actions of the
 // same kind are recognisable at a glance: blue creates, purple manages what
@@ -65,7 +67,11 @@ interface Props {
 
 /** The dashboard's header: title and account at the top, the grouped actions below. */
 export function DashboardNav({ trashCount, onImport, onBackup }: Props) {
-  const { theme, setTheme } = useTheme();
+  const { preference, theme, setPreference } = useTheme();
+  const cycleTheme = () => {
+    const next = THEME_PREFERENCES[(THEME_PREFERENCES.indexOf(preference) + 1) % THEME_PREFERENCES.length];
+    setPreference(next);
+  };
 
   return (
     <header className="mb-6 sm:mb-8 flex flex-col gap-5">
@@ -82,11 +88,10 @@ export function DashboardNav({ trashCount, onImport, onBackup }: Props) {
           <button
             className={accountItem}
             type="button"
-            onClick={() => setTheme(theme === 'winter' ? 'default' : 'winter')}
-            aria-pressed={theme === 'winter'}
-            title="Toggle winter theme"
+            onClick={cycleTheme}
+            title="Cycle theme (auto follows the season)"
           >
-            {theme === 'winter' ? '❄ winter' : '❄ default'}
+            {THEME_ICON[theme]} {preference === 'auto' ? `auto (${theme})` : preference}
           </button>
           {/* The demo has no account to manage or log out of. */}
           {!isDemo && (

@@ -38,3 +38,18 @@
   --ph-bg:        #16332E;
   --ph-ink:       #8FE6C2;
 }
+
+/* Autumn theme: same structure again, hues shifted to warm amber/rust tones. */
+:root[data-theme="autumn"] {
+  --ink:          #140B05;
+  --ink-2:        #C2946B;
+  --ink-3:        #6B4A32;
+  --ink-invert:   #F6E8D8;
+  --accent:       #E8903C;
+  --accent-bg:    #2A1C10;
+  --bg:           #1A1008;
+  --surface:      #2A1C10;
+  --rule:         #4A3220;
+  --ph-bg:        #332113;
+  --ph-ink:       #F2B860;
+}
