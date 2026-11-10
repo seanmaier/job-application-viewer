@@ -1,6 +1,6 @@
 import type { AppLanguage } from '../types';
 
-const LOCALES: Record<AppLanguage, string> = { en: 'en-US', de: 'de-DE' };
+const LOCALES: Record<AppLanguage, string> = { en: 'en-US', de: 'de-DE', sv: 'sv-SE' };
 
 /** Formats an ISO "YYYY-MM-DD" date (as produced by <input type="date">) with the month spelled out. */
 export function formatDateLong(isoDate: string, language: AppLanguage): string {

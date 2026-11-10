@@ -1,8 +1,8 @@
 import type { ApplicationConfig, ApplicationStatus, AppLanguage, AppFont, CoverLetter } from '../types.ts';
 import { slugify } from './slug.ts';
+import { isAppLanguage, LANGUAGE_ERROR } from './language.ts';
 
 const STATUSES: ApplicationStatus[] = ['drafting', 'ready', 'sent', 'interview', 'offer', 'rejected', 'withdrawn'];
-const LANGUAGES: AppLanguage[] = ['en', 'de'];
 const FONTS: AppFont[] = ['sans', 'serif', 'mono'];
 
 export type ParseResult =
@@ -70,10 +70,10 @@ export function validateApplicationConfig(input: unknown): ParseResult {
 
   let language: AppLanguage | undefined;
   if (input.language !== undefined) {
-    if (!isString(input.language) || !LANGUAGES.includes(input.language as AppLanguage)) {
-      errors.push('"language" must be "en" or "de".');
+    if (!isAppLanguage(input.language)) {
+      errors.push(LANGUAGE_ERROR);
     } else {
-      language = input.language as AppLanguage;
+      language = input.language;
     }
   }
 

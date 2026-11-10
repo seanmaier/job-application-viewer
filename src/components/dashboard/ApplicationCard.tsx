@@ -105,6 +105,7 @@ export function ApplicationCard({
 
       {/* Always a select here: there's no hover on touch, and a native picker is easier to hit than a tap-to-edit label */}
       <select
+        data-tour="status"
         className="self-start [font-family:var(--font-mono)] text-[12px] bg-[color:var(--surface)] border border-[color:var(--rule)] rounded px-2 py-1.5 cursor-pointer"
         value={status}
         style={{ color: STATUS_COLORS[status] }}
@@ -182,7 +183,7 @@ export function ApplicationCard({
       </div>
 
       {/* Status — inline select on click */}
-      <div className="w-[116px] shrink-0 flex items-center justify-end pr-1">
+      <div data-tour="status" className="w-[116px] shrink-0 flex items-center justify-end pr-1">
         {editingStatus ? (
           <select
             autoFocus

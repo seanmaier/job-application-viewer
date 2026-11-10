@@ -5,6 +5,7 @@ import { blankProfile, saveBaseProfile, uniqueBaseProfileId } from '../utils/bas
 import { parseProfile } from '../utils/parseProfile';
 import { JsonFileButton } from './JsonFileButton';
 import { nafSection, nafLabel, nafInput, nafAddBtn } from '../styles/formStyles';
+import { LANG_FLAGS, LANGUAGE_LABELS, LANGUAGES } from '../utils/language';
 
 type StartFrom = 'blank' | 'language-default' | 'json' | `duplicate:${string}`;
 
@@ -76,8 +77,9 @@ export function CreateBaseProfileModal({ existingProfiles, onClose, onCreated }:
             value={language}
             onChange={(e) => setLanguage(e.target.value as AppLanguage)}
           >
-            <option value="en">English 🇬🇧</option>
-            <option value="de">Deutsch 🇩🇪</option>
+            {LANGUAGES.map((lang) => (
+              <option key={lang} value={lang}>{LANGUAGE_LABELS[lang]} {LANG_FLAGS[lang]}</option>
+            ))}
           </select>
         </div>
 

@@ -1,5 +1,9 @@
 import type { Profile, AppLanguage } from '../types';
 import { getProfileOverride } from '../utils/profileStorage';
+import { isDemo } from '../demo/demoMode';
+import demoEn from '../demo/profiles/en.json';
+import demoDe from '../demo/profiles/de.json';
+import demoSv from '../demo/profiles/sv.json';
 
 // Real profile data is gitignored (personal info) — glob it so the app still
 // builds and runs on a fresh clone, falling back to the committed example.
@@ -16,10 +20,10 @@ function loadProfile(lang: AppLanguage): Profile {
   return mod.default;
 }
 
-const profiles: Record<AppLanguage, Profile> = {
-  en: loadProfile('en'),
-  de: loadProfile('de'),
-};
+// The demo shows a fictional person instead of the real (or example) profile.
+const profiles: Record<AppLanguage, Profile> = isDemo
+  ? { en: demoEn as Profile, de: demoDe as Profile, sv: demoSv as Profile }
+  : { en: loadProfile('en'), de: loadProfile('de'), sv: loadProfile('sv') };
 
 export function getProfile(language?: AppLanguage): Profile {
   const lang = language ?? 'en';

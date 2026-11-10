@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import type { AppFont, AppLanguage, ApplicationConfig, BaseProfile } from '../types';
-import { LANG_FLAGS } from '../utils/language';
+import { LANG_FLAGS, LANGUAGE_LABELS, LANGUAGES } from '../utils/language';
 import { ALL_FONTS, FONT_LABELS } from '../utils/fonts';
 import { getProfile } from '../data/profiles';
 import { getBaseProfiles } from '../utils/baseProfiles';
@@ -123,13 +123,13 @@ function ChooseBaseProfileScreen({
           </div>
 
           <div className="flex items-center gap-3 mt-1">
-            {(['en', 'de'] as AppLanguage[]).map((lang) => (
+            {LANGUAGES.map((lang) => (
               <button
                 key={lang}
                 className="[font-family:var(--font-mono)] text-[11px] bg-transparent text-[color:var(--ink-3)] border border-white/12 rounded px-3.5 py-[6px] cursor-pointer hover:text-[color:var(--ink-invert)]"
                 onClick={() => onSkip(lang)}
               >
-                Skip — {LANG_FLAGS[lang]} {lang === 'en' ? 'English' : 'Deutsch'} default
+                Skip — {LANG_FLAGS[lang]} {LANGUAGE_LABELS[lang]} default
               </button>
             ))}
             <Link
@@ -249,7 +249,7 @@ export function NewApplicationPage() {
                     {selectedBaseProfile.name}
                   </>
                 ) : (
-                  <span className={nafOptional}>{LANG_FLAGS[language]} {language === 'en' ? 'English' : 'Deutsch'} default</span>
+                  <span className={nafOptional}>{LANG_FLAGS[language]} {LANGUAGE_LABELS[language]} default</span>
                 )}
               </span>
               <button

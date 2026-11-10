@@ -244,7 +244,7 @@ export function DashboardPage() {
 
       {/* A table from lg up (scrolling sideways rather than crushing columns
           in narrow windows); below that each application is a card. */}
-      <div className="lg:overflow-x-auto">
+      <div data-tour="app-list" className="lg:overflow-x-auto">
       <div className="lg:min-w-[1004px]">
 
       {/* Column headers */}

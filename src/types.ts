@@ -70,7 +70,7 @@ export interface CoverLetter {
   closing?: string;
 }
 
-export type AppLanguage = 'en' | 'de';
+export type AppLanguage = 'en' | 'de' | 'sv';
 export type AppFont = 'sans' | 'serif' | 'mono';
 
 // A named, reusable profile a user can maintain independently of any single

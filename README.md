@@ -10,7 +10,9 @@ data, and use it to manage your own applications.
 ## Features
 
 - Dashboard listing all applications with status tracking
-- Print-optimized CV and cover letter documents (clean 2-page PDF export)
+- Print-optimized CV and cover letter documents in English, German or Swedish (clean 2-page PDF export)
+- A login-free demo at `/demo` for showing the app to others
+- A guided tour that opens once for every user (and in the demo) and can be restarted via **tour** on the dashboard
 - Plain-text export for pasting into LLMs or application forms
 - Form-based and raw-JSON editing for each application
 - Per-user login; all edits are stored on the server, not in the browser
@@ -18,6 +20,19 @@ data, and use it to manage your own applications.
 - Your personal data (profile, cover letters) is kept out of git entirely
 - Token-authenticated `/api/v1` and Claude Code skills for AI-assisted applications
 - Deleted applications and base profiles go to a trash for 7 days (restore or delete permanently), then the server purges them
+
+## Demo
+
+`/demo` (e.g. `http://localhost:5173/demo`, or `/demo` on the deployed app)
+runs the app without a login on a fictional sample profile with five
+applications, one per status. A guided tour opens on the first visit: each
+step spotlights the part of the UI it explains (dashboard, status, CV and
+cover letter, export), switching pages as needed. It can be restarted from
+the demo bar. The demo speaks the browser's language (English, German or
+Swedish, falling back to English); the bar switches it. Edits stay in the
+browser tab (`sessionStorage`) and never reach the server; **reset demo**
+starts over. The login screen links to it. Sample data and tour texts live
+in `src/demo/`.
 
 ## Tech stack
 
@@ -39,6 +54,7 @@ never committed. Set it up from the provided examples:
 ```bash
 cp private/profiles/en.example.json private/profiles/en.json
 cp private/profiles/de.example.json private/profiles/de.json
+cp private/profiles/sv.example.json private/profiles/sv.json   # optional, Swedish
 cp private/applications/example.json private/applications/<your-application-id>.json
 ```
 
@@ -101,7 +117,7 @@ Tokens work only here, not on login, password, token or raw-data routes.
 | Method | Path | |
 |--------|------|-|
 | GET | `/api/v1/me` | the token's user |
-| GET | `/api/v1/applications`, `/api/v1/applications/:id` | applications as the app shows them (saved edits and status merged in); the list takes `?language=en|de`, leaves out trashed ones, and `?trash=true` lists only those |
+| GET | `/api/v1/applications`, `/api/v1/applications/:id` | applications as the app shows them (saved edits and status merged in); the list takes `?language=en|de|sv`, leaves out trashed ones, and `?trash=true` lists only those |
 | POST | `/api/v1/applications` | create; always starts as `drafting` |
 | PATCH | `/api/v1/applications/:id` | update given fields, `null` removes one (not while trashed) |
 | GET | `/api/v1/base-profiles`, `/api/v1/base-profiles/:id` | base profiles; the list leaves out trashed ones, `?trash=true` lists only those (with `purgesAt`) |

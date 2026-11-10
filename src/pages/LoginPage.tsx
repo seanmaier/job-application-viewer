@@ -63,6 +63,13 @@ export function LoginPage({ onLoggedIn }: { onLoggedIn: (user: SessionUser) => v
         >
           {busy ? 'logging in…' : 'log in'}
         </button>
+        {/* A full page load, not a router link: demo mode is decided at load. */}
+        <a
+          className="[font-family:var(--font-mono)] text-[11px] text-center text-[color:var(--ink-2)] hover:text-[color:var(--accent)] transition-colors duration-150"
+          href="/demo"
+        >
+          no account? try the demo →
+        </a>
       </form>
     </div>
   );

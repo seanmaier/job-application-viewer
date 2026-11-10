@@ -1,0 +1,73 @@
+{
+  "name": "Alex Weber",
+  "role": "Full-Stack-Entwickler · TypeScript & Cloud",
+  "email": "alex.weber@example.com",
+  "website": "alexweber.example",
+  "github": "github.com/alexweber-demo",
+  "linkedin": "linkedin.com/in/alexweber-demo",
+  "city": "Hamburg, Deutschland",
+  "summary": "Full-Stack-Entwickler mit vier Jahren Erfahrung darin, Webprodukte von Anfang bis Ende zu bauen: React-Frontends, Node.js-APIs und die Cloud-Infrastruktur darunter. Ich mag kleine Teams, kurze Feedbackschleifen und Code, den die nächste Person gut lesen kann.",
+  "experience": [
+    {
+      "title": "Full-Stack-Entwickler",
+      "company": "Harbor Logistics",
+      "dates": "März 2023 – heute",
+      "bullets": [
+        "Sendungsverfolgungsportal mit React und TypeScript neu gebaut, Ladezeit um 60 % reduziert",
+        "Event-API in Node.js entworfen, die 2 Millionen Statusmeldungen pro Tag verarbeitet",
+        "End-to-End-Tests und Preview-Deployments für jeden Pull Request eingeführt"
+      ]
+    },
+    {
+      "title": "Junior-Webentwickler",
+      "company": "Pixelwerk Agentur",
+      "dates": "Aug. 2021 – Feb. 2023",
+      "bullets": [
+        "Über 15 Kundenwebsites und zwei Onlineshops umgesetzt",
+        "Wiederverwendbare Komponentenbibliothek für alle Agenturprojekte aufgebaut"
+      ]
+    }
+  ],
+  "projects": [
+    {
+      "id": "budget-buddy",
+      "name": "Budget Buddy",
+      "stack": "React · TypeScript · Supabase",
+      "description": "Haushaltsbuch für WGs und Paare mit wiederkehrenden Ausgaben, Belegupload und Monatsberichten.",
+      "link": "https://example.com/budget-buddy",
+      "linkLabel": "demo ↗"
+    },
+    {
+      "id": "trail-map",
+      "name": "Trail Map",
+      "stack": "Next.js · PostGIS · Mapbox",
+      "description": "Wanderroutenplaner, der Höhendaten mit aktuellen Wetterwarnungen kombiniert.",
+      "link": "https://example.com/trail-map",
+      "linkLabel": "github ↗"
+    },
+    {
+      "id": "k8s-starter",
+      "name": "k8s Starter",
+      "stack": "Kubernetes · Terraform · GitHub Actions",
+      "description": "Vorlage, mit der sich ein Node.js-Service samt CI/CD an einem Nachmittag auf Kubernetes bringen lässt.",
+      "hackathonLabel": "Hackathon-Gewinner"
+    }
+  ],
+  "education": {
+    "degree": "B.Sc. Informatik",
+    "school": "Hochschule für Angewandte Wissenschaften Hamburg",
+    "dates": "2017 – 2021"
+  },
+  "skillGroups": [
+    { "label": "Programmierung", "skills": ["TypeScript", "JavaScript", "SQL", "Python"] },
+    { "label": "Frontend", "skills": ["React", "Next.js", "Tailwind CSS"] },
+    { "label": "Backend", "skills": ["Node.js", "PostgreSQL", "REST", "GraphQL"] },
+    { "label": "Cloud & DevOps", "skills": ["Docker", "AWS", "GitHub Actions"] },
+    { "label": "Lerne gerade", "skills": ["Rust", "Kubernetes"], "variant": "learning" }
+  ],
+  "languages": [
+    { "name": "Deutsch", "level": "Muttersprache" },
+    { "name": "Englisch", "level": "Fließend (C1)" }
+  ],
+  "interests": ["Bouldern", "Open Source", "Brettspiele"]
+}

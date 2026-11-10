@@ -29,6 +29,15 @@ const LABELS = {
     experience: 'Berufserfahrung',
     projects: 'Projekte',
   },
+  sv: {
+    contact: 'Kontakt',
+    education: 'Utbildning',
+    languages: 'Språk',
+    beyondWork: 'Utanför jobbet',
+    profile: 'Profil',
+    experience: 'Arbetslivserfarenhet',
+    projects: 'Projekt',
+  },
 } as const;
 
 export function CVDocument({ profile, application }: Props) {

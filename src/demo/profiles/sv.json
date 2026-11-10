@@ -1,0 +1,74 @@
+{
+  "name": "Alex Weber",
+  "role": "Fullstackutvecklare · TypeScript & moln",
+  "email": "alex.weber@example.com",
+  "website": "alexweber.example",
+  "github": "github.com/alexweber-demo",
+  "linkedin": "linkedin.com/in/alexweber-demo",
+  "city": "Hamburg, Tyskland",
+  "summary": "Fullstackutvecklare med fyra års erfarenhet av att bygga webbprodukter från början till slut: React-gränssnitt, Node.js-API:er och molninfrastrukturen under dem. Jag trivs i små team med korta återkopplingsloopar och skriver kod som nästa person enkelt kan läsa.",
+  "experience": [
+    {
+      "title": "Fullstackutvecklare",
+      "company": "Harbor Logistics",
+      "dates": "mars 2023 – nu",
+      "bullets": [
+        "Byggde om portalen för sändningsspårning i React och TypeScript och minskade laddningstiden med 60 %",
+        "Utformade ett händelse-API i Node.js som hanterar 2 miljoner statusuppdateringar per dag",
+        "Införde end-to-end-tester och förhandsdriftsättningar för varje pull request"
+      ]
+    },
+    {
+      "title": "Juniorwebbutvecklare",
+      "company": "Pixelwerk Agency",
+      "dates": "aug 2021 – feb 2023",
+      "bullets": [
+        "Levererade över 15 kundwebbplatser och två e-handelsbutiker",
+        "Byggde ett återanvändbart komponentbibliotek för alla byråns projekt"
+      ]
+    }
+  ],
+  "projects": [
+    {
+      "id": "budget-buddy",
+      "name": "Budget Buddy",
+      "stack": "React · TypeScript · Supabase",
+      "description": "Gemensam hushållsbudget med återkommande utgifter, kvittouppladdning och månadsrapporter.",
+      "link": "https://example.com/budget-buddy",
+      "linkLabel": "demo ↗"
+    },
+    {
+      "id": "trail-map",
+      "name": "Trail Map",
+      "stack": "Next.js · PostGIS · Mapbox",
+      "description": "Ruttplanerare för vandring som kombinerar höjddata med aktuella vädervarningar.",
+      "link": "https://example.com/trail-map",
+      "linkLabel": "github ↗"
+    },
+    {
+      "id": "k8s-starter",
+      "name": "k8s Starter",
+      "stack": "Kubernetes · Terraform · GitHub Actions",
+      "description": "Mall för att driftsätta en Node.js-tjänst på Kubernetes med CI/CD på en eftermiddag.",
+      "hackathonLabel": "hackathonvinnare"
+    }
+  ],
+  "education": {
+    "degree": "Kandidatexamen i datavetenskap",
+    "school": "Hamburgs tekniska högskola",
+    "dates": "2017 – 2021"
+  },
+  "skillGroups": [
+    { "label": "Programmering", "skills": ["TypeScript", "JavaScript", "SQL", "Python"] },
+    { "label": "Frontend", "skills": ["React", "Next.js", "Tailwind CSS"] },
+    { "label": "Backend", "skills": ["Node.js", "PostgreSQL", "REST", "GraphQL"] },
+    { "label": "Moln & DevOps", "skills": ["Docker", "AWS", "GitHub Actions"] },
+    { "label": "Lär mig just nu", "skills": ["Rust", "Kubernetes"], "variant": "learning" }
+  ],
+  "languages": [
+    { "name": "Tyska", "level": "Modersmål" },
+    { "name": "Engelska", "level": "Flytande (C1)" },
+    { "name": "Svenska", "level": "Goda kunskaper (B2)" }
+  ],
+  "interests": ["Bouldering", "Öppen källkod", "Brädspel"]
+}

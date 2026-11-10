@@ -1,0 +1,44 @@
+{
+  "name": "Jane Doe",
+  "role": "Mjukvaruutvecklare · Backend & distribuerade system",
+  "email": "jane.doe@example.com",
+  "website": "janedoe.example",
+  "github": "github.com/janedoe",
+  "linkedin": "linkedin.com/in/janedoe",
+  "city": "Berlin, Tyskland",
+  "summary": "En eller två meningar om din bakgrund och vilken sorts utvecklingsarbete som lockar dig.",
+  "experience": [
+    {
+      "title": "Mjukvaruutvecklare",
+      "company": "Example Corp",
+      "dates": "jan 2024 – nu",
+      "bullets": [
+        "En konkret prestation med teknik och omfattning",
+        "Ytterligare en punkt om ansvar eller effekt"
+      ]
+    }
+  ],
+  "projects": [
+    {
+      "id": "example-project",
+      "name": "Exempelprojekt",
+      "stack": "TypeScript · React · PostgreSQL",
+      "description": "Kort beskrivning av vad projektet gör och varför det är intressant.",
+      "link": "https://github.com/janedoe/example-project",
+      "linkLabel": "github ↗"
+    }
+  ],
+  "education": {
+    "degree": "Datavetenskap",
+    "school": "Exempeluniversitetet",
+    "dates": "2020 – 2024"
+  },
+  "skillGroups": [
+    { "label": "Programmering", "skills": ["TypeScript", "Python"] },
+    { "label": "Ramverk", "skills": ["React", "FastAPI"] }
+  ],
+  "languages": [
+    { "name": "Svenska", "level": "Modersmål" }
+  ],
+  "interests": ["Läsning", "Vandring"]
+}

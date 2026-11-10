@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
-import type { AppLanguage, ApplicationConfig, BaseProfile } from '../types';
+import type { ApplicationConfig, BaseProfile } from '../types';
 import {
   applicationsUsingBaseProfile, deleteBaseProfilePermanently, getDeletedBaseProfiles, restoreBaseProfile,
 } from '../utils/baseProfiles';
@@ -9,8 +9,7 @@ import {
   deleteLocalApplicationPermanently, getDeletedLocalApplications, restoreLocalApplication,
 } from '../utils/localApplications';
 import { purgeDate, TRASH_RETENTION_DAYS } from '../utils/trash';
-
-const LANG_FLAGS: Record<AppLanguage, string> = { en: '🇬🇧', de: '🇩🇪' };
+import { LANG_FLAGS } from '../utils/language';
 
 const actionBtn =
   '[font-family:var(--font-mono)] text-[11px] text-[color:var(--ink-2)] bg-transparent border border-[color:var(--rule)] rounded px-2.5 py-1 cursor-pointer transition-colors';
