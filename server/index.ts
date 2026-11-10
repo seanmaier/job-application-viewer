@@ -25,7 +25,10 @@ import {
   SESSION_TTL_MS,
   type User,
 } from './auth.ts';
+import type { ApplicationConfig } from '../src/types.ts';
 import { db, transaction } from './db.ts';
+import { affectedAppIds, BROWSER_AUTHOR, deleteVersions, recordChanges, snapshot } from './history.ts';
+import { getJson, KEYS, parseJson } from './store.ts';
 import { purgeTrash } from './trash.ts';
 import { v1 } from './v1.ts';
 
@@ -35,7 +38,7 @@ const STATIC_DIR = process.env.STATIC_DIR ?? './dist';
 const SECURE_COOKIE = process.env.COOKIE_SECURE ? process.env.COOKIE_SECURE === 'true' : process.env.NODE_ENV === 'production';
 const COOKIE = 'session';
 
-const app = new Hono<{ Variables: { user: User } }>();
+const app = new Hono<{ Variables: { user: User; apiToken?: string } }>();
 
 // CSRF only threatens cookie auth. A bearer-token request to /api/v1 can't be
 // forged cross-site: browsers never add an Authorization header on their own,
@@ -94,13 +97,14 @@ const requireUser = createMiddleware<{ Variables: { user: User } }>(async (c, ne
 // /api/v1 also accepts `Authorization: Bearer <api token>`, so scripts can
 // call it without a password. Tokens are deliberately not accepted on the
 // routes above: they can't change the password or overwrite raw storage.
-const requireUserOrToken = createMiddleware<{ Variables: { user: User } }>(async (c, next) => {
+const requireUserOrToken = createMiddleware<{ Variables: { user: User; apiToken?: string } }>(async (c, next) => {
   const auth = c.req.header('authorization');
   if (auth !== undefined) {
     const match = /^Bearer\s+(\S+)$/i.exec(auth);
-    const user = match ? getApiTokenUser(match[1]) : null;
-    if (!user) return c.json({ error: 'Invalid API token.' }, 401);
-    c.set('user', user);
+    const found = match ? getApiTokenUser(match[1]) : null;
+    if (!found) return c.json({ error: 'Invalid API token.' }, 401);
+    c.set('user', found.user);
+    c.set('apiToken', found.tokenName);
     return next();
   }
   return requireUser(c, next);
@@ -165,28 +169,48 @@ app.get('/api/data', requireUser, (c) => {
   return c.json(Object.fromEntries(rows.map((r) => [r.key, r.value])));
 });
 
+const isStringRecord = (v: unknown): v is Record<string, string> =>
+  typeof v === 'object' && v !== null && !Array.isArray(v) && Object.values(v).every((x) => typeof x === 'string');
+
 // One request carries every write the frontend batched since its last flush,
-// applied atomically so a restore-from-backup can't land half-way.
+// applied atomically so a restore-from-backup can't land half-way. The
+// optional `messages` (application id → note) describe what a save changed,
+// for the version history.
 app.put('/api/data', requireUser, async (c) => {
-  const body = await c.req.json<{ set?: unknown; remove?: unknown }>().catch(() => null);
-  const set = body?.set ?? {};
-  const remove = body?.remove ?? [];
+  const body = await c.req.json<{ set?: unknown; remove?: unknown; messages?: unknown }>().catch(() => null);
+  const rawSet = body?.set ?? {};
+  const rawRemove = body?.remove ?? [];
+  const rawMessages = body?.messages ?? {};
   if (
-    typeof set !== 'object' || set === null || Array.isArray(set) ||
-    !Object.values(set).every((v) => typeof v === 'string') ||
-    !Array.isArray(remove) || !remove.every((k) => typeof k === 'string')
+    !isStringRecord(rawSet) || !isStringRecord(rawMessages) ||
+    !Array.isArray(rawRemove) || !rawRemove.every((k) => typeof k === 'string')
   ) {
-    return c.json({ error: 'Expected { set: Record<string, string>, remove: string[] }.' }, 400);
+    return c.json({ error: 'Expected { set: Record<string, string>, remove: string[], messages?: Record<string, string> }.' }, 400);
   }
 
   const userId = c.get('user').id;
+  const set = rawSet;
+  const remove = rawRemove as string[];
+  const messages = new Map(Object.entries(rawMessages));
   const upsert = db.prepare(
     'INSERT INTO kv (user_id, key, value) VALUES (?, ?, ?) ON CONFLICT (user_id, key) DO UPDATE SET value = excluded.value',
   );
   const del = db.prepare('DELETE FROM kv WHERE user_id = ? AND key = ?');
   transaction(() => {
-    for (const key of remove as string[]) del.run(userId, key);
-    for (const [key, value] of Object.entries(set as Record<string, string>)) upsert.run(userId, key, value);
+    const listBefore = getJson<ApplicationConfig[]>(userId, KEYS.localApps);
+    const listAfter = KEYS.localApps in set ? parseJson<ApplicationConfig[]>(set[KEYS.localApps]) : null;
+    const appIds = affectedAppIds([...remove, ...Object.keys(set)], KEYS.localApps in set ? [listBefore, listAfter] : []);
+    const before = snapshot(userId, appIds);
+
+    for (const key of remove) del.run(userId, key);
+    for (const [key, value] of Object.entries(set)) upsert.run(userId, key, value);
+
+    recordChanges(userId, before, BROWSER_AUTHOR, (appId) => messages.get(appId));
+    // An application deleted for good takes its history with it.
+    if (KEYS.localApps in set) {
+      const remaining = new Set((getJson<ApplicationConfig[]>(userId, KEYS.localApps) ?? []).map((a) => a.id));
+      for (const app of listBefore ?? []) if (!remaining.has(app.id)) deleteVersions(userId, app.id);
+    }
   });
   return c.body(null, 204);
 });

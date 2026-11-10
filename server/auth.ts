@@ -115,15 +115,16 @@ export function createApiToken(userId: number, rawName: string): CreateApiTokenR
   return { ok: true, token };
 }
 
-export function getApiTokenUser(token: string): User | null {
+/** The token's user, plus the token's name (recorded as the author of what it changes). */
+export function getApiTokenUser(token: string): { user: User; tokenName: string } | null {
   if (!token.startsWith(API_TOKEN_PREFIX)) return null;
   const hash = hashToken(token);
   const row = db
-    .prepare('SELECT u.id, u.username FROM api_tokens t JOIN users u ON u.id = t.user_id WHERE t.token_hash = ?')
-    .get(hash) as User | undefined;
+    .prepare('SELECT u.id, u.username, t.name FROM api_tokens t JOIN users u ON u.id = t.user_id WHERE t.token_hash = ?')
+    .get(hash) as (User & { name: string }) | undefined;
   if (!row) return null;
   db.prepare("UPDATE api_tokens SET last_used_at = datetime('now') WHERE token_hash = ?").run(hash);
-  return { id: row.id, username: row.username };
+  return { user: { id: row.id, username: row.username }, tokenName: row.name };
 }
 
 export function listApiTokens(userId: number): ApiTokenInfo[] {
