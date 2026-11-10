@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { formatDateNumeric, parseToIsoDate } from '../../utils/date';
+import { formatDateNumeric, numericDateToIso } from '../../utils/date';
 import type { AppLanguage } from '../../types';
 
 interface Props {
@@ -17,7 +17,7 @@ interface Props {
 export function EditableCell({
   value, onCommit, className, editClassName, placeholder, multiline = false, isDate = false, language, title,
 }: Props) {
-  const toDraft = (v: string) => (isDate ? parseToIsoDate(v) : v);
+  const toDraft = (v: string) => (isDate ? numericDateToIso(v) : v);
 
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(() => toDraft(value));
