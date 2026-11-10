@@ -22,3 +22,64 @@
   --status-rejected:   #F85149;
   --status-withdrawn:  #484F58;
 }
+
+/* Winter theme: same structure as the default palette above (dark surfaces,
+   light ink-invert text), hues shifted to an icy blue instead of neutral grey. */
+:root[data-theme="winter"] {
+  --ink:          #050B14;
+  --ink-2:        #7D96B3;
+  --ink-3:        #3E5068;
+  --ink-invert:   #E6F1FA;
+  --accent:       #6FD3FF;
+  --accent-bg:    #142A3D;
+  --bg:           #0A1420;
+  --surface:      #15283A;
+  --rule:         #24415C;
+  --ph-bg:        #16332E;
+  --ph-ink:       #8FE6C2;
+}
+
+/* Autumn theme: same structure again, hues shifted to warm amber/rust tones. */
+:root[data-theme="autumn"] {
+  --ink:          #140B05;
+  --ink-2:        #C2946B;
+  --ink-3:        #6B4A32;
+  --ink-invert:   #F6E8D8;
+  --accent:       #E8903C;
+  --accent-bg:    #2A1C10;
+  --bg:           #1A1008;
+  --surface:      #2A1C10;
+  --rule:         #4A3220;
+  --ph-bg:        #332113;
+  --ph-ink:       #F2B860;
+}
+
+/* Spring theme: same structure again, hues shifted to fresh green with a blossom-pink accent. */
+:root[data-theme="spring"] {
+  --ink:          #0A1408;
+  --ink-2:        #8FB37A;
+  --ink-3:        #3F5C34;
+  --ink-invert:   #EAF6E3;
+  --accent:       #FF9FC2;
+  --accent-bg:    #1C3314;
+  --bg:           #0E1C0A;
+  --surface:      #182A10;
+  --rule:         #2E4A22;
+  --ph-bg:        #23331A;
+  --ph-ink:       #C3F17A;
+}
+
+/* Summer theme: same structure again, hues shifted to sun-warmed teal with a golden accent. */
+:root[data-theme="summer"] {
+  --ink:          #140F02;
+  --ink-2:        #D9B56A;
+  --ink-3:        #6B5428;
+  --ink-invert:   #FFF6DF;
+  --accent:       #FFD23F;
+  --accent-bg:    #1C3A3F;
+  --bg:           #10262B;
+  --surface:      #17343A;
+  --rule:         #2A4A50;
+  --ph-bg:        #3A2E12;
+  --ph-ink:       #FFEB85;
+}
